@@ -1,69 +1,98 @@
-pub struct Board {
-    w_pawns: u64,
-    w_rooks: u64,
-    w_knights: u64,
-    w_bishops: u64,
-    w_king: u64,
-    w_queen: u64,
+pub type Bitboard = u64;
 
-    b_pawns: u64,
-    b_rooks: u64,
-    b_knights: u64,
-    b_bishops: u64,
-    b_king: u64,
-    b_queen: u64,
+pub const RANK1: u64 = 0xFF;
+pub const RANK2: u64 = RANK1 << (8 * 1);
+pub const RANK3: u64 = RANK1 << (8 * 2);
+pub const RANK4: u64 = RANK1 << (8 * 3);
+pub const RANK5: u64 = RANK1 << (8 * 4);
+pub const RANK6: u64 = RANK1 << (8 * 5);
+pub const RANK7: u64 = RANK1 << (8 * 6);
+pub const RANK8: u64 = RANK1 << (8 * 7);
+
+fn shift_left(n: u64, i: u8) -> Bitboard {
+    n.checked_shl(i as u32).unwrap_or(0)
 }
 
-impl Board {
-    pub fn default() -> Board {
-        Board {
-            w_pawns: 65280,
-            w_rooks: 129,
-            w_knights: 66,
-            w_bishops: 36,
-            w_queen: 16,
-            w_king: 8,
-            b_pawns: 71776119061217280,
-            b_rooks: 9295429630892703744,
-            b_knights: 4755801206503243776,
-            b_bishops: 2594073385365405696,
-            b_queen: 1152921504606846976,
-            b_king: 576460752303423488,
+fn shift_right(n: u64, i: u8) -> Bitboard {
+    n.checked_shr(i as u32).unwrap_or(0)
+}
+
+pub trait Shift {
+    fn shift(&self, n: i8) -> Bitboard;
+}
+
+impl Shift for Bitboard {
+    fn shift(&self, n: i8) -> Bitboard {
+        if n > 0 {
+            shift_left(*self, n as u8)
+        } else {
+            shift_right(*self, -n as u8)
         }
     }
+}
 
-    pub fn pieces(&self) -> Vec<u64> {
-        vec![
-            self.w_pawns,
-            self.w_rooks,
-            self.w_knights,
-            self.w_bishops,
-            self.w_king,
-            self.w_queen,
-            self.b_pawns,
-            self.b_rooks,
-            self.b_knights,
-            self.b_bishops,
-            self.b_king,
-            self.b_queen,
-        ]
+pub trait GetBit {
+    fn get_bit_lsb(&self, index: i8) -> bool;
+    fn get_bit_msb(&self, index: i8) -> bool;
+}
+
+impl GetBit for Bitboard {
+    fn get_bit_lsb(&self, index: i8) -> bool {
+        self & (1 << index) != 0
     }
 
-    pub fn debug_print(&self) {
-        let mut p: u64 = 0;
-        for b in self.pieces().iter() {
-            p |= b
-        }
-        for i in 1..65 {
-            print!("{}", Board::bit_at_i(p, i - 1) as u64);
-            if i % 8 == 0 {
-                println!("");
-            }
-        }
-        println!("");
+    fn get_bit_msb(&self, index: i8) -> bool {
+        self & (1 << (63 - index)) != 0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gets_bit_lsb() {
+        let b: Bitboard = 0b0000_0001u64;
+        let b1 = b.get_bit_lsb(0);
+        let b2 = b.get_bit_lsb(63);
+        assert_eq!(b1 as u8, 1);
+        assert_eq!(b2 as u8, 0);
     }
 
-    pub fn bit_at_i(n: u64, i: u8) -> bool {
-        n & (1 << i) != 0
+    #[test]
+    fn gets_bit_msb() {
+        let b: Bitboard = 0b0000_0001u64;
+        let b1 = b.get_bit_msb(0);
+        let b2 = b.get_bit_msb(63);
+        assert_eq!(b1 as u8, 0);
+        assert_eq!(b2 as u8, 1);
+    }
+
+    #[test]
+    fn left_overflow_goes_to_zero() {
+        let b: Bitboard = 0b0000_1000u64;
+        let s = b.shift(64);
+        assert_eq!(s, 0);
+    }
+
+    #[test]
+    fn right_overflow_goes_to_zero() {
+        let b: Bitboard = 0b0000_1000u64;
+        let s = b.shift(-64);
+        assert_eq!(s, 0);
+    }
+
+    #[test]
+    fn shifts_left() {
+        let b: Bitboard = 0b0000_1000u64;
+        let s = b.shift(1);
+        assert_eq!(s, 0b0001_0000u64);
+    }
+
+    #[test]
+    fn shifts_right() {
+        let b: Bitboard = 0b0000_1000;
+        let s = b.shift(-1);
+        assert_eq!(s, 0b0000_0100u64);
     }
 }
