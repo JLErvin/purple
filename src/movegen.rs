@@ -14,8 +14,8 @@ pub fn gen_pawn_moves(pos: Position) -> Vec<Move> {
 
 fn gen_single_pawn_moves(pos: &Position) -> Vec<Move> {
     let pawns = pos.our_pawns() & !RANK7;
-    let all = pos.all();
-    let forward = pawns.shift(UP) & !pos.all();
+    let empty_squares = !pos.all();
+    let forward = pawns.shift(UP) & empty_squares;
     extract_pawn_moves(forward)
 }
 
@@ -37,4 +37,13 @@ fn gen_double_pawn_moves(pos: &Position) -> Vec<Move> {
     let mut v: Vec<Move> = Vec::new();
 
     v
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn doesnt_crash() {
+    }
 }

@@ -1,136 +1,197 @@
 use crate::bitboard::*;
+use crate::player::*;
 
 pub struct Position {
-    w_pawns: Bitboard,
-    w_rooks: Bitboard,
-    w_knights: Bitboard,
-    w_bishops: Bitboard,
-    w_king: Bitboard,
-    w_queen: Bitboard,
-
-    b_pawns: Bitboard,
-    b_rooks: Bitboard,
-    b_knights: Bitboard,
-    b_bishops: Bitboard,
-    b_king: Bitboard,
-    b_queen: Bitboard,
-
-    w_turn: bool
+    white: Player,
+    black: Player,
+    pub white_to_move: bool,
 }
 
 impl Position {
-    pub fn all(&self) -> Bitboard {
-        self.our_all() | self.op_all()
+    pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
+        let player: &mut Player;
+        if piece.is_lowercase() {
+            player = &mut self.black
+        } else {
+            player = &mut self.white
+        }
+        player.add_piece(piece, rank, file);
     }
 
-    pub fn op_no_king(&self) -> Bitboard {
-        self.b_pawns | self.b_rooks | self.b_knights | self.b_bishops | self.b_queen
+    fn get_us(&self) -> &Player {
+        if self.white_to_move {
+            &self.white
+        } else {
+            &self.black
+        }
     }
 
-    pub fn our_pawns(&self) -> Bitboard {
-        if self.w_turn { self.w_pawns } else { self.b_pawns }
-    }
-
-    pub fn our_knights(&self) -> Bitboard {
-        if self.w_turn { self.w_knights } else { self.b_knights }
-    }
-
-    pub fn our_bishops(&self) -> Bitboard {
-        if self.w_turn { self.w_bishops } else { self.b_bishops }
-    }
-
-    pub fn our_king(&self) -> Bitboard {
-        if self.w_turn { self.w_king } else { self.b_king }
-    }
-
-    pub fn our_queen(&self) -> Bitboard {
-        if self.w_turn { self.w_queen } else { self.b_queen }
+    fn get_them(&self) -> &Player {
+        if self.white_to_move {
+            &self.black
+        } else {
+            &self.white
+        }
     }
 
     pub fn our_all(&self) -> Bitboard {
-        if self.w_turn {
-            self.w_pawns | self.w_rooks | self.w_knights | self.w_bishops | self.w_king | self.w_queen
-        } else {
-            self.b_pawns | self.b_rooks | self.b_knights | self.b_bishops | self.b_king | self.b_queen
-        }
-
-    }
-
-    pub fn op_pawns(&self) -> Bitboard {
-        if !self.w_turn { self.w_pawns } else { self.b_pawns }
-    }
-
-    pub fn op_knights(&self) -> Bitboard {
-        if !self.w_turn { self.w_knights } else { self.b_knights }
-    }
-
-    pub fn op_bishops(&self) -> Bitboard {
-        if !self.w_turn { self.w_bishops } else { self.b_bishops }
-    }
-
-    pub fn op_king(&self) -> Bitboard {
-        if !self.w_turn { self.w_king } else { self.b_king }
-    }
-
-    pub fn op_queen(&self) -> Bitboard {
-        if !self.w_turn { self.w_queen } else { self.b_queen }
+        self.get_us().get_all()
     }
 
     pub fn op_all(&self) -> Bitboard {
-        if !self.w_turn {
-            self.w_pawns | self.w_rooks | self.w_knights | self.w_bishops | self.w_king | self.w_queen
-        } else {
-            self.b_pawns | self.b_rooks | self.b_knights | self.b_bishops | self.b_king | self.b_queen
-        }
+        self.get_them().get_all()
+    }
 
+    pub fn our_pawns(&self) -> Bitboard {
+        self.get_us().pawns
+    }
+
+    pub fn our_rooks(&self) -> Bitboard {
+        self.get_us().rooks
+    }
+
+    pub fn our_knights(&self) -> Bitboard {
+        self.get_us().knights
+    }
+
+    pub fn our_bishops(&self) -> Bitboard {
+        self.get_us().bishops
+    }
+
+    pub fn our_queen(&self) -> Bitboard {
+        self.get_us().queen
+    }
+
+    pub fn our_king(&self) -> Bitboard {
+        self.get_us().king
+    }
+
+    pub fn their_pawns(&self) -> Bitboard {
+        self.get_them().pawns
+    }
+
+    pub fn their_rooks(&self) -> Bitboard {
+        self.get_them().rooks
+    }
+
+    pub fn their_knights(&self) -> Bitboard {
+        self.get_them().knights
+    }
+
+    pub fn their_bishops(&self) -> Bitboard {
+        self.get_them().bishops
+    }
+
+    pub fn their_queen(&self) -> Bitboard {
+        self.get_them().queen
+    }
+
+    pub fn their_king(&self) -> Bitboard {
+        self.get_them().king
+    }
+
+    pub fn all(&self) -> Bitboard {
+        self.get_us().get_all() | self.get_them().get_all()
+    }
+
+    pub fn empty() -> Position {
+        let white = Player {
+            pawns: 0,
+            rooks: 0,
+            knights: 0,
+            bishops: 0,
+            queen: 0,
+            king: 0,
+        };
+        let black = Player {
+            pawns: 0,
+            rooks: 0,
+            knights: 0,
+            bishops: 0,
+            queen: 0,
+            king: 0,
+        };
+        Position {
+            white: white,
+            black: black,
+            white_to_move: true,
+        }
     }
 
     pub fn default() -> Position {
+        let white = Player {
+            pawns: RANK2,
+            rooks: 0b10000001u64,
+            knights: 0b01000010u64,
+            bishops: 0b00100100u64,
+            queen: 0b00010000u64,
+            king: 0b00001000u64,
+        };
+        let black = Player {
+            pawns: RANK7,
+            rooks: 0b10000001u64 << (8 * 7),
+            knights: 0b01000010u64 << (8 * 7),
+            bishops: 0b00100100u64 << (8 * 7),
+            queen: 0b00010000u64 << (8 * 7),
+            king: 0b00001000u64 << (8 * 7),
+        };
         Position {
-            w_pawns: 65280,
-            w_rooks: 129,
-            w_knights: 66,
-            w_bishops: 36,
-            w_queen: 16,
-            w_king: 8,
-            b_pawns: 71776119061217280,
-            b_rooks: 9295429630892703744,
-            b_knights: 4755801206503243776,
-            b_bishops: 2594073385365405696,
-            b_queen: 1152921504606846976,
-            b_king: 576460752303423488,
-            w_turn: true,
+            white: white,
+            black: black,
+            white_to_move: true,
         }
     }
 
-    pub fn pieces(&self) -> Vec<u64> {
-        vec![
-            self.w_pawns,
-            self.w_rooks,
-            self.w_knights,
-            self.w_bishops,
-            self.w_king,
-            self.w_queen,
-            self.b_pawns,
-            self.b_rooks,
-            self.b_knights,
-            self.b_bishops,
-            self.b_king,
-            self.b_queen,
-        ]
+    pub fn pieces(&self) -> Vec<Bitboard> {
+        let mut i = self.white.pieces();
+        let j = self.black.pieces();
+        i.extend(j);
+        i
     }
 
     pub fn debug_print(&self) {
         let mut p: u64 = 0;
-        for b in self.pieces().iter() {
+        for b in self.pieces() {
             p |= b
         }
         for i in 1..65 {
-            print!("{}", p.get_bit_lsb(i-1) as u64);
+            print!("{}", p.get_bit_msb(i-1) as u64);
             if i % 8 == 0 {
                 println!("");
             }
         }
         println!("");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correct_initial_values() {
+        let p = Position::default();
+        assert_eq!(p.our_pawns(), 65280);
+        assert_eq!(p.our_rooks(), 129);
+        assert_eq!(p.our_knights(), 66);
+        assert_eq!(p.our_bishops(), 36);
+        assert_eq!(p.our_queen(), 16);
+        assert_eq!(p.our_king(), 8);
+        assert_eq!(p.their_pawns(), 71776119061217280);
+        assert_eq!(p.their_rooks(), 9295429630892703744);
+        assert_eq!(p.their_knights(), 4755801206503243776);
+        assert_eq!(p.their_bishops(), 2594073385365405696);
+        assert_eq!(p.their_queen(), 1152921504606846976);
+        assert_eq!(p.their_king(), 576460752303423488);
+        assert_eq!(p.white_to_move, true);
+    }
+
+    #[test]
+    fn gets_bit_lsb() {
+        let b: Bitboard = 0b0000_0001u64;
+        let b1 = b.get_bit_lsb(0);
+        let b2 = b.get_bit_lsb(63);
+        assert_eq!(b1 as u8, 1);
+        assert_eq!(b2 as u8, 0);
     }
 }

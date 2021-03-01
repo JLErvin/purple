@@ -17,6 +17,13 @@ fn shift_right(n: u64, i: u8) -> Bitboard {
     n.checked_shr(i as u32).unwrap_or(0)
 }
 
+/// Given a 1-based index rank and file (file 1 is the a file),
+/// returns the index of the square as an offset from the least
+/// significant bit.
+fn rank_file_to_index(rank: u8, file: u8) -> u8 {
+    (rank-1) * 8 + (8-file)
+}
+
 pub trait Shift {
     fn shift(&self, n: i8) -> Bitboard;
 }
@@ -46,9 +53,72 @@ impl GetBit for Bitboard {
     }
 }
 
+
+pub trait AddPiece {
+    fn add_piece(&self, rank: u8, file: u8) -> Bitboard;
+}
+
+impl AddPiece for Bitboard {
+    fn add_piece(&self, rank: u8, file: u8) -> Bitboard {
+        let index = rank_file_to_index(rank, file);
+        *self | (1 << index)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn identifies_index_top_left() {
+        let index = rank_file_to_index(8, 1);
+        assert_eq!(index, 63);
+    }
+
+    #[test]
+    fn identifies_index_top_right() {
+        let index = rank_file_to_index(8, 8);
+        assert_eq!(index, 56);
+    }
+
+    #[test]
+    fn identifies_index_bottom_left() {
+        let index = rank_file_to_index(1, 1);
+        assert_eq!(index, 7);
+    }
+
+    #[test]
+    fn identifies_index_bottom_right() {
+        let index = rank_file_to_index(1, 8);
+        assert_eq!(index, 0);
+    }
+
+    #[test]
+    fn identifies_index_middle() {
+        let index = rank_file_to_index(4, 5);
+        assert_eq!(index, 27);
+    }
+
+    #[test]
+    fn adds_piece_eight_rank() {
+        let b1: Bitboard = 0;
+        let b2 = b1.add_piece(8, 1);
+        assert_eq!(b2, 1 << 63);
+    }
+
+    #[test]
+    fn adds_piece_eight_rank_and_file() {
+        let b1: Bitboard = 0;
+        let b2 = b1.add_piece(8, 8);
+        assert_eq!(b2, 1 << 56);
+    }
+
+    #[test]
+    fn adds_piece_first_rank() {
+        let b1: Bitboard = 0;
+        let b2 = b1.add_piece(1, 1);
+        assert_eq!(b2, 1 << 7);
+    }
 
     #[test]
     fn gets_bit_lsb() {
