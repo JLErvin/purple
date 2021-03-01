@@ -1,21 +1,22 @@
 use crate::position::*;
 
 pub fn parse_fen(fen: &str) -> Result<Position, String> {
-    let mut s: Vec<&str> = fen.split_ascii_whitespace().collect();
-    if s.len() != 6 {
-        return Err("FEN does not have exactly 6 fields, is invalid".to_string());
-    }
+    let mut s = fen.split_whitespace();
+    let p = Position::empty();
 
-    let p = parse_ranks(s.get(0).unwrap());
+    let position = parse_ranks(s.next().unwrap());
+    let active_color = parse_active_color(s.next().unwrap());
+    let castling_rights = parse_castling_rights(s.next().unwrap());
+    let en_passant = parse_en_passant(s.next().unwrap());
+    let half_move = parse_move(s.next().unwrap());
+    let full_move = parse_move(s.next().unwrap());
 
-    let mut p = match p {
-        Ok(pos) => pos,
-        Err(_error) => panic!("AHHHHH"),
-    };
+    //let mut p = match p {
+        //Ok(pos) => pos,
+        //Err(_error) => panic!("AHHHHH"),
+    //};
 
-    p.white_to_move = active_color_is_white(s.get(1).unwrap());
-
-    Ok(p)
+    Ok(position.unwrap())
 }
 
 fn parse_ranks(fen: &str) -> Result<Position, String> {
@@ -49,11 +50,41 @@ fn parse_ranks(fen: &str) -> Result<Position, String> {
     Ok(p)
 }
 
-fn active_color_is_white(fen: &str) -> bool {
+fn parse_active_color(fen: &str) -> bool {
     match fen.chars().next() {
         Some(c) => c == 'w',
         None => false
     }
+}
+
+fn parse_castling_rights(fen: &str) -> Castle {
+    let mut white_king = false;
+    let mut white_queen = false;
+    let mut black_king = false;
+    let mut black_queen = false;
+    for c in fen.chars() {
+        match c {
+            'K' => white_king = true,
+            'Q' => white_queen = true,
+            'k' => black_king = true,
+            'q' => black_queen = true,
+            _ => ()
+        }
+    }
+    Castle {
+        white_king,
+        white_queen,
+        black_king,
+        black_queen
+    }
+}
+
+fn parse_en_passant(fen: &str) -> u8 {
+    8
+}
+
+fn parse_move(fen: &str) -> u8 {
+    8
 }
 
 #[cfg(test)]

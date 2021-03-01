@@ -1,0 +1,105 @@
+
+running 2 tests
+test fen::tests::parses_default_board ... ok
+test fen::tests::parses_random_board_1 ... FAILED
+
+failures:
+
+---- fen::tests::parses_random_board_1 stdout ----
+RANK 8 FILE 1 CHAR 5
+RANK 8 FILE 6 CHAR K
+adding
+ one
+RANK 8 FILE 7 CHAR 1
+RANK 8 FILE 8 CHAR b
+adding
+ one
+RANK 7 FILE 1 CHAR 8
+RANK 6 FILE 1 CHAR 2
+RANK 6 FILE 3 CHAR P
+adding
+ one
+RANK 6 FILE 4 CHAR 1
+RANK 6 FILE 5 CHAR q
+adding
+ one
+RANK 6 FILE 6 CHAR 1
+RANK 6 FILE 7 CHAR P
+adding
+ one
+RANK 6 FILE 8 CHAR 1
+RANK 5 FILE 1 CHAR 2
+RANK 5 FILE 3 CHAR p
+adding
+ one
+RANK 5 FILE 4 CHAR 5
+RANK 4 FILE 1 CHAR p
+adding
+ one
+RANK 4 FILE 2 CHAR 2
+RANK 4 FILE 4 CHAR N
+adding
+ one
+RANK 4 FILE 5 CHAR 2
+RANK 4 FILE 7 CHAR p
+adding
+ one
+RANK 4 FILE 8 CHAR 1
+RANK 3 FILE 1 CHAR 7
+RANK 3 FILE 8 CHAR P
+adding
+ one
+RANK 2 FILE 1 CHAR 2
+RANK 2 FILE 3 CHAR Q
+adding
+ one
+RANK 2 FILE 4 CHAR R
+adding
+ one
+RANK 2 FILE 5 CHAR P
+adding
+ one
+RANK 2 FILE 6 CHAR P
+adding
+ one
+RANK 2 FILE 7 CHAR 2
+RANK 1 FILE 1 CHAR k
+adding
+ one
+RANK 1 FILE 2 CHAR 6
+RANK 1 FILE 8 CHAR B
+adding
+ one
+00000101
+00000000
+00101010
+00100000
+10010010
+00000001
+00111100
+10000001
+
+thread 'fen::tests::parses_random_board_1' panicked at 'assertion failed: `(left == right)`
+  left: `360334289566514305`,
+ right: `11529307423458212993`', src/fen.rs:74:9
+stack backtrace:
+   0: rust_begin_unwind
+             at /rustc/cb75ad5db02783e8b0222fee363c5f63f7e2cf5b/library/std/src/panicking.rs:493:5
+   1: core::panicking::panic_fmt
+             at /rustc/cb75ad5db02783e8b0222fee363c5f63f7e2cf5b/library/core/src/panicking.rs:92:14
+   2: purple::fen::tests::parses_random_board_1
+             at ./src/fen.rs:74:9
+   3: purple::fen::tests::parses_random_board_1::{{closure}}
+             at ./src/fen.rs:71:5
+   4: core::ops::function::FnOnce::call_once
+             at /home/jle/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/ops/function.rs:227:5
+   5: core::ops::function::FnOnce::call_once
+             at /rustc/cb75ad5db02783e8b0222fee363c5f63f7e2cf5b/library/core/src/ops/function.rs:227:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    fen::tests::parses_random_board_1
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+

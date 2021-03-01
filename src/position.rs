@@ -1,6 +1,13 @@
 use crate::bitboard::*;
 use crate::player::*;
 
+pub struct Castle {
+    pub white_king: bool,
+    pub white_queen: bool,
+    pub black_king: bool,
+    pub black_queen: bool,
+}
+
 pub struct Position {
     white: Player,
     black: Player,
