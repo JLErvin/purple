@@ -1,4 +1,4 @@
-use crate::bitboard::*;
+use crate::components::bitboard::*;
 
 pub enum Color {
     Black,
@@ -19,7 +19,7 @@ impl Player {
         self.pawns | self.rooks | self.knights | self.bishops | self.king | self.queen
     }
 
-    pub fn pieces(&self) -> Vec<Bitboard> {
+    pub(crate) fn pieces(&self) -> Vec<Bitboard> {
         vec![
             self.pawns,
             self.rooks,

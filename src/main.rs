@@ -1,15 +1,7 @@
-mod bitboard;
-mod castle;
-mod fen;
-mod gamestate;
-mod movegen;
-mod p_move;
-mod piece;
-mod player;
-mod position;
-mod square;
-use fen::*;
-use gamestate::*;
+use board_state::fen::*;
+
+mod board_state;
+mod components;
 
 fn main() {
     println!("Hello, world!");

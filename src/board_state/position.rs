@@ -1,5 +1,5 @@
-use crate::bitboard::*;
-use crate::player::*;
+use crate::components::bitboard::*;
+use crate::board_state::player::*;
 
 pub struct Position {
     pub white: Player,

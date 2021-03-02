@@ -1,10 +1,11 @@
-use crate::bitboard::*;
-use crate::castle::*;
-use crate::player::*;
-use crate::position::*;
-use crate::square::*;
+use crate::components::bitboard::*;
+use crate::components::square::*;
+use crate::components::square::*;
+use crate::board_state::position::Position;
+use crate::board_state::player::{Color, Player};
+use crate::board_state::castle::Castle;
 
-pub struct GameState {
+pub struct BoardState {
     pub position: Position,
     pub active_player: Color,
     pub castling_rights: Castle,
@@ -13,7 +14,7 @@ pub struct GameState {
     pub full_move: u8,
 }
 
-impl GameState {
+impl BoardState {
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
         self.position.add_piece(piece, rank, file);
     }
@@ -92,9 +93,9 @@ impl GameState {
         self.get_us().get_all() | self.get_them().get_all()
     }
 
-    pub fn empty() -> GameState {
+    pub fn empty() -> BoardState {
         let position = Position::empty();
-        GameState {
+        BoardState {
             position,
             active_player: Color::White,
             castling_rights: Castle::default(),
@@ -104,8 +105,8 @@ impl GameState {
         }
     }
 
-    pub fn default() -> GameState {
-        GameState {
+    pub fn default() -> BoardState {
+        BoardState {
             position: Position::default(),
             active_player: Color::White,
             castling_rights: Castle::default(),
@@ -143,7 +144,7 @@ mod tests {
 
     #[test]
     fn correct_initial_values() {
-        let p = GameState::default();
+        let p = BoardState::default();
         assert_eq!(p.our_pawns(), 65280);
         assert_eq!(p.our_rooks(), 129);
         assert_eq!(p.our_knights(), 66);

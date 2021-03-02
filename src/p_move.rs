@@ -1,4 +1,4 @@
-use crate::piece::*;
+use crate::gamestate::piece::*;
 
 pub const UP: i8 = 8;
 pub const UP_LEFT: i8 = 9;

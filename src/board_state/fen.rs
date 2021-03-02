@@ -1,10 +1,11 @@
-use crate::castle::*;
-use crate::gamestate::*;
-use crate::player::*;
-use crate::position::*;
-use crate::square::*;
+use crate::board_state::castle::*;
+use crate::components::square::*;
+use crate::board_state::*;
+use crate::board_state::player::*;
+use crate::board_state::position::*;
+use crate::board_state::board::BoardState;
 
-pub fn parse_fen(fen: &str) -> Result<GameState, String> {
+pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
 
     let position = parse_ranks(s.next().unwrap());
@@ -14,7 +15,7 @@ pub fn parse_fen(fen: &str) -> Result<GameState, String> {
     let half_move = parse_move(s.next().unwrap());
     let full_move = parse_move(s.next().unwrap());
 
-    let game_state = GameState {
+    let game_state = BoardState {
         position: position.unwrap(),
         active_player: active_color,
         castling_rights,

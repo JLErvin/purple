@@ -1,18 +1,17 @@
-use crate::bitboard::*;
-use crate::gamestate::*;
-use crate::p_move::*;
-use crate::piece::Piece::*;
+/*use crate::components::bitboard::{RANK7, Bitboard, GetBit, Shift};
+use crate::components::piece::Piece::WPawn;
+use crate::board_state::board::BoardState;
 
 const MAX_MOVES: usize = 256;
 
-pub fn gen_pawn_moves(pos: GameState) -> Vec<Move> {
+pub fn gen_pawn_moves(pos: BoardState) -> Vec<Move> {
     let mut v: Vec<Move> = Vec::with_capacity(MAX_MOVES);
     v.append(&mut gen_single_pawn_moves(&pos));
     v.append(&mut gen_double_pawn_moves(&pos));
     v
 }
 
-fn gen_single_pawn_moves(pos: &GameState) -> Vec<Move> {
+fn gen_single_pawn_moves(pos: &BoardState) -> Vec<Move> {
     let pawns = pos.our_pawns() & !RANK7;
     let empty_squares = !pos.all();
     let forward = pawns.shift(UP) & empty_squares;
@@ -49,4 +48,4 @@ mod tests {
 
     #[test]
     fn doesnt_crash() {}
-}
+}*/
