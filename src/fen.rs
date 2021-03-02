@@ -1,8 +1,11 @@
+use crate::castle::*;
+use crate::gamestate::*;
+use crate::player::*;
 use crate::position::*;
+use crate::square::*;
 
-pub fn parse_fen(fen: &str) -> Result<Position, String> {
+pub fn parse_fen(fen: &str) -> Result<GameState, String> {
     let mut s = fen.split_whitespace();
-    let p = Position::empty();
 
     let position = parse_ranks(s.next().unwrap());
     let active_color = parse_active_color(s.next().unwrap());
@@ -11,17 +14,21 @@ pub fn parse_fen(fen: &str) -> Result<Position, String> {
     let half_move = parse_move(s.next().unwrap());
     let full_move = parse_move(s.next().unwrap());
 
-    //let mut p = match p {
-        //Ok(pos) => pos,
-        //Err(_error) => panic!("AHHHHH"),
-    //};
+    let game_state = GameState {
+        position: position.unwrap(),
+        active_player: active_color,
+        castling_rights,
+        en_passant,
+        half_move,
+        full_move,
+    };
 
-    Ok(position.unwrap())
+    Ok(game_state)
 }
 
 fn parse_ranks(fen: &str) -> Result<Position, String> {
     let mut p = Position::empty();
-    let s: Vec<&str> = fen.split("/").collect();
+    let s: Vec<&str> = fen.split('/').collect();
     if s.len() != 8 {
         return Err("FEN position does not have exactly 8 ranks, is invalid".to_string());
     }
@@ -30,31 +37,23 @@ fn parse_ranks(fen: &str) -> Result<Position, String> {
         let real_rank = 8 - rank;
         let mut file = 1;
         for c in contents.chars() {
-            println!("RANK {} FILE {} CHAR {}", real_rank, file, c);
             match c {
                 'p' | 'r' | 'n' | 'b' | 'k' | 'q' => p.add_piece(c, real_rank as u8, file),
                 'P' | 'R' | 'N' | 'B' | 'K' | 'Q' => p.add_piece(c, real_rank as u8, file),
                 '1'..='8' => file += char::to_digit(c, 10).unwrap() as u8,
-                _ => ()
+                _ => (),
             }
             if char::is_alphabetic(c) {
                 file += 1;
-                println!("adding\n one");
             }
-
         }
     }
-
-    p.debug_print();
 
     Ok(p)
 }
 
-fn parse_active_color(fen: &str) -> bool {
-    match fen.chars().next() {
-        Some(c) => c == 'w',
-        None => false
-    }
+fn parse_active_color(fen: &str) -> Color {
+    Color::White
 }
 
 fn parse_castling_rights(fen: &str) -> Castle {
@@ -68,18 +67,18 @@ fn parse_castling_rights(fen: &str) -> Castle {
             'Q' => white_queen = true,
             'k' => black_king = true,
             'q' => black_queen = true,
-            _ => ()
+            _ => (),
         }
     }
     Castle {
         white_king,
         white_queen,
         black_king,
-        black_queen
+        black_queen,
     }
 }
 
-fn parse_en_passant(fen: &str) -> u8 {
+fn parse_en_passant(fen: &str) -> Square {
     8
 }
 

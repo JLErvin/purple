@@ -1,7 +1,9 @@
+use crate::square::*;
+
 pub type Bitboard = u64;
 
 pub const RANK1: u64 = 0xFF;
-pub const RANK2: u64 = RANK1 << (8 * 1);
+pub const RANK2: u64 = RANK1 << 8;
 pub const RANK3: u64 = RANK1 << (8 * 2);
 pub const RANK4: u64 = RANK1 << (8 * 3);
 pub const RANK5: u64 = RANK1 << (8 * 4);
@@ -15,13 +17,6 @@ fn shift_left(n: u64, i: u8) -> Bitboard {
 
 fn shift_right(n: u64, i: u8) -> Bitboard {
     n.checked_shr(i as u32).unwrap_or(0)
-}
-
-/// Given a 1-based index rank and file (file 1 is the a file),
-/// returns the index of the square as an offset from the least
-/// significant bit.
-fn rank_file_to_index(rank: u8, file: u8) -> u8 {
-    (rank-1) * 8 + (8-file)
 }
 
 pub trait Shift {
@@ -52,7 +47,6 @@ impl GetBit for Bitboard {
         self & (1 << (63 - index)) != 0
     }
 }
-
 
 pub trait AddPiece {
     fn add_piece(&self, rank: u8, file: u8) -> Bitboard;

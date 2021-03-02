@@ -1,5 +1,10 @@
 use crate::bitboard::*;
 
+pub enum Color {
+    Black,
+    White,
+}
+
 pub struct Player {
     pub pawns: Bitboard,
     pub rooks: Bitboard,
@@ -15,7 +20,14 @@ impl Player {
     }
 
     pub fn pieces(&self) -> Vec<Bitboard> {
-        vec![self.pawns, self.rooks, self.knights, self.bishops, self.king, self.queen]
+        vec![
+            self.pawns,
+            self.rooks,
+            self.knights,
+            self.bishops,
+            self.king,
+            self.queen,
+        ]
     }
 
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
@@ -31,5 +43,3 @@ impl Player {
         }
     }
 }
-
-
