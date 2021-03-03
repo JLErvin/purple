@@ -1,8 +1,15 @@
+use std::ops::Index;
+
 pub enum Piece {
-    WPawn,
-    WRook,
-    WKnight,
-    WBishop,
-    WKing,
-    WQueen,
+    Pawn,
+    Rook,
+    Knight,
+    Bishop,
+    King,
+    Queen,
+}
+
+pub enum Color {
+    Black,
+    White,
 }

@@ -1,9 +1,10 @@
+use crate::board_state::board::BoardState;
 use crate::board_state::castle::*;
-use crate::components::square::*;
-use crate::board_state::*;
 use crate::board_state::player::*;
 use crate::board_state::position::*;
-use crate::board_state::board::BoardState;
+use crate::board_state::*;
+use crate::components::piece::Color;
+use crate::components::square::*;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();

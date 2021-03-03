@@ -1,9 +1,6 @@
 use crate::components::bitboard::*;
-
-pub enum Color {
-    Black,
-    White,
-}
+use crate::components::piece::Piece;
+use std::ops::Index;
 
 pub struct Player {
     pub pawns: Bitboard,
@@ -15,11 +12,22 @@ pub struct Player {
 }
 
 impl Player {
+    pub fn get_piece(&self, piece: &Piece) -> Bitboard {
+        match piece {
+            Piece::Pawn => self.pawns,
+            Piece::Rook => self.rooks,
+            Piece::Knight => self.knights,
+            Piece::Bishop => self.bishops,
+            Piece::King => self.king,
+            Piece::Queen => self.queen,
+        }
+    }
+
     pub fn get_all(&self) -> Bitboard {
         self.pawns | self.rooks | self.knights | self.bishops | self.king | self.queen
     }
 
-    pub(crate) fn pieces(&self) -> Vec<Bitboard> {
+    pub fn pieces(&self) -> Vec<Bitboard> {
         vec![
             self.pawns,
             self.rooks,

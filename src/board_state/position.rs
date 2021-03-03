@@ -1,5 +1,6 @@
-use crate::components::bitboard::*;
 use crate::board_state::player::*;
+use crate::components::bitboard::*;
+use crate::components::piece::{Color, Piece};
 
 pub struct Position {
     pub white: Player,
@@ -7,6 +8,20 @@ pub struct Position {
 }
 
 impl Position {
+    pub fn get_pieces(&self, piece: &Piece, color: &Color) -> Bitboard {
+        match color {
+            Color::White => self.white.get_piece(piece),
+            Color::Black => self.black.get_piece(piece),
+        }
+    }
+
+    pub fn all_pieces(&self, color: &Color) -> Bitboard {
+        match color {
+            Color::White => self.white.get_all(),
+            Color::Black => self.black.get_all(),
+        }
+    }
+
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
         let player: &mut Player;
         if piece.is_lowercase() {

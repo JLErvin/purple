@@ -1,9 +1,9 @@
-use crate::components::bitboard::*;
-use crate::components::square::*;
-use crate::components::square::*;
-use crate::board_state::position::Position;
-use crate::board_state::player::{Color, Player};
 use crate::board_state::castle::Castle;
+use crate::board_state::position::Position;
+use crate::components::bitboard::*;
+use crate::components::piece::*;
+use crate::components::square::*;
+use crate::components::square::*;
 
 pub struct BoardState {
     pub position: Position,
@@ -15,82 +15,28 @@ pub struct BoardState {
 }
 
 impl BoardState {
+    pub fn get_active_bitboard(&self, piece: &Piece) -> Bitboard {
+        self.position.get_pieces(piece, &self.active_player)
+    }
+
+    pub fn get_inactive_bitboard(&self, piece: &Piece) -> Bitboard {
+        self.position.get_pieces(piece, &self.active_player)
+    }
+
+    pub fn active_all(&self) -> Bitboard {
+        self.position.all_pieces(&self.active_player)
+    }
+
+    pub fn inactive_all(&self) -> Bitboard {
+        self.position.all_pieces(&self.active_player)
+    }
+
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
         self.position.add_piece(piece, rank, file);
     }
 
-    fn get_us(&self) -> &Player {
-        match self.active_player {
-            Color::White => &self.position.white,
-            Color::Black => &self.position.black,
-        }
-    }
-
-    fn get_them(&self) -> &Player {
-        match self.active_player {
-            Color::White => &self.position.black,
-            Color::Black => &self.position.white,
-        }
-    }
-
-    pub fn our_all(&self) -> Bitboard {
-        self.get_us().get_all()
-    }
-
-    pub fn op_all(&self) -> Bitboard {
-        self.get_them().get_all()
-    }
-
-    pub fn our_pawns(&self) -> Bitboard {
-        self.get_us().pawns
-    }
-
-    pub fn our_rooks(&self) -> Bitboard {
-        self.get_us().rooks
-    }
-
-    pub fn our_knights(&self) -> Bitboard {
-        self.get_us().knights
-    }
-
-    pub fn our_bishops(&self) -> Bitboard {
-        self.get_us().bishops
-    }
-
-    pub fn our_queen(&self) -> Bitboard {
-        self.get_us().queen
-    }
-
-    pub fn our_king(&self) -> Bitboard {
-        self.get_us().king
-    }
-
-    pub fn their_pawns(&self) -> Bitboard {
-        self.get_them().pawns
-    }
-
-    pub fn their_rooks(&self) -> Bitboard {
-        self.get_them().rooks
-    }
-
-    pub fn their_knights(&self) -> Bitboard {
-        self.get_them().knights
-    }
-
-    pub fn their_bishops(&self) -> Bitboard {
-        self.get_them().bishops
-    }
-
-    pub fn their_queen(&self) -> Bitboard {
-        self.get_them().queen
-    }
-
-    pub fn their_king(&self) -> Bitboard {
-        self.get_them().king
-    }
-
     pub fn all(&self) -> Bitboard {
-        self.get_us().get_all() | self.get_them().get_all()
+        self.position.all_pieces(&Color::White) | self.position.all_pieces(&Color::Black)
     }
 
     pub fn empty() -> BoardState {
