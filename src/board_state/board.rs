@@ -3,7 +3,6 @@ use crate::board_state::position::Position;
 use crate::components::bitboard::*;
 use crate::components::piece::*;
 use crate::components::square::*;
-use crate::components::square::*;
 
 pub struct BoardState {
     pub position: Position,
@@ -15,28 +14,20 @@ pub struct BoardState {
 }
 
 impl BoardState {
-    pub fn get_active_bitboard(&self, piece: &Piece) -> Bitboard {
-        self.position.get_pieces(piece, &self.active_player)
+    pub fn get_bb(&self, color: Color, piece: PieceType) -> Bitboard {
+        self.position.get_pieces(piece, color)
     }
 
-    pub fn get_inactive_bitboard(&self, piece: &Piece) -> Bitboard {
-        self.position.get_pieces(piece, &self.active_player)
+    pub fn all_bb_for_color(&self, color: Color) -> Bitboard {
+        self.position.all_pieces(color)
     }
 
-    pub fn active_all(&self) -> Bitboard {
-        self.position.all_pieces(&self.active_player)
-    }
-
-    pub fn inactive_all(&self) -> Bitboard {
-        self.position.all_pieces(&self.active_player)
+    pub fn all_bb(&self) -> Bitboard {
+        self.position.all_pieces(Color::White) | self.position.all_pieces(Color::Black)
     }
 
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
         self.position.add_piece(piece, rank, file);
-    }
-
-    pub fn all(&self) -> Bitboard {
-        self.position.all_pieces(&Color::White) | self.position.all_pieces(&Color::Black)
     }
 
     pub fn empty() -> BoardState {
@@ -91,18 +82,27 @@ mod tests {
     #[test]
     fn correct_initial_values() {
         let p = BoardState::default();
-        assert_eq!(p.our_pawns(), 65280);
-        assert_eq!(p.our_rooks(), 129);
-        assert_eq!(p.our_knights(), 66);
-        assert_eq!(p.our_bishops(), 36);
-        assert_eq!(p.our_queen(), 16);
-        assert_eq!(p.our_king(), 8);
-        assert_eq!(p.their_pawns(), 71776119061217280);
-        assert_eq!(p.their_rooks(), 9295429630892703744);
-        assert_eq!(p.their_knights(), 4755801206503243776);
-        assert_eq!(p.their_bishops(), 2594073385365405696);
-        assert_eq!(p.their_queen(), 1152921504606846976);
-        assert_eq!(p.their_king(), 576460752303423488);
+        assert_eq!(p.get_bb(Color::White, PieceType::Pawn), 65280);
+        assert_eq!(p.get_bb(Color::White, PieceType::Rook), 129);
+        assert_eq!(p.get_bb(Color::White, PieceType::Knight), 66);
+        assert_eq!(p.get_bb(Color::White, PieceType::Bishop), 36);
+        assert_eq!(p.get_bb(Color::White, PieceType::Queen), 16);
+        assert_eq!(p.get_bb(Color::White, PieceType::King), 8);
+        assert_eq!(p.get_bb(Color::Black, PieceType::Pawn), 71776119061217280);
+        assert_eq!(p.get_bb(Color::Black, PieceType::Rook), 9295429630892703744);
+        assert_eq!(
+            p.get_bb(Color::Black, PieceType::Knight),
+            4755801206503243776
+        );
+        assert_eq!(
+            p.get_bb(Color::Black, PieceType::Bishop),
+            2594073385365405696
+        );
+        assert_eq!(
+            p.get_bb(Color::Black, PieceType::Queen),
+            1152921504606846976
+        );
+        assert_eq!(p.get_bb(Color::Black, PieceType::King), 576460752303423488);
         //assert_eq!(p.white_to_move, true);
     }
 

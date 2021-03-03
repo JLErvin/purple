@@ -1,5 +1,5 @@
 use crate::components::bitboard::*;
-use crate::components::piece::Piece;
+use crate::components::piece::PieceType;
 use std::ops::Index;
 
 pub struct Player {
@@ -12,14 +12,14 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn get_piece(&self, piece: &Piece) -> Bitboard {
+    pub fn get_piece(&self, piece: PieceType) -> Bitboard {
         match piece {
-            Piece::Pawn => self.pawns,
-            Piece::Rook => self.rooks,
-            Piece::Knight => self.knights,
-            Piece::Bishop => self.bishops,
-            Piece::King => self.king,
-            Piece::Queen => self.queen,
+            PieceType::Pawn => self.pawns,
+            PieceType::Rook => self.rooks,
+            PieceType::Knight => self.knights,
+            PieceType::Bishop => self.bishops,
+            PieceType::King => self.king,
+            PieceType::Queen => self.queen,
         }
     }
 

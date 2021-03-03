@@ -1,6 +1,6 @@
 use crate::board_state::player::*;
 use crate::components::bitboard::*;
-use crate::components::piece::{Color, Piece};
+use crate::components::piece::{Color, PieceType};
 
 pub struct Position {
     pub white: Player,
@@ -8,14 +8,14 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn get_pieces(&self, piece: &Piece, color: &Color) -> Bitboard {
+    pub fn get_pieces(&self, piece: PieceType, color: Color) -> Bitboard {
         match color {
             Color::White => self.white.get_piece(piece),
             Color::Black => self.black.get_piece(piece),
         }
     }
 
-    pub fn all_pieces(&self, color: &Color) -> Bitboard {
+    pub fn all_pieces(&self, color: Color) -> Bitboard {
         match color {
             Color::White => self.white.get_all(),
             Color::Black => self.black.get_all(),
