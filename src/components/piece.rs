@@ -17,8 +17,27 @@ pub enum Color {
 }
 
 pub struct Piece {
-    piece_type: PieceType,
-    color: Color,
+    pub piece_type: PieceType,
+    pub color: Color,
+}
+
+impl Piece {
+    pub fn convert_char_to_piece(c: char) -> Piece {
+        let color = match c.is_lowercase() {
+            true => Color::Black,
+            false => Color::White,
+        };
+        let piece_type = match c.to_ascii_lowercase() {
+            'p' => PieceType::Pawn,
+            'r' => PieceType::Rook,
+            'n' => PieceType::Knight,
+            'b' => PieceType::Bishop,
+            'k' => PieceType::King,
+            'q' => PieceType::Queen,
+            _ => PieceType::Pawn,
+        };
+        Piece { piece_type, color }
+    }
 }
 
 impl Not for Color {

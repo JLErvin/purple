@@ -1,6 +1,6 @@
 use crate::board_state::player::*;
 use crate::components::bitboard::*;
-use crate::components::piece::{Color, PieceType};
+use crate::components::piece::{Color, Piece, PieceType};
 
 pub struct Position {
     pub white: Player,
@@ -8,28 +8,26 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn get_pieces(&self, piece: PieceType, color: Color) -> Bitboard {
+    pub fn bb(&self, piece: PieceType, color: Color) -> Bitboard {
         match color {
-            Color::White => self.white.get_piece(piece),
-            Color::Black => self.black.get_piece(piece),
+            Color::White => self.white.bb(piece),
+            Color::Black => self.black.bb(piece),
         }
     }
 
-    pub fn all_pieces(&self, color: Color) -> Bitboard {
+    pub fn bb_for_color(&self, color: Color) -> Bitboard {
         match color {
-            Color::White => self.white.get_all(),
-            Color::Black => self.black.get_all(),
+            Color::White => self.white.bb_all(),
+            Color::Black => self.black.bb_all(),
         }
     }
 
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
-        let player: &mut Player;
-        if piece.is_lowercase() {
-            player = &mut self.black;
-        } else {
-            player = &mut self.white;
+        let piece = Piece::convert_char_to_piece(piece);
+        match piece.color {
+            Color::White => self.white.add_piece(piece, rank, file),
+            Color::Black => self.black.add_piece(piece, rank, file),
         }
-        player.add_piece(piece, rank, file);
     }
 
     pub fn default() -> Position {
@@ -51,23 +49,10 @@ impl Position {
         };
         Position { white, black }
     }
+
     pub fn empty() -> Position {
-        let white = Player {
-            pawns: 0,
-            rooks: 0,
-            knights: 0,
-            bishops: 0,
-            queen: 0,
-            king: 0,
-        };
-        let black = Player {
-            pawns: 0,
-            rooks: 0,
-            knights: 0,
-            bishops: 0,
-            queen: 0,
-            king: 0,
-        };
+        let white = Player::default();
+        let black = Player::default();
         Position { white, black }
     }
 }

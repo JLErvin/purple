@@ -1,6 +1,5 @@
 use crate::components::bitboard::*;
-use crate::components::piece::PieceType;
-use std::ops::Index;
+use crate::components::piece::{Piece, PieceType};
 
 pub struct Player {
     pub pawns: Bitboard,
@@ -11,8 +10,21 @@ pub struct Player {
     pub queen: Bitboard,
 }
 
+impl Default for Player {
+    fn default() -> Player {
+        Player {
+            pawns: 0,
+            rooks: 0,
+            knights: 0,
+            bishops: 0,
+            king: 0,
+            queen: 0,
+        }
+    }
+}
+
 impl Player {
-    pub fn get_piece(&self, piece: PieceType) -> Bitboard {
+    pub fn bb(&self, piece: PieceType) -> Bitboard {
         match piece {
             PieceType::Pawn => self.pawns,
             PieceType::Rook => self.rooks,
@@ -23,7 +35,7 @@ impl Player {
         }
     }
 
-    pub fn get_all(&self) -> Bitboard {
+    pub fn bb_all(&self) -> Bitboard {
         self.pawns | self.rooks | self.knights | self.bishops | self.king | self.queen
     }
 
@@ -38,16 +50,14 @@ impl Player {
         ]
     }
 
-    pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
-        let piece = piece.to_ascii_lowercase();
-        match piece {
-            'p' => self.pawns = self.pawns.add_piece(rank, file),
-            'r' => self.rooks = self.rooks.add_piece(rank, file),
-            'n' => self.knights = self.knights.add_piece(rank, file),
-            'b' => self.bishops = self.bishops.add_piece(rank, file),
-            'q' => self.queen = self.queen.add_piece(rank, file),
-            'k' => self.king = self.king.add_piece(rank, file),
-            _ => (),
+    pub fn add_piece(&mut self, piece: Piece, rank: u8, file: u8) {
+        match piece.piece_type {
+            PieceType::Pawn => self.pawns = self.pawns.add_piece(rank, file),
+            PieceType::Rook => self.rooks = self.rooks.add_piece(rank, file),
+            PieceType::Knight => self.knights = self.knights.add_piece(rank, file),
+            PieceType::Bishop => self.bishops = self.bishops.add_piece(rank, file),
+            PieceType::Queen => self.queen = self.queen.add_piece(rank, file),
+            PieceType::King => self.king = self.king.add_piece(rank, file),
         }
     }
 }

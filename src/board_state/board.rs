@@ -5,25 +5,29 @@ use crate::components::piece::*;
 use crate::components::square::*;
 
 pub struct BoardState {
-    pub position: Position,
-    pub active_player: Color,
-    pub castling_rights: Castle,
-    pub en_passant: Square,
-    pub half_move: u8,
-    pub full_move: u8,
+    pub(super) position: Position,
+    pub(super) active_player: Color,
+    pub(super) castling_rights: Castle,
+    pub(super) en_passant: Square,
+    pub(super) half_move: u8,
+    pub(super) full_move: u8,
 }
 
 impl BoardState {
-    pub fn get_bb(&self, color: Color, piece: PieceType) -> Bitboard {
-        self.position.get_pieces(piece, color)
+    pub fn active_player(&self) -> Color {
+        self.active_player
     }
 
-    pub fn all_bb_for_color(&self, color: Color) -> Bitboard {
-        self.position.all_pieces(color)
+    pub fn bb(&self, color: Color, piece: PieceType) -> Bitboard {
+        self.position.bb(piece, color)
     }
 
-    pub fn all_bb(&self) -> Bitboard {
-        self.position.all_pieces(Color::White) | self.position.all_pieces(Color::Black)
+    pub fn bb_for_color(&self, color: Color) -> Bitboard {
+        self.position.bb_for_color(color)
+    }
+
+    pub fn bb_all(&self) -> Bitboard {
+        self.position.bb_for_color(Color::White) | self.position.bb_for_color(Color::Black)
     }
 
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
@@ -53,7 +57,7 @@ impl BoardState {
         }
     }
 
-    pub fn pieces(&self) -> Vec<Bitboard> {
+    fn pieces(&self) -> Vec<Bitboard> {
         let mut i = self.position.white.pieces();
         let j = self.position.black.pieces();
         i.extend(j);
@@ -82,27 +86,18 @@ mod tests {
     #[test]
     fn correct_initial_values() {
         let p = BoardState::default();
-        assert_eq!(p.get_bb(Color::White, PieceType::Pawn), 65280);
-        assert_eq!(p.get_bb(Color::White, PieceType::Rook), 129);
-        assert_eq!(p.get_bb(Color::White, PieceType::Knight), 66);
-        assert_eq!(p.get_bb(Color::White, PieceType::Bishop), 36);
-        assert_eq!(p.get_bb(Color::White, PieceType::Queen), 16);
-        assert_eq!(p.get_bb(Color::White, PieceType::King), 8);
-        assert_eq!(p.get_bb(Color::Black, PieceType::Pawn), 71776119061217280);
-        assert_eq!(p.get_bb(Color::Black, PieceType::Rook), 9295429630892703744);
-        assert_eq!(
-            p.get_bb(Color::Black, PieceType::Knight),
-            4755801206503243776
-        );
-        assert_eq!(
-            p.get_bb(Color::Black, PieceType::Bishop),
-            2594073385365405696
-        );
-        assert_eq!(
-            p.get_bb(Color::Black, PieceType::Queen),
-            1152921504606846976
-        );
-        assert_eq!(p.get_bb(Color::Black, PieceType::King), 576460752303423488);
+        assert_eq!(p.bb(Color::White, PieceType::Pawn), 65280);
+        assert_eq!(p.bb(Color::White, PieceType::Rook), 129);
+        assert_eq!(p.bb(Color::White, PieceType::Knight), 66);
+        assert_eq!(p.bb(Color::White, PieceType::Bishop), 36);
+        assert_eq!(p.bb(Color::White, PieceType::Queen), 16);
+        assert_eq!(p.bb(Color::White, PieceType::King), 8);
+        assert_eq!(p.bb(Color::Black, PieceType::Pawn), 71776119061217280);
+        assert_eq!(p.bb(Color::Black, PieceType::Rook), 9295429630892703744);
+        assert_eq!(p.bb(Color::Black, PieceType::Knight), 4755801206503243776);
+        assert_eq!(p.bb(Color::Black, PieceType::Bishop), 2594073385365405696);
+        assert_eq!(p.bb(Color::Black, PieceType::Queen), 1152921504606846976);
+        assert_eq!(p.bb(Color::Black, PieceType::King), 576460752303423488);
         //assert_eq!(p.white_to_move, true);
     }
 
