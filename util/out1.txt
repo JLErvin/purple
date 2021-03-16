@@ -1,1 +1,15 @@
-360334289566514305
+White Pawn: 74766799089664
+White Rooks: 2048
+White Knights: 134217728
+White Bishops: 128
+White King: 2305843009213693952
+White Queen: 1024
+
+Black Pawn: 18270388224
+Black Rooks: 0
+Black Knights: 0
+Black Bishops: 9223372036854775808
+Black King: 1
+Black Queen: 17592186044416
+
+All Pieces: 11529307423458212993

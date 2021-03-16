@@ -58,10 +58,8 @@ impl BoardState {
     }
 
     fn pieces(&self) -> Vec<Bitboard> {
-        let mut i = self.position.white.pieces();
-        let j = self.position.black.pieces();
-        i.extend(j);
-        i
+        let a = Vec::new();
+        a
     }
 
     pub fn debug_print(&self) {

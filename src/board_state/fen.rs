@@ -1,6 +1,5 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::castle::*;
-use crate::board_state::player::*;
 use crate::board_state::position::*;
 use crate::board_state::*;
 use crate::components::piece::Color;
@@ -36,8 +35,8 @@ fn parse_ranks(fen: &str) -> Result<Position, String> {
     }
 
     for (rank, contents) in s.into_iter().enumerate() {
-        let real_rank = 8 - rank;
-        let mut file = 1;
+        let real_rank = 7 - rank;
+        let mut file = 0;
         for c in contents.chars() {
             match c {
                 'p' | 'r' | 'n' | 'b' | 'k' | 'q' => p.add_piece(c, real_rank as u8, file),
@@ -104,37 +103,39 @@ mod tests {
     fn parses_random_board_1() {
         let fen = "5K1b/8/2P1q1P1/2p5/p2N2p1/7P/2QRPP2/k6B w - - 0 1";
         let position = parse_fen(&fen.to_string());
-        assert_eq!(position.unwrap().bb_all(), 360334289566514305);
+        let a = 5;
+        assert_eq!(position.unwrap().bb_all(), 11529307423458212993);
     }
 
     #[test]
     fn parses_random_board_2() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 w - - 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
-        assert_eq!(position.bb(Color::White, PieceType::Pawn), 564059128725504);
-        assert_eq!(position.bb(Color::White, PieceType::Rook), 134217728);
+        let a = 5;
+        assert_eq!(
+            position.bb(Color::White, PieceType::Pawn),
+            18155410909298688
+        );
+        assert_eq!(position.bb(Color::White, PieceType::Rook), 268435456);
         assert_eq!(position.bb(Color::White, PieceType::Knight), 0);
         assert_eq!(
             position.bb(Color::White, PieceType::Bishop),
-            281474976710656
+            36028797018963968
         );
         assert_eq!(
             position.bb(Color::White, PieceType::King),
-            1152921504606846976
+            576460752303423488
         );
-        assert_eq!(position.bb(Color::White, PieceType::Queen), 2);
-        assert_eq!(
-            position.bb(Color::Black, PieceType::Pawn),
-            18051781904842752
-        );
-        assert_eq!(position.bb(Color::Black, PieceType::Rook), 32768);
+        assert_eq!(position.bb(Color::White, PieceType::Queen), 64);
+        assert_eq!(position.bb(Color::Black, PieceType::Pawn), 637716744110592);
+        assert_eq!(position.bb(Color::Black, PieceType::Rook), 256);
         assert_eq!(position.bb(Color::Black, PieceType::Knight), 0);
-        assert_eq!(position.bb(Color::Black, PieceType::Bishop), 1088);
+        assert_eq!(position.bb(Color::Black, PieceType::Bishop), 8194);
         assert_eq!(
             position.bb(Color::Black, PieceType::King),
-            4611686018427387904
+            144115188075855872
         );
         assert_eq!(position.bb(Color::Black, PieceType::Queen), 0);
-        assert_eq!(position.bb_all(), 5783504839178765378);
+        assert_eq!(position.bb_all(), 775397865320096578);
     }
 }

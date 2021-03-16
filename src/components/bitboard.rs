@@ -1,4 +1,5 @@
 use crate::components::square::*;
+use std::ops::Index;
 
 pub type Bitboard = u64;
 
@@ -64,54 +65,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn identifies_index_top_left() {
-        let index = rank_file_to_index(8, 1);
-        assert_eq!(index, 63);
-    }
-
-    #[test]
-    fn identifies_index_top_right() {
-        let index = rank_file_to_index(8, 8);
-        assert_eq!(index, 56);
-    }
-
-    #[test]
-    fn identifies_index_bottom_left() {
-        let index = rank_file_to_index(1, 1);
-        assert_eq!(index, 7);
-    }
-
-    #[test]
-    fn identifies_index_bottom_right() {
-        let index = rank_file_to_index(1, 8);
-        assert_eq!(index, 0);
-    }
-
-    #[test]
-    fn identifies_index_middle() {
-        let index = rank_file_to_index(4, 5);
-        assert_eq!(index, 27);
-    }
-
-    #[test]
     fn adds_piece_eight_rank() {
         let b1: Bitboard = 0;
-        let b2 = b1.add_piece(8, 1);
-        assert_eq!(b2, 1 << 63);
+        let b2 = b1.add_piece(7, 0);
+        assert_eq!(b2, 1 << 56);
     }
 
     #[test]
     fn adds_piece_eight_rank_and_file() {
         let b1: Bitboard = 0;
-        let b2 = b1.add_piece(8, 8);
-        assert_eq!(b2, 1 << 56);
+        let b2 = b1.add_piece(7, 7);
+        assert_eq!(b2, 1 << 63);
     }
 
     #[test]
     fn adds_piece_first_rank() {
         let b1: Bitboard = 0;
-        let b2 = b1.add_piece(1, 1);
-        assert_eq!(b2, 1 << 7);
+        let b2 = b1.add_piece(0, 0);
+        assert_eq!(b2, 1);
     }
 
     #[test]
