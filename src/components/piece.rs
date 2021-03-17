@@ -4,7 +4,7 @@ use std::ops::{Index, IndexMut, Not};
 pub const PIECE_COUNT: usize = 6;
 pub const COLOR_COUNT: usize = 2;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PieceType {
     Pawn,
     Rook,
@@ -14,7 +14,7 @@ pub enum PieceType {
     Queen,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Color {
     Black,
     White,

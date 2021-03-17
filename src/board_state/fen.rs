@@ -1,7 +1,6 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::castle::*;
 use crate::board_state::position::*;
-use crate::board_state::*;
 use crate::components::piece::Color;
 use crate::components::square::*;
 
@@ -15,16 +14,16 @@ pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let half_move = parse_move(s.next().unwrap());
     let full_move = parse_move(s.next().unwrap());
 
-    let game_state = BoardState {
+    let board_state = BoardState {
         position: position.unwrap(),
-        active_player: active_color,
+        active_player: active_color.unwrap(),
         castling_rights,
         en_passant,
         half_move,
         full_move,
     };
 
-    Ok(game_state)
+    Ok(board_state)
 }
 
 fn parse_ranks(fen: &str) -> Result<Position, String> {
@@ -53,8 +52,13 @@ fn parse_ranks(fen: &str) -> Result<Position, String> {
     Ok(p)
 }
 
-fn parse_active_color(fen: &str) -> Color {
-    Color::White
+fn parse_active_color(fen: &str) -> Result<Color, String> {
+    let c = match fen.chars().next().unwrap() {
+        'w' => Ok(Color::White),
+        'b' => Ok(Color::Black),
+        _ => Err("Cannot parse active color".to_string()),
+    };
+    c
 }
 
 fn parse_castling_rights(fen: &str) -> Castle {
@@ -79,12 +83,16 @@ fn parse_castling_rights(fen: &str) -> Castle {
     }
 }
 
-fn parse_en_passant(fen: &str) -> Square {
-    8
+fn parse_en_passant(fen: &str) -> Option<Square> {
+    let c = fen.chars().next().unwrap();
+    match c {
+        '-' => None,
+        _ => Some(algebraic_to_square(&fen[0..2])),
+    }
 }
 
 fn parse_move(fen: &str) -> u8 {
-    8
+    fen.parse().unwrap()
 }
 
 #[cfg(test)]
@@ -103,7 +111,6 @@ mod tests {
     fn parses_random_board_1() {
         let fen = "5K1b/8/2P1q1P1/2p5/p2N2p1/7P/2QRPP2/k6B w - - 0 1";
         let position = parse_fen(&fen.to_string());
-        let a = 5;
         assert_eq!(position.unwrap().bb_all(), 11529307423458212993);
     }
 
@@ -111,7 +118,6 @@ mod tests {
     fn parses_random_board_2() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 w - - 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
-        let a = 5;
         assert_eq!(
             position.bb(Color::White, PieceType::Pawn),
             18155410909298688
@@ -137,5 +143,28 @@ mod tests {
         );
         assert_eq!(position.bb(Color::Black, PieceType::Queen), 0);
         assert_eq!(position.bb_all(), 775397865320096578);
+        assert_eq!(position.active_player(), Color::White);
+    }
+
+    #[test]
+    fn parses_active_black() {
+        let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 b - - 0 1";
+        let position = parse_fen(&fen.to_string()).unwrap();
+        assert_eq!(position.active_player(), Color::Black);
+    }
+
+    #[test]
+    fn parses_en_passant() {
+        let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+        let position = parse_fen(&fen.to_string()).unwrap();
+        assert_eq!(position.en_passant().unwrap(), 20);
+    }
+
+    #[test]
+    fn parses_move_count() {
+        let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+        let position = parse_fen(&fen.to_string()).unwrap();
+        assert_eq!(position.half_move(), 0);
+        assert_eq!(position.full_move(), 1);
     }
 }

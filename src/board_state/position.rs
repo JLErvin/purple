@@ -23,26 +23,17 @@ impl Position {
     }
 
     pub fn default() -> Position {
-        let white = RANK1 | RANK2;
-        let black = RANK7 | RANK8;
-        let pawns = RANK2 | RANK7;
-        let rooks = 0b10000001u64 | (0b10000001u64 << (8 * 7));
-        let knights = 0b01000010u64 | (0b01000010u64 << (8 * 7));
-        let bishops = 0b00100100u64 | (0b00100100u64 << (8 * 7));
-        let queens = 0b00010000u64 | (0b00010000u64 << (8 * 7));
-        let kings = 0b00001000u64 | (0b00001000u64 << (8 * 7));
-
         let mut pieces_bb: [Bitboard; PIECE_COUNT] = [0; PIECE_COUNT];
-        pieces_bb[PieceType::Pawn] = pawns;
-        pieces_bb[PieceType::Rook] = rooks;
-        pieces_bb[PieceType::Knight] = knights;
-        pieces_bb[PieceType::Bishop] = bishops;
-        pieces_bb[PieceType::Queen] = queens;
-        pieces_bb[PieceType::King] = kings;
+        pieces_bb[PieceType::Pawn] = RANK2 | RANK7;
+        pieces_bb[PieceType::Rook] = INIT_W_ROOKS | INIT_W_ROOKS.shift(8 * 7);
+        pieces_bb[PieceType::Knight] = INIT_W_KNIGHTS | INIT_W_KNIGHTS.shift(8 * 7);
+        pieces_bb[PieceType::Bishop] = INIT_W_BISHOPS | INIT_W_BISHOPS.shift(8 * 7);
+        pieces_bb[PieceType::Queen] = INIT_W_QUEEN | INIT_W_QUEEN.shift(8 * 7);
+        pieces_bb[PieceType::King] = INIT_W_KING | INIT_W_KING.shift(8 * 7);
 
         let mut colors_bb: [Bitboard; COLOR_COUNT] = [0; COLOR_COUNT];
-        colors_bb[Color::White] = white;
-        colors_bb[Color::Black] = black;
+        colors_bb[Color::White] = RANK1 | RANK2;
+        colors_bb[Color::Black] = RANK7 | RANK8;
 
         Position {
             pieces_bb,

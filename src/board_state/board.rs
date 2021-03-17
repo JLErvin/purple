@@ -8,7 +8,7 @@ pub struct BoardState {
     pub(super) position: Position,
     pub(super) active_player: Color,
     pub(super) castling_rights: Castle,
-    pub(super) en_passant: Square,
+    pub(super) en_passant: Option<Square>,
     pub(super) half_move: u8,
     pub(super) full_move: u8,
 }
@@ -16,6 +16,22 @@ pub struct BoardState {
 impl BoardState {
     pub fn active_player(&self) -> Color {
         self.active_player
+    }
+
+    pub fn en_passant(&self) -> Option<Square> {
+        self.en_passant
+    }
+
+    pub fn castling_rights(&self) -> &Castle {
+        &self.castling_rights
+    }
+
+    pub fn half_move(&self) -> u8 {
+        self.half_move
+    }
+
+    pub fn full_move(&self) -> u8 {
+        self.full_move
     }
 
     pub fn bb(&self, color: Color, piece: PieceType) -> Bitboard {
@@ -40,7 +56,7 @@ impl BoardState {
             position,
             active_player: Color::White,
             castling_rights: Castle::default(),
-            en_passant: 0,
+            en_passant: None,
             half_move: 0,
             full_move: 0,
         }
@@ -51,9 +67,9 @@ impl BoardState {
             position: Position::default(),
             active_player: Color::White,
             castling_rights: Castle::default(),
-            en_passant: 0,
+            en_passant: None,
             half_move: 0,
-            full_move: 0,
+            full_move: 1,
         }
     }
 
@@ -96,7 +112,13 @@ mod tests {
         assert_eq!(p.bb(Color::Black, PieceType::Bishop), 2594073385365405696);
         assert_eq!(p.bb(Color::Black, PieceType::Queen), 1152921504606846976);
         assert_eq!(p.bb(Color::Black, PieceType::King), 576460752303423488);
-        //assert_eq!(p.white_to_move, true);
+        assert_eq!(p.active_player(), Color::White);
+        assert_eq!(p.half_move(), 0);
+        assert_eq!(p.full_move(), 1);
+        assert_eq!(p.castling_rights().black_king, true);
+        assert_eq!(p.castling_rights().black_queen, true);
+        assert_eq!(p.castling_rights().white_king, true);
+        assert_eq!(p.castling_rights().white_queen, true);
     }
 
     #[test]

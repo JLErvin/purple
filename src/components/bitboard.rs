@@ -1,16 +1,21 @@
 use crate::components::square::*;
-use std::ops::Index;
 
 pub type Bitboard = u64;
 
-pub const RANK1: u64 = 0xFF;
-pub const RANK2: u64 = RANK1 << 8;
-pub const RANK3: u64 = RANK1 << (8 * 2);
-pub const RANK4: u64 = RANK1 << (8 * 3);
-pub const RANK5: u64 = RANK1 << (8 * 4);
-pub const RANK6: u64 = RANK1 << (8 * 5);
-pub const RANK7: u64 = RANK1 << (8 * 6);
-pub const RANK8: u64 = RANK1 << (8 * 7);
+pub const RANK1: Bitboard = 0xFF;
+pub const RANK2: Bitboard = RANK1 << 8;
+pub const RANK3: Bitboard = RANK1 << (8 * 2);
+pub const RANK4: Bitboard = RANK1 << (8 * 3);
+pub const RANK5: Bitboard = RANK1 << (8 * 4);
+pub const RANK6: Bitboard = RANK1 << (8 * 5);
+pub const RANK7: Bitboard = RANK1 << (8 * 6);
+pub const RANK8: Bitboard = RANK1 << (8 * 7);
+
+pub const INIT_W_ROOKS: Bitboard = 0b_1000_0001_u64;
+pub const INIT_W_KNIGHTS: Bitboard = 0b_0100_0010_u64;
+pub const INIT_W_BISHOPS: Bitboard = 0b_0010_0100_u64;
+pub const INIT_W_QUEEN: Bitboard = 0b_0001_0000_u64;
+pub const INIT_W_KING: Bitboard = 0b_0000_1000_u64;
 
 fn shift_left(n: u64, i: u8) -> Bitboard {
     n.checked_shl(i as u32).unwrap_or(0)
