@@ -4,17 +4,21 @@ use crate::components::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, Capture, KnightPromotion, KnightPromotionCapture,
     QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion, RookPromotionCapture,
 };
-use crate::components::chess_move::{Move, MoveType, EAST, NORTH, WEST};
+use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, WEST};
 use crate::components::piece::PieceType;
 use crate::components::piece::PieceType::{Knight, Queen};
 
+/// Generate all pseudo-legal moves for the given position and add them
+/// to the provided vector. Pseudo-legal moves are defined as a subset of
+/// all legal moves for a given position which might also leave the king in check.
 pub fn gen_pseudo_legal_pawn_moves(pos: &BoardState, list: &mut Vec<Move>) {
     gen_quiet_pushes(pos, list);
-    gen_en_passant(pos, list);
     gen_captures(pos, list);
     gen_promotions(pos, list);
 }
 
+/// Generate all quiet pushes, defined as single and double pushes,
+/// but excludes all promotions.
 fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>) {
     let us = pos.active_player();
     let pawns = pos.bb(us, PieceType::Pawn) & !RANK7;
@@ -29,29 +33,14 @@ fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>) {
     extract_moves(double, NORTH + NORTH, Quiet, list);
 }
 
-fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
-    if pos.en_passant().is_none() {
-        return;
-    }
-
-    let us = pos.active_player();
-    let square = pos.en_passant().unwrap();
-    let mut b: Bitboard = 0;
-    b = b.add_at_square(square);
-    let pawns = pos.bb(us, PieceType::Pawn);
-
-    let left_captures = pawns.shift(NORTH + WEST) & b;
-    let right_captures = pawns.shift(NORTH + EAST) & b;
-
-    extract_moves(left_captures, NORTH + WEST, Capture, list);
-    extract_moves(right_captures, NORTH + EAST, Capture, list);
-}
-
+/// Generate all captures, including en-passant, but excluding captures which
+/// result in promotions and under-promotions.
 fn gen_captures(pos: &BoardState, list: &mut Vec<Move>) {
     let us = pos.active_player();
     let pawns = pos.bb(us, PieceType::Pawn) & !RANK7;
     let their_king = pos.bb(!us, PieceType::King);
-    let valid_pieces = pos.bb_for_color(!us) & !their_king;
+    let en_passant = en_passant_bb(pos);
+    let valid_pieces = pos.bb_for_color(!us) & !their_king | en_passant;
 
     let left_captures = pawns.shift(NORTH + WEST) & valid_pieces;
     let right_captures = pawns.shift(NORTH + EAST) & valid_pieces;
@@ -60,6 +49,7 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>) {
     extract_moves(right_captures, NORTH + EAST, Capture, list);
 }
 
+/// Generate all promotions and under promotions, including pushes and captures on the eighth rank.
 fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
     let us = pos.active_player();
     let pawns = pos.bb(us, PieceType::Pawn) & RANK7;
@@ -71,9 +61,9 @@ fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
     let left_captures = pawns.shift(NORTH + WEST) & valid_captures;
     let right_captures = pawns.shift(NORTH + EAST) & valid_captures;
 
-    extract_promotions(pushes, NORTH, list, false);
-    extract_promotions(left_captures, NORTH + EAST, list, true);
-    extract_promotions(right_captures, NORTH + WEST, list, true);
+    extract_promotions(pushes, NORTH, list, PromotionType::Push);
+    extract_promotions(left_captures, NORTH + EAST, list, PromotionType::Capture);
+    extract_promotions(right_captures, NORTH + WEST, list, PromotionType::Capture);
 }
 
 fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
@@ -89,16 +79,20 @@ fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut
     }
 }
 
-fn extract_promotions(mut bitboard: Bitboard, offset: i8, moves: &mut Vec<Move>, is_capture: bool) {
+fn extract_promotions(
+    mut bitboard: Bitboard,
+    offset: i8,
+    moves: &mut Vec<Move>,
+    kind: PromotionType,
+) {
     while bitboard != 0 {
         let index = bitboard.trailing_zeros() as u8;
         bitboard = bitboard.clear_bit(index);
         let to = index as u8;
         let from = (index as i8 - offset) as u8;
-        let itr = if is_capture {
-            MoveType::promotion_capture_itr()
-        } else {
-            MoveType::promotion_itr()
+        let itr = match kind {
+            PromotionType::Push => MoveType::promotion_itr(),
+            PromotionType::Capture => MoveType::promotion_capture_itr(),
         };
         for promotion in itr {
             let m = Move {
@@ -108,6 +102,16 @@ fn extract_promotions(mut bitboard: Bitboard, offset: i8, moves: &mut Vec<Move>,
             };
             moves.push(m)
         }
+    }
+}
+
+fn en_passant_bb(pos: &BoardState) -> Bitboard {
+    let square = pos.en_passant().unwrap_or(0);
+    if square == 0 {
+        0
+    } else {
+        let b: Bitboard = 0;
+        b.add_at_square(square)
     }
 }
 

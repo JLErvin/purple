@@ -31,24 +31,30 @@ pub enum MoveType {
     Quiet,
 }
 
+#[derive(Clone, Copy)]
+pub enum PromotionType {
+    Push,
+    Capture,
+}
+
 impl MoveType {
     pub fn promotion_itr() -> Iter<'static, MoveType> {
-        static DIRECTIONS: [MoveType; 4] = [
+        static PROMOTIONS: [MoveType; 4] = [
             KnightPromotion,
             BishopPromotion,
             RookPromotion,
             QueenPromotion,
         ];
-        DIRECTIONS.iter()
+        PROMOTIONS.iter()
     }
 
     pub fn promotion_capture_itr() -> Iter<'static, MoveType> {
-        static DIRECTIONS: [MoveType; 4] = [
+        static PROMOTIONS: [MoveType; 4] = [
             KnightPromotionCapture,
             BishopPromotionCapture,
             RookPromotionCapture,
             QueenPromotionCapture,
         ];
-        DIRECTIONS.iter()
+        PROMOTIONS.iter()
     }
 }
