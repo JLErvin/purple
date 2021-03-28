@@ -147,6 +147,13 @@ mod tests {
     }
 
     #[test]
+    fn parses_random_board_3() {
+        let fen = "3r2r1/P6b/q2pKPk1/4P3/1p1P1R2/5n2/1B2N3/8 w - - 0 1";
+        let position = parse_fen(&fen.to_string()).unwrap();
+        assert_eq!(position.bb_all(), 5224590153059668480);
+    }
+
+    #[test]
     fn parses_active_black() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 b - - 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
