@@ -127,11 +127,26 @@ mod tests {
 
     #[test]
     fn gen_random_pawn_moves3() {
-        let n: u64 = 281474976710656;
-        let k = n.checked_shl(9).unwrap_or(0);
-
         let pos =
             parse_fen(&"3r2r1/P6b/q2pKPk1/4P3/1p1P1R2/5n2/1B2N3/8 w - - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_pawn_moves(&pos, &mut list);
+        assert_eq!(list.len(), 7);
+    }
+
+    #[test]
+    fn gen_random_pawn_moves4() {
+        let pos = parse_fen(&"8/4PP2/2n3p1/6P1/2p1p2q/K1P3k1/b1p1P1B1/2R5 w - - 0 1".to_string())
+            .unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_pawn_moves(&pos, &mut list);
+        assert_eq!(list.len(), 9);
+    }
+
+    #[test]
+    fn gen_random_pawn_moves5() {
+        let pos =
+            parse_fen(&"3bBr2/8/P7/2PPp3/1N6/3bK2R/2Pp4/1k1qN3 w - d6 0 1".to_string()).unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 7);

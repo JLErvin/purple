@@ -46,7 +46,7 @@ impl Shift for Bitboard {
         } else if n == SOUTH || n == SOUTH + SOUTH {
             shift_right(*self, -n as u8)
         } else if n == EAST || n == NORTH + EAST || n == SOUTH + EAST {
-            shift_right(*self & !FILEH, n as u8)
+            shift_left(*self & !FILEH, n as u8)
         } else if n == WEST || n == NORTH + WEST || n == SOUTH + WEST {
             shift_left(*self & !FILEA, n as u8)
         } else if n > 0 {
