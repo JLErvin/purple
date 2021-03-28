@@ -71,20 +71,9 @@ fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
     let left_captures = pawns.shift(NORTH + WEST) & valid_captures;
     let right_captures = pawns.shift(NORTH + EAST) & valid_captures;
 
-    extract_moves(pushes, NORTH, KnightPromotion, list);
-    extract_moves(pushes, NORTH, BishopPromotion, list);
-    extract_moves(pushes, NORTH, RookPromotion, list);
-    extract_moves(pushes, NORTH, QueenPromotion, list);
-
-    extract_moves(left_captures, NORTH + EAST, KnightPromotionCapture, list);
-    extract_moves(left_captures, NORTH + EAST, BishopPromotionCapture, list);
-    extract_moves(left_captures, NORTH + EAST, RookPromotionCapture, list);
-    extract_moves(left_captures, NORTH + EAST, QueenPromotionCapture, list);
-
-    extract_moves(right_captures, NORTH + WEST, KnightPromotionCapture, list);
-    extract_moves(right_captures, NORTH + WEST, BishopPromotionCapture, list);
-    extract_moves(right_captures, NORTH + WEST, RookPromotionCapture, list);
-    extract_moves(right_captures, NORTH + WEST, QueenPromotionCapture, list);
+    extract_promotions(pushes, NORTH, list, false);
+    extract_promotions(left_captures, NORTH + EAST, list, true);
+    extract_promotions(right_captures, NORTH + WEST, list, true);
 }
 
 fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
@@ -97,6 +86,28 @@ fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut
             kind,
         };
         moves.push(m);
+    }
+}
+
+fn extract_promotions(mut bitboard: Bitboard, offset: i8, moves: &mut Vec<Move>, is_capture: bool) {
+    while bitboard != 0 {
+        let index = bitboard.trailing_zeros() as u8;
+        bitboard = bitboard.clear_bit(index);
+        let to = index as u8;
+        let from = (index as i8 - offset) as u8;
+        let itr = if is_capture {
+            MoveType::promotion_capture_itr()
+        } else {
+            MoveType::promotion_itr()
+        };
+        for promotion in itr {
+            let m = Move {
+                to,
+                from,
+                kind: *promotion,
+            };
+            moves.push(m)
+        }
     }
 }
 
