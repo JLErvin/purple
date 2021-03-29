@@ -20,6 +20,7 @@ pub struct Move {
 #[derive(Copy, Clone)]
 pub enum MoveType {
     Capture,
+    EnPassantCapture,
     KnightPromotion,
     BishopPromotion,
     RookPromotion,
@@ -38,6 +39,20 @@ pub enum PromotionType {
 }
 
 impl MoveType {
+    pub fn king_itr() -> Iter<'static, i8> {
+        static KING_MOVES: [i8; 8] = [
+            WEST,
+            NORTH + WEST,
+            NORTH,
+            NORTH + EAST,
+            EAST,
+            SOUTH + EAST,
+            SOUTH,
+            SOUTH + WEST,
+        ];
+        KING_MOVES.iter()
+    }
+
     pub fn promotion_itr() -> Iter<'static, MoveType> {
         static PROMOTIONS: [MoveType; 4] = [
             KnightPromotion,

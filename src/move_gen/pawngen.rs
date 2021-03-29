@@ -1,8 +1,9 @@
 use crate::board_state::board::BoardState;
 use crate::components::bitboard::{AddPiece, Bitboard, ClearBit, Shift, RANK3, RANK7};
 use crate::components::chess_move::MoveType::{
-    BishopPromotion, BishopPromotionCapture, Capture, KnightPromotion, KnightPromotionCapture,
-    QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion, RookPromotionCapture,
+    BishopPromotion, BishopPromotionCapture, Capture, EnPassantCapture, KnightPromotion,
+    KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
+    RookPromotionCapture,
 };
 use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, WEST};
 use crate::components::piece::PieceType;
@@ -14,6 +15,7 @@ use crate::components::piece::PieceType::{Knight, Queen};
 pub fn gen_pseudo_legal_pawn_moves(pos: &BoardState, list: &mut Vec<Move>) {
     gen_quiet_pushes(pos, list);
     gen_captures(pos, list);
+    gen_en_passant(pos, list);
     gen_promotions(pos, list);
 }
 
@@ -39,14 +41,29 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>) {
     let us = pos.active_player();
     let pawns = pos.bb(us, PieceType::Pawn) & !RANK7;
     let their_king = pos.bb(!us, PieceType::King);
-    let en_passant = en_passant_bb(pos);
-    let valid_pieces = pos.bb_for_color(!us) & !their_king | en_passant;
+    let valid_pieces = pos.bb_for_color(!us) & !their_king;
 
     let left_captures = pawns.shift(NORTH + WEST) & valid_pieces;
     let right_captures = pawns.shift(NORTH + EAST) & valid_pieces;
 
     extract_moves(left_captures, NORTH + WEST, Capture, list);
     extract_moves(right_captures, NORTH + EAST, Capture, list);
+}
+
+fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
+    if pos.en_passant().is_none() {
+        return;
+    }
+
+    let us = pos.active_player();
+    let en_passant = en_passant_bb(pos);
+    let pawns = pos.bb(us, PieceType::Pawn);
+
+    let left_captures = pawns.shift(NORTH + WEST) & en_passant;
+    let right_captures = pawns.shift(NORTH + EAST) & en_passant;
+
+    extract_moves(left_captures, NORTH + WEST, EnPassantCapture, list);
+    extract_moves(right_captures, NORTH + EAST, EnPassantCapture, list);
 }
 
 /// Generate all promotions and under promotions, including pushes and captures on the eighth rank.

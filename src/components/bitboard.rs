@@ -38,17 +38,36 @@ fn shift_right(n: u64, i: u8) -> Bitboard {
 pub trait Shift {
     fn shift(&self, n: i8) -> Bitboard;
 }
+/*
+return  D == NORTH      ?  b             << 8 : D == SOUTH      ?  b             >> 8
+: D == NORTH+NORTH?  b             <<16 : D == SOUTH+SOUTH?  b             >>16
+: D == EAST       ? (b & ~FileHBB) << 1 : D == WEST       ? (b & ~FileABB) >> 1
+: D == NORTH_EAST ? (b & ~FileHBB) << 9 : D == NORTH_WEST ? (b & ~FileABB) << 7
+: D == SOUTH_EAST ? (b & ~FileHBB) >> 7 : D == SOUTH_WEST ? (b & ~FileABB) >> 9
+: 0*/
 
 impl Shift for Bitboard {
     fn shift(&self, n: i8) -> Bitboard {
-        if n == NORTH || n == NORTH + NORTH {
-            shift_left(*self, n as u8)
-        } else if n == SOUTH || n == SOUTH + SOUTH {
-            shift_right(*self, -n as u8)
-        } else if n == EAST || n == NORTH + EAST || n == SOUTH + EAST {
-            shift_left(*self & !FILEH, n as u8)
-        } else if n == WEST || n == NORTH + WEST || n == SOUTH + WEST {
-            shift_left(*self & !FILEA, n as u8)
+        if n == NORTH {
+            shift_left(*self, 8)
+        } else if n == SOUTH {
+            shift_right(*self, 8)
+        } else if n == NORTH + NORTH {
+            shift_left(*self, 16)
+        } else if n == SOUTH + SOUTH {
+            shift_right(*self, 16)
+        } else if n == EAST {
+            shift_left(*self & !FILEH, 1)
+        } else if n == WEST {
+            shift_right(*self & !FILEA, 1)
+        } else if n == NORTH + EAST {
+            shift_left(*self & !FILEH, 9)
+        } else if n == NORTH + WEST {
+            shift_left(*self & !FILEA, 7)
+        } else if n == SOUTH + EAST {
+            shift_right(*self & !FILEH, 7)
+        } else if n == SOUTH + WEST {
+            shift_right(*self & !FILEA, 9)
         } else if n > 0 {
             shift_left(*self, n as u8)
         } else {
