@@ -1,7 +1,9 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{Bitboard, ClearBit, Shift};
+use crate::components::bitboard::{Bitboard, ClearBit, PieceItr, Shift};
 use crate::components::chess_move::{Move, MoveType, EAST, NORTH, SOUTH, WEST};
 use crate::components::piece::PieceType;
+
+use super::util::extract_moves;
 
 pub fn gen_pseudo_legal_king_moves(pos: &BoardState, list: &mut Vec<Move>) {
     let us = pos.active_player();
@@ -14,19 +16,6 @@ pub fn gen_pseudo_legal_king_moves(pos: &BoardState, list: &mut Vec<Move>) {
         let captures = king.shift(*direction) & enemies;
         extract_moves(quiets, *direction, MoveType::Quiet, list);
         extract_moves(captures, *direction, MoveType::Capture, list);
-    }
-}
-
-fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
-    while bitboard != 0 {
-        let index = bitboard.trailing_zeros() as u8;
-        bitboard = bitboard.clear_bit(index);
-        let m = Move {
-            to: index as u8,
-            from: (index as i8 - offset) as u8,
-            kind,
-        };
-        moves.push(m);
     }
 }
 

@@ -1,5 +1,8 @@
 use crate::components::chess_move::{EAST, NORTH, SOUTH, WEST};
 use crate::components::square::*;
+use std::slice::Iter;
+
+use super::piece::PieceType;
 
 pub type Bitboard = u64;
 
@@ -38,13 +41,6 @@ fn shift_right(n: u64, i: u8) -> Bitboard {
 pub trait Shift {
     fn shift(&self, n: i8) -> Bitboard;
 }
-/*
-return  D == NORTH      ?  b             << 8 : D == SOUTH      ?  b             >> 8
-: D == NORTH+NORTH?  b             <<16 : D == SOUTH+SOUTH?  b             >>16
-: D == EAST       ? (b & ~FileHBB) << 1 : D == WEST       ? (b & ~FileABB) >> 1
-: D == NORTH_EAST ? (b & ~FileHBB) << 9 : D == NORTH_WEST ? (b & ~FileABB) << 7
-: D == SOUTH_EAST ? (b & ~FileHBB) >> 7 : D == SOUTH_WEST ? (b & ~FileABB) >> 9
-: 0*/
 
 impl Shift for Bitboard {
     fn shift(&self, n: i8) -> Bitboard {
@@ -113,6 +109,36 @@ pub trait ClearBit {
 impl ClearBit for Bitboard {
     fn clear_bit(&self, index: u8) -> Bitboard {
         *self & !(1 << index)
+    }
+}
+
+pub struct BitboardIterator{bb: Bitboard}
+
+impl Iterator for BitboardIterator {
+    type Item = (Square, Bitboard);
+
+    fn next(&mut self) -> Option<(Square, Bitboard)> {
+        if self.bb == 0 {
+            return None
+        }
+
+        let square = self.bb.trailing_zeros() as u8;
+        let new_bb = self.bb.clear_bit(square as u8);
+        self.bb = new_bb;
+        Some((square, new_bb))
+    }
+}
+
+pub trait PieceItr {
+    fn iter(&self) -> BitboardIterator;
+}
+
+impl PieceItr for Bitboard {
+    fn iter(&self) -> BitboardIterator {
+        let bb_itr = BitboardIterator {
+            bb: *self
+        };
+        bb_itr
     }
 }
 

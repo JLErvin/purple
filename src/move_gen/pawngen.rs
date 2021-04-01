@@ -1,5 +1,5 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{AddPiece, Bitboard, ClearBit, Shift, RANK3, RANK7};
+use crate::components::bitboard::{AddPiece, Bitboard, ClearBit, PieceItr, Shift, RANK3, RANK7};
 use crate::components::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, Capture, EnPassantCapture, KnightPromotion,
     KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
@@ -8,6 +8,7 @@ use crate::components::chess_move::MoveType::{
 use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, WEST};
 use crate::components::piece::PieceType;
 use crate::components::piece::PieceType::{Knight, Queen};
+use crate::move_gen::util::extract_moves;
 
 /// Generate all pseudo-legal moves for the given position and add them
 /// to the provided vector. Pseudo-legal moves are defined as a subset of
@@ -83,38 +84,21 @@ fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
     extract_promotions(right_captures, NORTH + WEST, list, PromotionType::Capture);
 }
 
-fn extract_moves(mut bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
-    while bitboard != 0 {
-        let index = bitboard.trailing_zeros() as u8;
-        bitboard = bitboard.clear_bit(index);
-        let m = Move {
-            to: index as u8,
-            from: (index as i8 - offset) as u8,
-            kind,
-        };
-        moves.push(m);
-    }
-}
-
 fn extract_promotions(
     mut bitboard: Bitboard,
     offset: i8,
     moves: &mut Vec<Move>,
     kind: PromotionType,
 ) {
-    while bitboard != 0 {
-        let index = bitboard.trailing_zeros() as u8;
-        bitboard = bitboard.clear_bit(index);
-        let to = index as u8;
-        let from = (index as i8 - offset) as u8;
+    for (square, bb) in bitboard.iter() {
         let itr = match kind {
             PromotionType::Push => MoveType::promotion_itr(),
             PromotionType::Capture => MoveType::promotion_capture_itr(),
         };
         for promotion in itr {
             let m = Move {
-                to,
-                from,
+                to: square as u8,
+                from: (square as i8 - offset) as u8,
                 kind: *promotion,
             };
             moves.push(m)

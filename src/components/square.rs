@@ -71,12 +71,6 @@ pub fn rank_file_to_index(rank: u8, file: u8) -> Square {
     8 * rank + file
 }
 
-/*pub fn index_to_bit_index(index: u8) -> u8 {
-    let file_index = index % 8;
-    let rank_index = index / 8;
-    (7 - file_index) + 8 * rank_index
-}
-*/
 pub fn algebraic_to_square(alg: &str) -> Square {
     let mut s = alg.chars();
     let file = s.next().unwrap();
@@ -125,26 +119,4 @@ mod tests {
         let index = algebraic_to_square("a8");
         assert_eq!(index, 56);
     }
-
-    /*    #[test]
-        fn converts_h1_to_bit_index() {
-            let index = algebraic_to_square("h1");
-            let bit_index = index_to_bit_index(index);
-            assert_eq!(bit_index, 0);
-        }
-    */
-    /*    #[test]
-        fn converts_a1_to_bit_index() {
-            let index = algebraic_to_square("a1");
-            let bit_index = index_to_bit_index(index);
-            assert_eq!(bit_index, 7);
-        }
-
-        #[test]
-        fn converts_e4_to_bit_index() {
-            let index = algebraic_to_square("e4");
-            let bit_index = index_to_bit_index(index);
-            assert_eq!(bit_index, 27);
-        }
-    */
 }
