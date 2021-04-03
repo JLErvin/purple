@@ -7,6 +7,7 @@ use crate::components::piece::PieceType;
 use crate::components::square::SquareIndex::A1;
 use crate::components::square::{rank_file_to_index, Square};
 use itertools::{all, Combinations, Itertools};
+use rand::rngs::ThreadRng;
 use rand::{Rng, RngCore};
 use std::slice::Iter;
 
@@ -26,17 +27,18 @@ pub struct MagicManager {
     bishops: [Bitboard; 64],
 }
 
-pub struct MagicGenerator {
+pub struct MagicGenerator<'a> {
     occupancies: [Bitboard; 4096],
     attack_map: [Bitboard; 4096],
     used_map: [Bitboard; 4096],
     bits: usize,
+    random: &'a mut ThreadRng,
 }
 
-impl MagicGenerator {
+impl MagicGenerator<'_> {
     /// Generates a new MagicGenerator which is used to search for the magic number
     /// associated with the given square and PieceType (i.e. Rook or Bishop)
-    pub fn new(square: Square, piece: PieceType) -> MagicGenerator {
+    pub fn new(square: Square, piece: PieceType, random: &mut ThreadRng) -> MagicGenerator {
         let mut occupancies: [Bitboard; 4096] = [0; 4096];
         let mut attack_map: [u64; 4096] = [0; 4096];
         let used_map: [u64; 4096] = [0; 4096];
@@ -56,6 +58,7 @@ impl MagicGenerator {
             attack_map,
             used_map,
             bits,
+            random,
         }
     }
 
@@ -65,22 +68,23 @@ impl MagicGenerator {
 
     pub fn find_magic_number(&mut self) -> u64 {
         for k in 0..1000000 {
-            let magic = MagicGenerator::gen_random_number();
+            let magic = self.gen_random_number();
             let mut fail = false;
             self.used_map.iter_mut().for_each(|m| *m = 0);
             let mut i = 0;
-            while i < 4096 && !fail {
+            'inner: while i < 4096 {
                 let occupied = self.occupancies[i];
                 let key = MagicGenerator::key(occupied, magic, self.bits);
                 if self.used_map[key] == 0 {
                     self.used_map[key] = self.attack_map[i];
                 } else if self.used_map[key] != self.attack_map[i] {
                     fail = true;
+                    break 'inner;
                 }
                 i += 1;
             }
             if !fail {
-                println!("it took {} iterations", k);
+                //println!("it took {} iterations", k);
                 return magic;
             }
         }
@@ -213,19 +217,18 @@ impl MagicGenerator {
         }
     }
 
-    fn gen_random_number() -> u64 {
-        let n1: u64 = MagicGenerator::gen_u64();
-        let n2: u64 = MagicGenerator::gen_u64();
-        let n3: u64 = MagicGenerator::gen_u64();
+    fn gen_random_number(&mut self) -> u64 {
+        let n1: u64 = self.gen_u64();
+        let n2: u64 = self.gen_u64();
+        let n3: u64 = self.gen_u64();
         n1 & n2 & n3
     }
 
-    fn gen_u64() -> u64 {
-        let mut rng = rand::thread_rng();
-        let u1: u64 = rng.next_u64() & 0xFFFF;
-        let u2: u64 = rng.next_u64() & 0xFFFF;
-        let u3: u64 = rng.next_u64() & 0xFFFF;
-        let u4: u64 = rng.next_u64() & 0xFFFF;
+    fn gen_u64(&mut self) -> u64 {
+        let u1: u64 = self.random.next_u64() & 0xFFFF;
+        let u2: u64 = self.random.next_u64() & 0xFFFF;
+        let u3: u64 = self.random.next_u64() & 0xFFFF;
+        let u4: u64 = self.random.next_u64() & 0xFFFF;
         u1 | (u2 << 16) | (u3 << 32) | (u4 << 48)
     }
 }
@@ -284,8 +287,8 @@ mod tests {
 
     #[test]
     fn correct_combinations() {
-        //let b = gen_magic_number(0);
-        let mut b = MagicGenerator::new(0, PieceType::Rook);
+        let mut rng = ThreadRng::default();
+        let mut b = MagicGenerator::new(10, PieceType::Rook, &mut rng);
         let m = b.find_magic_number();
         assert_eq!(m, 756607761056301088);
     }
