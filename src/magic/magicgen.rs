@@ -12,6 +12,7 @@ use crate::magic::util::{
 use itertools::{all, Combinations, Itertools};
 use rand::rngs::ThreadRng;
 use rand::{Rng, RngCore};
+use rayon::prelude::IntoParallelIterator;
 use std::slice::Iter;
 
 static mut ROOK_RELEVANT_BITS: [usize; 64] = [
@@ -36,6 +37,26 @@ pub struct MagicGenerator<'a> {
     used_map: [Bitboard; 4096],
     bits: usize,
     random: &'a mut ThreadRng,
+}
+
+impl MagicManager {
+    pub fn new() -> MagicManager {
+        let mut random = ThreadRng::default();
+        let mut rooks: [Bitboard; 64] = [0; 64];
+        let mut bishops: [Bitboard; 64] = [0; 64];
+
+        for i in 0..64 {
+            let mut m = MagicGenerator::new(i, MagicPiece::Rook, &mut random);
+            rooks[i as usize] = m.find_magic_number();
+        }
+
+        for i in 0..64 {
+            let mut m = MagicGenerator::new(i, MagicPiece::Bishop, &mut random);
+            bishops[i as usize] = m.find_magic_number();
+        }
+
+        MagicManager { rooks, bishops }
+    }
 }
 
 impl MagicGenerator<'_> {
