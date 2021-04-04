@@ -15,20 +15,42 @@ use rand::{Rng, RngCore};
 use rayon::prelude::IntoParallelIterator;
 use std::slice::Iter;
 
-static mut ROOK_RELEVANT_BITS: [usize; 64] = [
+static ROOK_RELEVANT_BITS: [usize; 64] = [
     12, 11, 11, 11, 11, 11, 11, 12, 11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 12, 11, 11, 11, 11, 11, 11, 12,
 ];
 
-static mut BISHOP_RELEVANT_BITS: [usize; 64] = [
+static BISHOP_RELEVANT_BITS: [usize; 64] = [
     6, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7, 5, 5, 5, 5, 7, 9, 9, 7, 5, 5,
     5, 5, 7, 9, 9, 7, 5, 5, 5, 5, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 6,
 ];
 
-pub struct MagicManager {
-    rooks: [Bitboard; 64],
-    bishops: [Bitboard; 64],
+pub struct MagicTable {
+    pub table: Vec<u64>,
+    pub magics: Vec<u64>,
+}
+
+impl MagicTable {
+    pub fn init(piece: MagicPiece) -> MagicTable {
+        //let len = match piece {
+        //    MagicPiece::Rook => ROOK_RELEVANT_BITS.iter().map(|x| 1 << *x).sum(),
+        //    MagicPiece::Bishop => BISHOP_RELEVANT_BITS.iter().map(|x| 1 << *x).sum(),
+        //};
+        let len = 0;
+        let mut table: Vec<u64> = Vec::with_capacity(len);
+        let magics: Vec<u64> = Vec::with_capacity(64);
+        let mut random = ThreadRng::default();
+
+        for i in 0..64 {
+            let mut m = MagicGenerator::new(i, MagicPiece::Rook, &mut random);
+            let mut magic = m.find_magic_number();
+            //table.push(magic.0);
+            //table.append(&mut magic.1);
+        }
+
+        MagicTable { table, magics }
+    }
 }
 
 pub struct MagicGenerator<'a> {
@@ -39,29 +61,7 @@ pub struct MagicGenerator<'a> {
     random: &'a mut ThreadRng,
 }
 
-impl MagicManager {
-    pub fn new() -> MagicManager {
-        let mut random = ThreadRng::default();
-        let mut rooks: [Bitboard; 64] = [0; 64];
-        let mut bishops: [Bitboard; 64] = [0; 64];
-
-        for i in 0..64 {
-            let mut m = MagicGenerator::new(i, MagicPiece::Rook, &mut random);
-            rooks[i as usize] = m.find_magic_number();
-        }
-
-        for i in 0..64 {
-            let mut m = MagicGenerator::new(i, MagicPiece::Bishop, &mut random);
-            bishops[i as usize] = m.find_magic_number();
-        }
-
-        MagicManager { rooks, bishops }
-    }
-}
-
 impl MagicGenerator<'_> {
-    /// Creates a new MagicGenerator which is used to search for the magic number
-    /// associated with the given square and PieceType (i.e. Rook or Bishop)
     pub fn new(square: Square, piece: MagicPiece, random: &mut ThreadRng) -> MagicGenerator {
         let bits: usize = match piece {
             MagicPiece::Rook => unsafe { ROOK_RELEVANT_BITS },
@@ -100,7 +100,7 @@ impl MagicGenerator<'_> {
         (occupied.wrapping_mul(magic) >> (64 - bits)) as usize
     }
 
-    pub fn find_magic_number(&mut self) -> u64 {
+    pub fn find_magic_number(&mut self) -> (Bitboard, Vec<u64>) {
         for k in 0..1000000 {
             let magic = self.gen_random_number();
             let mut fail = false;
@@ -119,10 +119,15 @@ impl MagicGenerator<'_> {
             }
             if !fail {
                 println!("it took {} iterations", k);
-                return magic;
+                let v: Vec<u64> = Vec::new();
+                //let mut v: Vec<u64> = Vec::with_capacity(1 << self.bits);
+                //for i in 0..(1 << self.bits) {
+                //    v.push(self.used_map[i]);
+                //}
+                return (magic, v);
             }
         }
-        0
+        (0, Vec::new())
     }
 
     fn gen_random_number(&mut self) -> u64 {
@@ -151,6 +156,6 @@ mod tests {
         let mut rng = ThreadRng::default();
         let mut b = MagicGenerator::new(10, MagicPiece::Rook, &mut rng);
         let m = b.find_magic_number();
-        assert_eq!(m, 756607761056301088);
+        assert_eq!(m.0, 756607761056301088);
     }
 }
