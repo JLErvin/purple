@@ -4,6 +4,7 @@ use crate::components::bitboard::{
 };
 use crate::components::square::{rank_file_to_index, Square};
 
+#[derive(Copy, Clone)]
 pub enum MagicPiece {
     Rook,
     Bishop,
