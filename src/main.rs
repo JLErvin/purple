@@ -22,9 +22,9 @@ fn main() {
 
     let t = Lookup::new();
     let square = D4 as u8;
-    let blockers = 0;
+    let blockers = 2251800920983552u64;
     let moves = t.rook_moves(square, blockers);
-    println!("Desired: {}", 578721386714368008u64);
+    println!("Desired: {}", 2260632246683648u64);
     println!("Actual : {}", moves);
 
     let toc = tic.elapsed().as_secs_f64();
