@@ -39,7 +39,7 @@ impl MagicTable {
         };
         let mut table = vec![0; len];
 
-        let magics: Vec<u64> = Vec::with_capacity(64);
+        let mut magics: Vec<u64> = Vec::with_capacity(64);
         let mut random = ThreadRng::default();
 
         let mut start_index = 0;
@@ -56,17 +56,28 @@ impl MagicTable {
             );
             start_index = end_index;
             let magic = m.find_magic_number();
-            table.push(magic);
+            magics.push(magic);
         }
 
         MagicTable { table, magics }
+    }
+
+    pub fn moves(&self, square: Square, blockers: Bitboard) -> Bitboard {
+        let mask = rook_ray(square);
+        let occupancy = mask & blockers;
+        let bits = ROOK_RELEVANT_BITS[square as usize];
+        let magic = self.magics[square as usize];
+
+        let key = MagicGenerator::key(occupancy, magic, bits);
+
+        self.table[key]
     }
 }
 
 pub struct MagicGenerator<'a> {
     occupancies: [Bitboard; 4096],
     table: &'a mut [u64],
-    used_map: [Bitboard; 4096],
+    attack_map: [Bitboard; 4096],
     bits: usize,
     random: &'a mut ThreadRng,
 }
@@ -83,7 +94,7 @@ impl MagicGenerator<'_> {
             MagicPiece::Bishop => BISHOP_RELEVANT_BITS,
         }[square as usize];
         let mut occupancies: [Bitboard; 4096] = [0; 4096];
-        let used_map: [u64; 4096] = [0; 4096];
+        let mut attack_map: [Bitboard; 4096] = [0; 4096];
 
         let ray = match piece {
             MagicPiece::Rook => rook_ray(square),
@@ -96,21 +107,21 @@ impl MagicGenerator<'_> {
 
         for i in 0..(1 << bits) {
             match piece {
-                MagicPiece::Rook => table[i] = rook_attacks(square, occupancies[i]),
-                MagicPiece::Bishop => table[i] = bishop_attacks(square, occupancies[i]),
+                MagicPiece::Rook => attack_map[i] = rook_attacks(square, occupancies[i]),
+                MagicPiece::Bishop => attack_map[i] = bishop_attacks(square, occupancies[i]),
             }
         }
 
         MagicGenerator {
             occupancies,
             table,
-            used_map,
+            attack_map,
             bits,
             random,
         }
     }
 
-    fn key(occupied: Bitboard, magic: u64, bits: usize) -> usize {
+    pub fn key(occupied: Bitboard, magic: u64, bits: usize) -> usize {
         (occupied.wrapping_mul(magic) >> (64 - bits)) as usize
     }
 
@@ -118,14 +129,14 @@ impl MagicGenerator<'_> {
         for k in 0..1000000 {
             let magic = self.gen_random_number();
             let mut fail = false;
-            self.used_map.iter_mut().for_each(|m| *m = 0);
+            self.table.iter_mut().for_each(|m| *m = 0);
             let mut i = 0;
             'inner: while i < (1 << self.bits) {
                 let occupied = self.occupancies[i];
                 let key = MagicGenerator::key(occupied, magic, self.bits);
-                if self.used_map[key] == 0 {
-                    self.used_map[key] = self.table[i];
-                } else if self.used_map[key] != self.table[i] {
+                if self.table[key] == 0 {
+                    self.table[key] = self.attack_map[i];
+                } else if self.table[key] != self.attack_map[i] {
                     fail = true;
                     break 'inner;
                 }
