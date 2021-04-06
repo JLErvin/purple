@@ -7,10 +7,12 @@ pub struct Position {
 }
 
 impl Position {
+    #[inline]
     pub fn bb(&self, piece: PieceType, color: Color) -> Bitboard {
         self.pieces_bb[piece] & self.colors_bb[color]
     }
 
+    #[inline]
     pub fn bb_for_color(&self, color: Color) -> Bitboard {
         self.colors_bb[color]
     }

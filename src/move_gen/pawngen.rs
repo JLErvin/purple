@@ -32,8 +32,8 @@ fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>) {
     let empty_squares = !pos.bb_all();
     let double = pawns.shift(NORTH) & empty_squares;
 
-    extract_moves(single, NORTH, Quiet, list);
-    extract_moves(double, NORTH + NORTH, Quiet, list);
+    extract_pawn_moves(single, NORTH, Quiet, list);
+    extract_pawn_moves(double, NORTH + NORTH, Quiet, list);
 }
 
 /// Generate all captures, including en-passant, but excluding captures which
@@ -47,8 +47,8 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>) {
     let left_captures = pawns.shift(NORTH + WEST) & valid_pieces;
     let right_captures = pawns.shift(NORTH + EAST) & valid_pieces;
 
-    extract_moves(left_captures, NORTH + WEST, Capture, list);
-    extract_moves(right_captures, NORTH + EAST, Capture, list);
+    extract_pawn_moves(left_captures, NORTH + WEST, Capture, list);
+    extract_pawn_moves(right_captures, NORTH + EAST, Capture, list);
 }
 
 fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
@@ -63,8 +63,8 @@ fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
     let left_captures = pawns.shift(NORTH + WEST) & en_passant;
     let right_captures = pawns.shift(NORTH + EAST) & en_passant;
 
-    extract_moves(left_captures, NORTH + WEST, EnPassantCapture, list);
-    extract_moves(right_captures, NORTH + EAST, EnPassantCapture, list);
+    extract_pawn_moves(left_captures, NORTH + WEST, EnPassantCapture, list);
+    extract_pawn_moves(right_captures, NORTH + EAST, EnPassantCapture, list);
 }
 
 /// Generate all promotions and under promotions, including pushes and captures on the eighth rank.
@@ -82,6 +82,17 @@ fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
     extract_promotions(pushes, NORTH, list, PromotionType::Push);
     extract_promotions(left_captures, NORTH + EAST, list, PromotionType::Capture);
     extract_promotions(right_captures, NORTH + WEST, list, PromotionType::Capture);
+}
+
+pub fn extract_pawn_moves(bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
+    for (square, bb) in bitboard.iter() {
+        let m = Move {
+            to: square as u8,
+            from: (square as i8 - offset) as u8,
+            kind,
+        };
+        moves.push(m);
+    }
 }
 
 fn extract_promotions(
@@ -172,7 +183,7 @@ mod tests {
     fn extract_basic_pawn_moves() {
         let b = RANK2;
         let mut moves: Vec<Move> = Vec::new();
-        extract_moves(b, NORTH, Quiet, &mut moves);
+        extract_pawn_moves(b, NORTH, Quiet, &mut moves);
         assert_eq!(moves.len(), 8);
         assert_eq!(moves.get(0).unwrap().to, 8);
         assert_eq!(moves.get(1).unwrap().to, 9);
@@ -184,7 +195,7 @@ mod tests {
     fn extract_random_pawns() {
         let b: Bitboard = 35184506306560;
         let mut moves: Vec<Move> = Vec::new();
-        extract_moves(b, NORTH, Quiet, &mut moves);
+        extract_pawn_moves(b, NORTH, Quiet, &mut moves);
         assert_eq!(moves.len(), 2);
         assert_eq!(moves.get(0).unwrap().to, D4 as u8);
         assert_eq!(moves.get(0).unwrap().from, D3 as u8);

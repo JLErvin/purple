@@ -14,34 +14,42 @@ pub struct BoardState {
 }
 
 impl BoardState {
+    #[inline]
     pub fn active_player(&self) -> Color {
         self.active_player
     }
 
+    #[inline]
     pub fn en_passant(&self) -> Option<Square> {
         self.en_passant
     }
 
+    #[inline]
     pub fn castling_rights(&self) -> &Castle {
         &self.castling_rights
     }
 
+    #[inline]
     pub fn half_move(&self) -> u8 {
         self.half_move
     }
 
+    #[inline]
     pub fn full_move(&self) -> u8 {
         self.full_move
     }
 
+    #[inline]
     pub fn bb(&self, color: Color, piece: PieceType) -> Bitboard {
         self.position.bb(piece, color)
     }
 
+    #[inline]
     pub fn bb_for_color(&self, color: Color) -> Bitboard {
         self.position.bb_for_color(color)
     }
 
+    #[inline]
     pub fn bb_all(&self) -> Bitboard {
         self.position.bb_for_color(Color::White) | self.position.bb_for_color(Color::Black)
     }
@@ -71,25 +79,6 @@ impl BoardState {
             half_move: 0,
             full_move: 1,
         }
-    }
-
-    fn pieces(&self) -> Vec<Bitboard> {
-        let a = Vec::new();
-        a
-    }
-
-    pub fn debug_print(&self) {
-        let mut p: u64 = 0;
-        for b in self.pieces() {
-            p |= b
-        }
-        for i in 1..65 {
-            print!("{}", p.get_bit_msb(i - 1) as u64);
-            if i % 8 == 0 {
-                println!();
-            }
-        }
-        println!();
     }
 }
 

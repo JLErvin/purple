@@ -142,14 +142,14 @@ pub fn bishop_attacks(square: Square, blockers: Bitboard) -> Bitboard {
     let ray = bishop_ray(square);
     let relevant_blockers = ray & blockers;
     let mut b: Bitboard = 0;
-    let rank = square / 8;
-    let file = square % 8;
+    let rank: i8 = (square / 8) as i8;
+    let file: i8 = (square % 8) as i8;
 
     let mut rank_itr = rank.saturating_add(1);
     let mut file_itr = file.saturating_add(1);
     while rank_itr < 8 && file_itr < 8 {
-        b = b.add_piece(rank_itr, file_itr);
-        let s = rank_file_to_index(rank_itr, file_itr);
+        b = b.add_piece(rank_itr as u8, file_itr as u8);
+        let s = rank_file_to_index(rank_itr as u8, file_itr as u8);
         if relevant_blockers.get_bit_lsb(s as i8) {
             break;
         }
@@ -159,9 +159,9 @@ pub fn bishop_attacks(square: Square, blockers: Bitboard) -> Bitboard {
 
     let mut rank_itr = rank.saturating_add(1);
     let mut file_itr = file.saturating_sub(1);
-    while rank_itr < 8 && file_itr > 0 {
-        b = b.add_piece(rank_itr, file_itr);
-        let s = rank_file_to_index(rank_itr, file_itr);
+    while rank_itr < 8 && file_itr >= 0 {
+        b = b.add_piece(rank_itr as u8, file_itr as u8);
+        let s = rank_file_to_index(rank_itr as u8, file_itr as u8);
         if relevant_blockers.get_bit_lsb(s as i8) {
             break;
         }
@@ -171,9 +171,9 @@ pub fn bishop_attacks(square: Square, blockers: Bitboard) -> Bitboard {
 
     let mut rank_itr = rank.saturating_sub(1);
     let mut file_itr = file.saturating_sub(1);
-    while rank_itr > 0 && file_itr > 0 {
-        b = b.add_piece(rank_itr, file_itr);
-        let s = rank_file_to_index(rank_itr, file_itr);
+    while rank_itr >= 0 && file_itr >= 0 {
+        b = b.add_piece(rank_itr as u8, file_itr as u8);
+        let s = rank_file_to_index(rank_itr as u8, file_itr as u8);
         if relevant_blockers.get_bit_lsb(s as i8) {
             break;
         }
@@ -183,9 +183,9 @@ pub fn bishop_attacks(square: Square, blockers: Bitboard) -> Bitboard {
 
     let mut rank_itr = rank.saturating_sub(1);
     let mut file_itr = file.saturating_add(1);
-    while rank_itr > 0 && file_itr < 8 {
-        b = b.add_piece(rank_itr, file_itr);
-        let s = rank_file_to_index(rank_itr, file_itr);
+    while rank_itr >= 0 && file_itr < 8 {
+        b = b.add_piece(rank_itr as u8, file_itr as u8);
+        let s = rank_file_to_index(rank_itr as u8, file_itr as u8);
         if relevant_blockers.get_bit_lsb(s as i8) {
             break;
         }
@@ -247,8 +247,8 @@ pub fn occupancy(occupancy_index: usize, bits: usize, mut attack_mask: Bitboard)
 #[cfg(test)]
 mod tests {
     use crate::components::bitboard::Bitboard;
-    use crate::components::square::SquareIndex::{A1, A8, B2, C7, D4, H1, H8};
-    use crate::magic::util::{bishop_ray, rook_attacks, rook_ray};
+    use crate::components::square::SquareIndex::{A1, A7, A8, B2, C7, D4, H1, H8};
+    use crate::magic::util::{bishop_attacks, bishop_ray, rook_attacks, rook_ray};
 
     #[test]
     fn correct_rook_rays() {
@@ -287,5 +287,12 @@ mod tests {
         assert_eq!(a1, 18049651735527936);
         assert_eq!(d4, 18051867805491712);
         assert_eq!(c7, 11064376819712);
+    }
+
+    #[test]
+    fn correct_bishop_attacks_a7() {
+        let blockers: Bitboard = 0;
+        let b = bishop_attacks(A7 as u8, blockers);
+        assert_eq!(b, 144117404414255168);
     }
 }

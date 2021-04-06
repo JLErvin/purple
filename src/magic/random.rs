@@ -6,18 +6,24 @@ pub struct MagicRandomizer {
     random: ThreadRng,
 }
 
-impl MagicRandomizer {
-    pub fn new<'a>() -> MagicRandomizer {
-        MagicRandomizer {
-            random: ThreadRng::default(),
-        }
-    }
+pub trait Random {
+    fn gen_random_number(&mut self) -> u64;
+}
 
-    pub fn gen_random_number(&mut self) -> u64 {
+impl Random for MagicRandomizer {
+    fn gen_random_number(&mut self) -> u64 {
         let n1: u64 = self.gen_u64();
         let n2: u64 = self.gen_u64();
         let n3: u64 = self.gen_u64();
         n1 & n2 & n3
+    }
+}
+
+impl MagicRandomizer {
+    pub fn new() -> MagicRandomizer {
+        MagicRandomizer {
+            random: ThreadRng::default(),
+        }
     }
 
     fn gen_u64(&mut self) -> u64 {

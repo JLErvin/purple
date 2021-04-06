@@ -1,7 +1,7 @@
 use crate::components::bitboard::Bitboard;
 
 use crate::components::square::Square;
-use crate::magic::random::MagicRandomizer;
+use crate::magic::random::{MagicRandomizer, Random};
 
 use crate::magic::util::{
     bishop_attacks, bishop_ray, occupancy, rook_attacks, rook_ray, MagicPiece,
@@ -22,6 +22,8 @@ pub struct MagicTable {
     pub table: Vec<u64>,
     pub magics: Vec<u64>,
     pub offset: [usize; 64],
+    pub rays: [Bitboard; 64],
+    pub piece: MagicPiece,
 }
 
 impl MagicTable {
@@ -29,25 +31,22 @@ impl MagicTable {
     /// to lookup moves based on these values. Initialization of this struct is expensive as it
     /// involves finding all magic numbers for the given piece and builds the necessary lookup tables
     /// as well.
-    pub fn init(piece: MagicPiece) -> MagicTable {
+    pub fn init(piece: MagicPiece, random: &mut MagicRandomizer) -> MagicTable {
         let offset = MagicTable::init_offsets(piece);
         let len = MagicTable::calc_len(piece);
         let mut table = vec![0; len];
         let mut magics: Vec<u64> = Vec::with_capacity(64);
-        let mut random = MagicRandomizer::new();
+        let mut rays: [Bitboard; 64] = [0; 64];
 
         for i in 0..64 {
             let start_index = offset[i];
+            rays[i] = MagicTable::init_ray(i as u8, piece);
             let end_index = match piece {
                 MagicPiece::Rook => start_index + (1 << ROOK_RELEVANT_BITS[i]),
                 MagicPiece::Bishop => start_index + (1 << BISHOP_RELEVANT_BITS[i]),
             };
-            let mut m = MagicGenerator::new(
-                i as u8,
-                piece,
-                &mut random,
-                &mut table[start_index..end_index],
-            );
+            let mut m =
+                MagicGenerator::new(i as u8, piece, random, &mut table[start_index..end_index]);
             let magic = m.find_magic_number();
             magics.push(magic);
         }
@@ -56,6 +55,8 @@ impl MagicTable {
             table,
             magics,
             offset,
+            rays,
+            piece,
         }
     }
 
@@ -78,6 +79,13 @@ impl MagicTable {
         }
     }
 
+    fn init_ray(square: Square, piece: MagicPiece) -> Bitboard {
+        match piece {
+            MagicPiece::Rook => rook_ray(square),
+            MagicPiece::Bishop => bishop_ray(square),
+        }
+    }
+
     /// Returns a bitboard which represents the potential moves at the given square constrained
     /// by the given blockers bitboard. The blockers bitboard may include irrelevant pieces
     /// (i.e. those which are not on the ray associated with the given square) - this function
@@ -87,9 +95,12 @@ impl MagicTable {
     /// valid captures (it is up to the client to determine whether or not those pieces represent
     /// valid captures).
     pub fn moves(&self, square: Square, blockers: Bitboard) -> Bitboard {
-        let mask = rook_ray(square);
+        let mask = self.rays[square as usize];
         let occupancy = mask & blockers;
-        let bits = ROOK_RELEVANT_BITS[square as usize];
+        let bits = match self.piece {
+            MagicPiece::Rook => ROOK_RELEVANT_BITS[square as usize],
+            MagicPiece::Bishop => BISHOP_RELEVANT_BITS[square as usize],
+        };
         let magic = self.magics[square as usize];
         let offset = self.offset[square as usize];
 
@@ -104,14 +115,17 @@ pub struct MagicGenerator<'a> {
     table: &'a mut [u64],
     attack_map: [Bitboard; 4096],
     bits: usize,
-    random: &'a mut MagicRandomizer,
+    random: &'a mut dyn Random,
 }
 
 impl MagicGenerator<'_> {
+    /// Returns a new MagicGenerator for the given square and piece, using the given random
+    /// object to generate potential random numbers. Magic numbers that are generated will be
+    /// put into the provided table slice.
     pub fn new<'a>(
         square: Square,
         piece: MagicPiece,
-        random: &'a mut MagicRandomizer,
+        random: &'a mut impl Random,
         table: &'a mut [u64],
     ) -> MagicGenerator<'a> {
         let bits: usize = match piece {
