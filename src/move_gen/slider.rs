@@ -8,7 +8,7 @@ use crate::move_gen::lookup::Lookup;
 use crate::move_gen::util::extract_moves;
 use std::io::empty;
 
-pub fn gen_pseudo_legal_slider_moves(
+pub fn gen_pseudo_legal_moves(
     pos: &BoardState,
     list: &mut Vec<Move>,
     lookup: &Lookup,
@@ -20,7 +20,10 @@ pub fn gen_pseudo_legal_slider_moves(
     let empty_squares = !pos.bb_all();
 
     for (square, _) in pieces.iter() {
-        let destinations = lookup.sliding_moves(square, pos.bb_all(), piece);
+        let destinations = match piece {
+            PieceType::King | PieceType::Knight => lookup.moves(square, piece),
+            _ => lookup.sliding_moves(square, pos.bb_all(), piece),
+        };
         let captures = destinations & valid_pieces;
         let quiets = destinations & empty_squares;
 
@@ -29,53 +32,95 @@ pub fn gen_pseudo_legal_slider_moves(
     }
 }
 
-pub fn gen_pseudo_legal_rook_moves(pos: &BoardState, list: &mut Vec<Move>, lookup: &Lookup) {
-    let us = pos.active_player();
-    let rooks = pos.bb(us, PieceType::Rook);
-    let their_king = pos.bb(!us, PieceType::King);
-    let valid_pieces = pos.bb_for_color(!us) & !their_king;
-    let empty_squares = !pos.bb_all();
+#[cfg(test)]
+mod test {
+    use crate::board_state::fen::parse_fen;
+    use crate::components::chess_move::Move;
+    /*
+        #[test]
+        fn moves_king_on_h1() {
+            let pos = parse_fen(&"8/8/8/8/8/8/8/7K w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 3);
+        }
 
-    for (square, _) in rooks.iter() {
-        let destinations = lookup.sliding_moves(square, pos.bb_all(), PieceType::Rook);
-        let captures = destinations & valid_pieces;
-        let quiets = destinations & empty_squares;
+        #[test]
+        fn moves_king_on_a1() {
+            let pos = parse_fen(&"8/8/8/8/8/8/8/K7 w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 3);
+        }
 
-        extract_moves(square, captures, list, Capture);
-        extract_moves(square, quiets, list, Quiet);
-    }
-}
+        #[test]
+        fn moves_king_on_a8() {
+            let pos = parse_fen(&"K7/8/8/8/8/8/8/8 w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 3);
+        }
 
-pub fn gen_pseudo_legal_bishop_moves(pos: &BoardState, list: &mut Vec<Move>, lookup: &Lookup) {
-    let us = pos.active_player();
-    let bishops = pos.bb(us, PieceType::Bishop);
-    let their_king = pos.bb(!us, PieceType::King);
-    let valid_pieces = pos.bb_for_color(!us) & !their_king;
-    let empty_squares = !pos.bb_all();
+        #[test]
+        fn moves_king_on_h8() {
+            let pos = parse_fen(&"7K/8/8/8/8/8/8/8 w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 3);
+        }
 
-    for (square, _) in bishops.iter() {
-        let destinations = lookup.sliding_moves(square, pos.bb_all(), PieceType::Bishop);
-        let captures = destinations & valid_pieces;
-        let quiets = destinations & empty_squares;
+        #[test]
+        fn moves_king_random_fen1() {
+            let pos =
+                parse_fen(&"r4n2/4p1p1/5k1P/6pB/p7/1p1Pb1n1/2PB4/2K5 w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 3);
+        }
 
-        extract_moves(square, captures, list, Capture);
-        extract_moves(square, quiets, list, Quiet);
-    }
-}
+        #[test]
+        fn moves_king_random_fen2() {
+            let pos =
+                parse_fen(&"6b1/P1P5/2B1P1p1/k1K2N1n/1p3N2/8/P2R3p/4b3 w - - 0 1".to_string()).unwrap();
+            let mut list: Vec<Move> = Vec::with_capacity(256);
+            gen_pseudo_legal_king_moves(&pos, &mut list);
+            assert_eq!(list.len(), 7);
+        }
+    */
 
-pub fn gen_pseudo_legal_queen_moves(pos: &BoardState, list: &mut Vec<Move>, lookup: &Lookup) {
-    let us = pos.active_player();
-    let queens = pos.bb(us, PieceType::Queen);
-    let their_king = pos.bb(!us, PieceType::King);
-    let valid_pieces = pos.bb_for_color(!us) & !their_king;
-    let empty_squares = !pos.bb_all();
+    /*    #[test]
+       fn identifies_number_of_moves_from_d4() {
+           let pos = parse_fen(&"8/8/8/8/3N4/8/8/8 w - - 0 1".to_string()).unwrap();
+           let mut list: Vec<Move> = Vec::new();
+           gen_pseudo_legal_knight_moves(&pos, &mut list);
+           assert_eq!(list.len(), 8);
+       }
 
-    for (square, _) in queens.iter() {
-        let ray = lookup.sliding_moves(square, pos.bb_all(), PieceType::Queen);
-        let captures = ray & valid_pieces;
-        let quiets = ray & empty_squares;
+       #[test]
+       fn identifies_number_of_moves_from_h1() {
+           let pos = parse_fen(&"8/8/8/8/8/8/8/7N w - - 0 1".to_string()).unwrap();
+           let mut list: Vec<Move> = Vec::new();
+           gen_pseudo_legal_knight_moves(&pos, &mut list);
+           assert_eq!(list.len(), 2);
+       }
 
-        extract_moves(square, captures, list, Capture);
-        extract_moves(square, quiets, list, Quiet);
-    }
+       #[test]
+       fn identifies_number_of_moves_from_random_fen1() {
+           let pos =
+               parse_fen(&"R7/2p5/1p4PK/1PpN1PP1/4PP2/6p1/2n4k/2B5 w - - 0 1".to_string()).unwrap();
+           let mut list: Vec<Move> = Vec::new();
+           gen_pseudo_legal_knight_moves(&pos, &mut list);
+           assert_eq!(list.len(), 7);
+       }
+
+       #[test]
+       fn identifies_number_of_moves_from_random_fen2() {
+           let pos =
+               parse_fen(&"7n/QpB1N3/8/1p6/1p1b1R1P/p1PN4/4Kp2/1k6 w - - 0 1".to_string()).unwrap();
+           let mut list: Vec<Move> = Vec::new();
+           gen_pseudo_legal_knight_moves(&pos, &mut list);
+           assert_eq!(list.len(), 13);
+       }
+
+    */
 }

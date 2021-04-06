@@ -53,3 +53,40 @@ pub fn knight_destinations(square: u8) -> Bitboard {
 
     nnw | nww | nne | nee | sww | ssw | sse | see
 }
+#[cfg(test)]
+mod tests {
+    use crate::board_state::fen::parse_fen;
+    use crate::components::chess_move::Move;
+    use crate::components::square::SquareIndex::{A1, A8, D4, H1, H8};
+    use crate::move_gen::util::knight_destinations;
+
+    #[test]
+    fn identifies_correct_attack_bb_from_a1() {
+        let attack = knight_destinations(A1 as u8);
+        assert_eq!(attack, 132096);
+    }
+
+    #[test]
+    fn identifies_correct_attack_bb_from_a8() {
+        let attack = knight_destinations(A8 as u8);
+        assert_eq!(attack, 1128098930098176);
+    }
+
+    #[test]
+    fn identifies_correct_attack_bb_from_h1() {
+        let attack = knight_destinations(H1 as u8);
+        assert_eq!(attack, 4202496);
+    }
+
+    #[test]
+    fn identifies_correct_attack_bb_from_h8() {
+        let attack = knight_destinations(H8 as u8);
+        assert_eq!(attack, 9077567998918656);
+    }
+
+    #[test]
+    fn identifies_correct_attack_bb_from_d4() {
+        let attack = knight_destinations(D4 as u8);
+        assert_eq!(attack, 22136263676928);
+    }
+}
