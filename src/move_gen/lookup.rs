@@ -4,7 +4,7 @@ use crate::components::bitboard::{
 use crate::components::chess_move::{MoveType, EAST, NORTH, SOUTH, WEST};
 use crate::components::piece::PieceType;
 use crate::components::square::Square;
-use crate::magic::magicgen::{MagicTable};
+use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::{rook_ray, MagicPiece};
 use crate::move_gen::util::knight_destinations;

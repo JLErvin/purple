@@ -1,3 +1,3 @@
-pub mod magicgen;
+pub mod magic;
 pub mod random;
 pub mod util;

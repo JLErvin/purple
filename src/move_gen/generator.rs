@@ -3,10 +3,10 @@ use crate::components::bitboard::{Bitboard, ClearBit, GetBit, Shift, RANK3, RANK
 use crate::components::chess_move::{Move, NORTH};
 use crate::components::piece::PieceType;
 
-use super::pawngen::gen_pseudo_legal_pawn_moves;
+use super::pawns::gen_pseudo_legal_pawn_moves;
 use crate::magic::random::MagicRandomizer;
 use crate::move_gen::lookup::Lookup;
-use crate::move_gen::slider::gen_pseudo_legal_moves;
+use crate::move_gen::moves::gen_pseudo_legal_moves;
 
 const MAX_MOVES: usize = 256;
 

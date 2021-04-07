@@ -1,5 +1,5 @@
+pub mod generator;
 pub mod lookup;
-pub mod movegen;
-mod pawngen;
-pub mod slider;
+pub mod moves;
+mod pawns;
 mod util;
