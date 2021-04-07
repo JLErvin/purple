@@ -82,7 +82,7 @@ impl Piece {
             'b' => PieceType::Bishop,
             'k' => PieceType::King,
             'q' => PieceType::Queen,
-            _ => PieceType::Pawn,
+            _ => panic!("Cannot convert char to piece, unknown char: {}", c),
         };
         piece_type
     }
@@ -134,5 +134,19 @@ mod tests {
         a[1] = 42;
         assert_eq!(a[Color::White], 1);
         assert_eq!(a[Color::Black], 42);
+    }
+
+    #[test]
+    fn correct_not() {
+        let white = Color::White;
+        let black = Color::Black;
+        assert_eq!(!white, Color::Black);
+        assert_eq!(!black, Color::White);
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic() {
+        Piece::convert_char_to_piece('x');
     }
 }

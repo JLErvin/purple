@@ -41,7 +41,7 @@ fn parse_ranks(fen: &str) -> Result<Position, String> {
                 'p' | 'r' | 'n' | 'b' | 'k' | 'q' => p.add_piece(c, real_rank as u8, file),
                 'P' | 'R' | 'N' | 'B' | 'K' | 'Q' => p.add_piece(c, real_rank as u8, file),
                 '1'..='8' => file += char::to_digit(c, 10).unwrap() as u8,
-                _ => (),
+                _ => return Err("FEN contains illegal character in board description".to_string()),
             }
             if char::is_alphabetic(c) {
                 file += 1;
@@ -173,5 +173,26 @@ mod tests {
         let position = parse_fen(&fen.to_string()).unwrap();
         assert_eq!(position.half_move(), 0);
         assert_eq!(position.full_move(), 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn panics_on_incorrect_fen_ranks() {
+        let fen = "rnbqkbnr/pppppppp/8/8/4P3/8 b KQkq e3 0 1";
+        let _position = parse_fen(&fen.to_string()).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn panics_on_incorrect_fen_color() {
+        let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR Q KQkq e3 0 1";
+        let _position = parse_fen(&fen.to_string()).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn panics_on_illegal_character() {
+        let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNX b KQkq e3 0 1";
+        let _position = parse_fen(&fen.to_string()).unwrap();
     }
 }

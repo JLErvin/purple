@@ -82,8 +82,6 @@ mod test {
     use crate::components::square::SquareIndex::{A1, A8, D4, H1, H8};
     use crate::magic::random::*;
     use crate::move_gen::lookup::Lookup;
-    use mockall::predicate::*;
-    use mockall::*;
 
     #[test]
     fn init_king() {

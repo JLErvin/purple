@@ -111,6 +111,38 @@ mod tests {
     }
 
     #[test]
+    fn correct_empty_values() {
+        let p = BoardState::empty();
+        assert_eq!(p.bb(Color::White, PieceType::Pawn), 0);
+        assert_eq!(p.bb(Color::White, PieceType::Rook), 0);
+        assert_eq!(p.bb(Color::White, PieceType::Knight), 0);
+        assert_eq!(p.bb(Color::White, PieceType::Bishop), 0);
+        assert_eq!(p.bb(Color::White, PieceType::Queen), 0);
+        assert_eq!(p.bb(Color::White, PieceType::King), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::Pawn), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::Rook), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::Knight), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::Bishop), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::Queen), 0);
+        assert_eq!(p.bb(Color::Black, PieceType::King), 0);
+        assert_eq!(p.active_player(), Color::White);
+        assert_eq!(p.half_move(), 0);
+        assert_eq!(p.full_move(), 0);
+        assert_eq!(p.castling_rights().black_king, true);
+        assert_eq!(p.castling_rights().black_queen, true);
+        assert_eq!(p.castling_rights().white_king, true);
+        assert_eq!(p.castling_rights().white_queen, true);
+    }
+
+    #[test]
+    fn correctly_adds_piece() {
+        let mut p = BoardState::empty();
+        assert_eq!(p.bb(Color::White, PieceType::Pawn), 0);
+        p.add_piece('P', 0, 0);
+        assert_eq!(p.bb(Color::White, PieceType::Pawn), 1);
+    }
+
+    #[test]
     fn gets_bit_lsb() {
         let b: Bitboard = 0b0000_0001u64;
         let b1 = b.get_bit_lsb(0);
