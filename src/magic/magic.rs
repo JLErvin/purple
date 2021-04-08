@@ -6,19 +6,18 @@ use crate::magic::random::{MagicRandomizer, Random};
 use crate::magic::util::{
     bishop_attacks, bishop_ray, occupancy, rook_attacks, rook_ray, MagicPiece,
 };
+use crate::magic::search::{compute_magic, key};
 
-static ROOK_RELEVANT_BITS: [usize; 64] = [
+pub static ROOK_RELEVANT_BITS: [usize; 64] = [
     12, 11, 11, 11, 11, 11, 11, 12, 11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11, 12, 11, 11, 11, 11, 11, 11, 12,
 ];
 
-static BISHOP_RELEVANT_BITS: [usize; 64] = [
+pub static BISHOP_RELEVANT_BITS: [usize; 64] = [
     6, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7, 7, 7, 7, 5, 5, 5, 5, 7, 9, 9, 7, 5, 5,
     5, 5, 7, 9, 9, 7, 5, 5, 5, 5, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 6,
 ];
-
-static MAXIMUM_ITERATIONS: usize = 1000000;
 
 pub struct MagicTable {
     pub table: Vec<u64>,
@@ -68,7 +67,7 @@ impl MagicTable {
     /// 12 relevant bits then the square A2 would have an offset of 4096 (i.e. 2^12).
     fn init_offsets(piece: MagicPiece) -> [usize; 64] {
         let mut offset: [usize; 64] = [0; 64];
-        for i in 1..64 {
+        for i in 1..offset.len() {
             offset[i] = offset[i - 1]
                 + match piece {
                     MagicPiece::Rook => 1 << ROOK_RELEVANT_BITS[i - 1],
@@ -118,71 +117,6 @@ impl MagicTable {
 
         self.table[offset + key]
     }
-}
-
-pub fn compute_magic(
-    square: Square,
-    piece: MagicPiece,
-    random: &mut impl Random,
-    table: &mut [u64],
-) -> Option<u64> {
-    let bits: usize = match piece {
-        MagicPiece::Rook => ROOK_RELEVANT_BITS,
-        MagicPiece::Bishop => BISHOP_RELEVANT_BITS,
-    }[square as usize];
-    let mut occupancies: [Bitboard; 4096] = [0; 4096];
-    let mut attack_map: [Bitboard; 4096] = [0; 4096];
-
-    let ray = match piece {
-        MagicPiece::Rook => rook_ray(square),
-        MagicPiece::Bishop => bishop_ray(square),
-    };
-
-    for i in 0..(1 << bits) {
-        occupancies[i] = occupancy(i, bits, ray);
-    }
-
-    for i in 0..(1 << bits) {
-        match piece {
-            MagicPiece::Rook => attack_map[i] = rook_attacks(square, occupancies[i]),
-            MagicPiece::Bishop => attack_map[i] = bishop_attacks(square, occupancies[i]),
-        }
-    }
-
-    search_magic(random, occupancies, attack_map, bits, table)
-}
-
-pub fn key(occupied: Bitboard, magic: u64, bits: usize) -> usize {
-    (occupied.wrapping_mul(magic) >> (64 - bits)) as usize
-}
-
-fn search_magic(
-    random: &mut impl Random,
-    occupancies: [Bitboard; 4096],
-    attack_map: [Bitboard; 4096],
-    bits: usize,
-    table: &mut [u64],
-) -> Option<u64> {
-    for k in 0..MAXIMUM_ITERATIONS {
-        let magic = random.gen_random_number();
-        let mut fail = false;
-        table.iter_mut().for_each(|m| *m = 0);
-        'inner: for i in 0..(1 << bits) {
-            let occupied = occupancies[i];
-            let key = key(occupied, magic, bits);
-            if table[key] == 0 {
-                table[key] = attack_map[i];
-            } else if table[key] != attack_map[i] {
-                fail = true;
-                break 'inner;
-            }
-        }
-        if !fail {
-            println!("it took {} iterations", k);
-            return Some(magic);
-        }
-    }
-    None
 }
 
 #[cfg(test)]
