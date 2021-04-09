@@ -112,14 +112,16 @@ impl ClearBit for Bitboard {
     }
 }
 
-pub struct BitboardIterator{bb: Bitboard}
+pub struct BitboardIterator {
+    bb: Bitboard,
+}
 
 impl Iterator for BitboardIterator {
     type Item = (Square, Bitboard);
 
     fn next(&mut self) -> Option<(Square, Bitboard)> {
         if self.bb == 0 {
-            return None
+            return None;
         }
 
         let square = self.bb.trailing_zeros() as u8;
@@ -135,9 +137,7 @@ pub trait PieceItr {
 
 impl PieceItr for Bitboard {
     fn iter(&self) -> BitboardIterator {
-        let bb_itr = BitboardIterator {
-            bb: *self
-        };
+        let bb_itr = BitboardIterator { bb: *self };
         bb_itr
     }
 }
