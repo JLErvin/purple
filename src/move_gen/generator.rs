@@ -5,8 +5,10 @@ use crate::components::piece::PieceType;
 
 use super::pawns::gen_pseudo_legal_pawn_moves;
 use crate::magic::random::MagicRandomizer;
+use crate::move_gen::legal::is_legal;
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::gen_pseudo_legal_moves;
+use itertools::Itertools;
 
 const MAX_MOVES: usize = 256;
 
@@ -23,5 +25,12 @@ pub fn gen_all_pseudo_legal_moves(pos: &BoardState) {
     gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Bishop);
     gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Queen);
 
-    println!("Number of moves: {}", list.len());
+    println!("Number of Pseudo-Legal Moves: {}", list.len());
+
+    let v = list
+        .iter()
+        .filter(|x| is_legal(pos, &x, &lookup))
+        .collect_vec();
+
+    println!("Number of legal moves: {} ", v.len());
 }

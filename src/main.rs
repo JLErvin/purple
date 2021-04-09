@@ -18,7 +18,9 @@ mod move_gen;
 
 fn main() {
     println!("Hello, world!");
-    let b = parse_fen(&"RB6/p6p/1P1p1Pb1/4Pn1k/B2p1K2/2N5/p7/8 w - - 0 1".to_string());
+    //let b = parse_fen(&"RB6/p6p/1P1p1Pb1/4Pn1k/B2p1K2/2N5/p7/8 w - - 0 1".to_string());
+    //let b = parse_fen(&"8/1N2k3/P5K1/4P2B/4rp1P/8/P1Pq1Qp1/2N2R2 w - - 0 1".to_string());
+    let b = parse_fen(&"3Q1n2/P1r3k1/1pBb3p/5p1P/K2pP3/8/2P3N1/8 w - - 0 1".to_string());
     let tic = Instant::now();
 
     let pos = b.unwrap();

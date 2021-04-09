@@ -5,9 +5,10 @@ use crate::components::chess_move::MoveType::{
     KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
     RookPromotionCapture,
 };
-use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, WEST};
-use crate::components::piece::PieceType;
+use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
 use crate::components::piece::PieceType::{Knight, Queen};
+use crate::components::piece::{Color, PieceType};
+use crate::components::square::Square;
 use crate::move_gen::util::extract_moves;
 
 /// Generate all pseudo-legal moves for the given position and add them
@@ -92,6 +93,16 @@ pub fn extract_pawn_moves(bitboard: Bitboard, offset: i8, kind: MoveType, moves:
             kind,
         };
         moves.push(m);
+    }
+}
+
+/// Returns a bitboard representing all pawn attacks from the given square for the given color
+pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
+    let mut b: Bitboard = 0;
+    let b = b.add_at_square(square);
+    match color {
+        Color::White => b.shift(NORTH + WEST) | b.shift(NORTH + EAST),
+        Color::Black => b.shift(SOUTH + WEST) | b.shift(SOUTH + EAST),
     }
 }
 
