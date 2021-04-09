@@ -7,7 +7,7 @@ use crate::move_gen::lookup::Lookup;
 use crate::move_gen::pawns::pawn_attacks;
 use crate::move_gen::util::knight_destinations;
 
-pub fn is_pinned(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
+pub fn cannot_move_because_pinned(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
     // let's check against enemy rooks first
     let us = pos.active_player();
     let rooks = pos.bb(!us, PieceType::Rook);
@@ -32,10 +32,32 @@ pub fn is_pinned(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
         let king = pos.bb(us, PieceType::King);
         let intersect = removed_attacks & king;
         if intersect != 0 {
-            return true;
+            // if this piece is pinned then the move is _only_ legal if we move on the ray that it's
+            // pinned on.
+            println!("Piece is pinned, cannot move to {}", to);
+            let allowed_ray = ray_between(from, i, lookup);
+            println!("Considering allowed_ray {}", allowed_ray);
+            let mut b_to: Bitboard = 0;
+            b_to = b_to.add_at_square(to);
+            println!("Overlap with destination {}", b_to & allowed_ray);
+            println!();
+
+            return b_to & allowed_ray == 0;
         }
     }
     false
+}
+
+fn ray_between(s1: Square, s2: Square, lookup: &Lookup) -> Bitboard {
+    let attack_s1 = lookup.sliding_moves(s1, 0, PieceType::Rook);
+    let attack_s2 = lookup.sliding_moves(s2, 0, PieceType::Rook);
+
+    let mut b1: Bitboard = 0;
+    let mut b2: Bitboard = 0;
+    b1 = b1.add_at_square(s1);
+    b2 = b2.add_at_square(s2);
+
+    (attack_s1 & attack_s2) | b1 | b2
 }
 
 pub fn is_legal(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
