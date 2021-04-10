@@ -23,7 +23,11 @@ fn main() {
     //let b = parse_fen(&"3Q1n2/P1r3k1/1pBb3p/5p1P/K2pP3/8/2P3N1/8 w - - 0 1".to_string());
     //let b = parse_fen(&"8/8/8/8/KB5r/8/8/8 w - - 0 1".to_string());
     //let b = parse_fen(&"8/8/8/8/8/8/KPP4r/8 w - - 0 1".to_string());
-    let b = parse_fen(&"8/8/8/8/8/8/K1R4r/8 w - - 0 1".to_string());
+    //let b = parse_fen(&"8/8/8/8/8/8/K1R4r/8 w - - 0 1".to_string());
+    //let b = parse_fen(&"4n2B/2r4p/3N4/k7/2P4p/1P3Q1n/2p1KP1p/7r w - - 0 1".to_string());
+    //let b = parse_fen(&"7Q/P1k5/3N3p/p3p3/R1p3P1/5P2/2P4R/2Kq3b w - - 0 1".to_string());
+    //let b = parse_fen(&"7Q/P1k5/3N3p/p3p3/R1p3P1/5P2/2Pq3R/2Kq4 w - - 0 1".to_string());
+    let b = parse_fen(&"7Q/P1k5/3N3p/p3p3/R1p3P1/5P2/2P4R/2K4q w - - 0 1".to_string());
     let tic = Instant::now();
 
     let pos = b.unwrap();

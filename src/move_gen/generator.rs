@@ -4,8 +4,8 @@ use crate::components::chess_move::{Move, NORTH};
 use crate::components::piece::PieceType;
 
 use super::pawns::gen_pseudo_legal_pawn_moves;
-use crate::magic::random::MagicRandomizer;
-use crate::move_gen::legal::{cannot_move_because_pinned, is_legal};
+use crate::magic::random::{GenerationScheme, MagicRandomizer};
+use crate::move_gen::legal::{cannot_move_because_pinned, is_legal_king, is_legal_king_in_check};
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::gen_pseudo_legal_moves;
 use itertools::Itertools;
@@ -13,7 +13,7 @@ use itertools::Itertools;
 const MAX_MOVES: usize = 256;
 
 pub fn gen_all_pseudo_legal_moves(pos: &BoardState) {
-    let random = MagicRandomizer::new();
+    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
     let lookup = Lookup::new(random);
     let mut list: Vec<Move> = Vec::with_capacity(MAX_MOVES);
 
@@ -35,6 +35,8 @@ pub fn gen_all_pseudo_legal_moves(pos: &BoardState) {
     let v = list
         .iter()
         .filter(|x| !cannot_move_because_pinned(pos, &x, &lookup))
+        .filter(|x| is_legal_king(pos, &x, &lookup))
+        .filter(|x| is_legal_king_in_check(pos, &x, &lookup))
         .collect_vec();
 
     println!("Number of legal moves: {} ", v.len());

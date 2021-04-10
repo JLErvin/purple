@@ -142,6 +142,21 @@ impl PieceItr for Bitboard {
     }
 }
 
+pub trait New {
+    fn empty() -> Bitboard;
+    fn for_square(square: Square) -> Bitboard;
+}
+impl New for Bitboard {
+    fn empty() -> Bitboard {
+        0
+    }
+
+    fn for_square(square: Square) -> Bitboard {
+        let b: Bitboard = 0;
+        b.add_at_square(square)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
