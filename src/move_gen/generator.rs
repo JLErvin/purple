@@ -5,7 +5,7 @@ use crate::components::piece::PieceType;
 
 use super::pawns::gen_pseudo_legal_pawn_moves;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
-use crate::move_gen::legal::{cannot_move_because_pinned, is_legal_king, is_legal_king_in_check};
+use crate::move_gen::legal::is_legal;
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::gen_pseudo_legal_moves;
 use itertools::Itertools;
@@ -27,17 +27,10 @@ pub fn gen_all_pseudo_legal_moves(pos: &BoardState) {
 
     println!("Number of Pseudo-Legal Moves: {}", list.len());
 
-    //let v = list
-    //    .iter()
-    //    .filter(|x| is_legal(pos, &x, &lookup))
-    //    .collect_vec();
-
     let v = list
         .iter()
-        .filter(|x| !cannot_move_because_pinned(pos, &x, &lookup))
-        .filter(|x| is_legal_king(pos, &x, &lookup))
-        .filter(|x| is_legal_king_in_check(pos, &x, &lookup))
+        .filter(|x| is_legal(pos, &x, &lookup))
         .collect_vec();
 
-    println!("Number of legal moves: {} ", v.len());
+    println!("Number of Legal Moves: {}", v.len());
 }
