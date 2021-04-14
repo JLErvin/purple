@@ -18,8 +18,10 @@ mod move_gen;
 
 fn main() {
     println!("Hello, world!");
-    let b = parse_fen(&"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1".to_string());
-    let mut pos = b.unwrap();
-    gen_all_pseudo_legal_moves(&mut pos);
+    let mut b = parse_fen(
+        &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
+    )
+    .unwrap();
+    gen_all_pseudo_legal_moves(&mut b, 6);
     println!();
 }

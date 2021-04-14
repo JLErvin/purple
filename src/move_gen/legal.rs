@@ -233,8 +233,8 @@ mod test {
     use crate::components::chess_move::MoveType::Quiet;
     use crate::components::square::SquareIndex;
     use crate::components::square::SquareIndex::{
-        A1, A2, A3, A4, B1, B2, B4, B8, C2, C3, C5, C6, C8, D3, D4, D5, E2, E6, E7, E8, F1, F2, F3,
-        G1, G2, G5, G8, H1, H2, H3, H4,
+        A1, A2, A3, A4, B1, B2, B4, B8, C2, C3, C5, C6, C8, D3, D4, D5, E1, E2, E4, E6, E7, E8, F1,
+        F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
 
@@ -530,16 +530,29 @@ mod test {
     }
 
     #[test]
-    fn bishop_moves() {
+    fn challenge() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos =
-            parse_fen(&"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ".to_string())
+            parse_fen(&"r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b K c3 0 1".to_string())
                 .unwrap();
         let mv = Move {
-            to: C8 as u8,
-            from: H3 as u8,
-            kind: MoveType::Quiet,
+            to: C3 as u8,
+            from: B4 as u8,
+            kind: MoveType::EnPassantCapture,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), false);
+    }
+
+    #[test]
+    fn castle_pawn_attacks() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/8/8/8/6p1/4K2R w K - 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: E1 as u8,
+            from: G1 as u8,
+            kind: MoveType::CastleKing,
         };
         assert_eq!(is_legal(&pos, &mv, &lookup), false);
     }

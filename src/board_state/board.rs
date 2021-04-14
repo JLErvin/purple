@@ -188,6 +188,24 @@ impl BoardState {
             || mv.kind == MoveType::QueenPromotionCapture
         {
             let capture_kind = self.position.type_on(mv.to).unwrap();
+
+            if capture_kind == Rook {
+                if self.active_player == Color::White {
+                    if mv.to == H8 as u8 {
+                        self.castling_rights.black_king = false;
+                    } else if mv.to == A8 as u8 {
+                        self.castling_rights.black_queen = false;
+                    }
+                } else {
+                    if self.active_player == Color::Black {
+                        if mv.to == H1 as u8 {
+                            self.castling_rights.white_king = false;
+                        } else if mv.to == A1 as u8 {
+                            self.castling_rights.white_queen = false;
+                        }
+                    }
+                }
+            }
             self.position
                 .remove_piece(kind, self.active_player, mv.from);
             self.position

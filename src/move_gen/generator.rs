@@ -17,11 +17,11 @@ use std::time::Instant;
 
 const MAX_MOVES: usize = 256;
 
-pub fn gen_all_pseudo_legal_moves(pos: &mut BoardState) -> usize {
+pub fn gen_all_pseudo_legal_moves(pos: &mut BoardState, depth: usize) -> usize {
     let random = MagicRandomizer::new(GenerationScheme::PreComputed);
     let lookup = Lookup::new(random);
     let tic = Instant::now();
-    let sum = gen(pos, 6, &lookup);
+    let sum = gen(pos, depth, &lookup);
     let toc = tic.elapsed().as_secs_f64();
     println!("Took {} seconds", toc);
     println!("number of nodes at depth {}", sum);
@@ -45,56 +45,28 @@ pub fn gen(pos: &mut BoardState, depth: usize, lookup: &Lookup) -> usize {
         .filter(|x| is_legal(pos, &x, &lookup))
         .collect_vec();
 
-    if depth == 0 {
-        for mv in v.iter() {
-            //println!("MOVE");
-            if mv.kind == EnPassantCapture {
-                //println!("EN PASSANT");
-            } else if mv.kind == Capture {
-                //println!("CAPTURE");
-            } else if mv.kind == CastleKing || mv.kind == CastleQueen {
-                //println!("CASTLE");
-            }
-            let pt = pos.type_on(mv.from).unwrap();
-            let p = match pt {
-                PieceType::Pawn => "P",
-                PieceType::Rook => "R",
-                PieceType::King => "K",
-                PieceType::Bishop => "B",
-                PieceType::Queen => "Q",
-                PieceType::Knight => "N",
-                _ => "",
-            };
-
-            //if pt == Queen && mv.to == 12 && mv.from == 21 {
-            //    println!("{}", pos.bb_all());
-            //}
-            if mv.to == 62 && mv.from == 60 && pos.bb_all() == 10474584692977106833 {
-                //let mut new_pos = pos.clone();
-                //new_pos.make_move(*mv);
-                //println!("Preview Pos: {}", pos.bb_all());
-                //println!("New Pos    : {}", new_pos.bb_all());
-                //println!("Capture");
-                //println!("{}", pos.bb_all());
-                //debug_print(pos);
-            }
-            //println!("{} from {} to {}", p, mv.from, mv.to);
-        }
-
+    if depth == 1 {
+        /*        for mv in v.iter() {
+                    let pt = pos.type_on(mv.from).unwrap();
+                    let pt = match pt {
+                        PieceType::Pawn => 'P',
+                        PieceType::Rook => 'R',
+                        Knight => 'N',
+                        PieceType::Bishop => 'B',
+                        King => 'K',
+                        Queen => 'Q',
+                    };
+                    if mv.from == 4 && mv.to == 6 {
+                        debug_print(pos);
+                        println!();
+                    }
+                    //println!("{} from {} to {}", pt, mv.from, mv.to);
+                }
+        */
         return v.len();
     } else {
         let mut sum = 0;
         for mv in v.into_iter() {
-            /*            let pt = pos.type_on(mv.from).unwrap();
-                        let p = match pt {
-                            PieceType::Pawn => "P",
-                            PieceType::Rook => "R",
-                            PieceType::King => "K",
-                            _ => "",
-                        };
-                        let mut new_pos = pos.clone();
-                        println!("{} from {} to {}", p, mv.from, mv.to);
-            */
             let mut new_pos = pos.clone();
             new_pos.make_move(mv);
             sum += gen(&mut new_pos, depth - 1, lookup);
@@ -131,16 +103,130 @@ fn debug_print(pos: &BoardState) {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+    use crate::board_state::board::BoardState;
     use crate::board_state::fen::parse_fen;
     use crate::move_gen::generator::gen_all_pseudo_legal_moves;
 
     #[test]
-    fn generates_kiwi_pete() {
+    #[ignore]
+    fn perft_starting_position() {
+        let mut pos = BoardState::default();
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+        let depth_4 = gen_all_pseudo_legal_moves(&mut pos, 4);
+        let depth_5 = gen_all_pseudo_legal_moves(&mut pos, 5);
+
+        assert_eq!(depth_1, 20);
+        assert_eq!(depth_2, 400);
+        assert_eq!(depth_3, 8902);
+        assert_eq!(depth_4, 197281);
+    }
+    #[test]
+    #[ignore]
+    fn perft_kiwipete() {
         let mut pos = parse_fen(
-            &"r3k2r/p1ppq1b1/bn2pn2/3P2N1/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 2".to_string(),
+            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
         )
         .unwrap();
-        let sum = gen_all_pseudo_legal_moves(&mut pos);
-        //assert_eq!(sum, 2039);
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+        let depth_4 = gen_all_pseudo_legal_moves(&mut pos, 4);
+
+        assert_eq!(depth_1, 48);
+        assert_eq!(depth_2, 2039);
+        assert_eq!(depth_3, 97862);
+        assert_eq!(depth_4, 4085603);
+    }
+
+    #[test]
+    #[ignore]
+    fn perft_fen_3() {
+        let mut pos = parse_fen(&"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1".to_string()).unwrap();
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+        let depth_4 = gen_all_pseudo_legal_moves(&mut pos, 4);
+        let depth_5 = gen_all_pseudo_legal_moves(&mut pos, 5);
+
+        assert_eq!(depth_1, 14);
+        assert_eq!(depth_2, 191);
+        assert_eq!(depth_3, 2812);
+        assert_eq!(depth_4, 43238);
+        assert_eq!(depth_5, 674624);
+    }
+
+    #[test]
+    #[ignore]
+    fn perft_fen_4() {
+        let mut pos = parse_fen(
+            &"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1".to_string(),
+        )
+        .unwrap();
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+        let depth_4 = gen_all_pseudo_legal_moves(&mut pos, 4);
+
+        assert_eq!(depth_1, 6);
+        assert_eq!(depth_2, 264);
+        assert_eq!(depth_3, 9467);
+        assert_eq!(depth_4, 422333);
+    }
+
+    #[test]
+    #[ignore]
+    fn perft_fen_5() {
+        let mut pos =
+            parse_fen(&"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8".to_string())
+                .unwrap();
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+        let depth_4 = gen_all_pseudo_legal_moves(&mut pos, 4);
+
+        assert_eq!(depth_1, 44);
+        assert_eq!(depth_2, 1486);
+        assert_eq!(depth_3, 62379);
+        assert_eq!(depth_4, 2103487);
+    }
+
+    #[test]
+    #[ignore]
+    fn perft_fen_6() {
+        let mut pos = parse_fen(
+            &"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10".to_string(),
+        )
+        .unwrap();
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+
+        assert_eq!(depth_1, 46);
+        assert_eq!(depth_2, 2079);
+        assert_eq!(depth_3, 89890);
+    }
+
+    #[test]
+    #[ignore]
+    fn perft_fen_random() {
+        let mut pos =
+            parse_fen(&"r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b KQ c3 0 1".to_string())
+                .unwrap();
+
+        let depth_1 = gen_all_pseudo_legal_moves(&mut pos, 1);
+        let depth_2 = gen_all_pseudo_legal_moves(&mut pos, 2);
+        let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
+
+        assert_eq!(depth_1, 51);
+        assert_eq!(depth_2, 2733);
+        assert_eq!(depth_3, 109269);
     }
 }
