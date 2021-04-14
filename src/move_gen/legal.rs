@@ -1,6 +1,8 @@
 use crate::board_state::board::BoardState;
 use crate::components::bitboard::{AddPiece, Bitboard, New, PieceItr};
-use crate::components::chess_move::Move;
+use crate::components::chess_move::MoveType::Capture;
+use crate::components::chess_move::{Move, MoveType, SOUTH};
+use crate::components::piece::PieceType::Queen;
 use crate::components::piece::{Color, PieceType};
 use crate::components::square::Square;
 use crate::move_gen::lookup::Lookup;
@@ -10,14 +12,14 @@ use crate::move_gen::util::knight_destinations;
 /// Determines whether or not the given move is legal given the provided state of the game.
 /// A move is determined to be legal if it does not leave the king in check after the move is made.
 pub fn is_legal(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
-    let to = mv.to;
     let from = mv.from;
 
-    if king_on_square(pos, from) {
-        return is_legal_king_move(pos, mv, lookup);
+    let is_castle = mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen;
+    return if king_on_square(pos, from) & !is_castle {
+        is_legal_king_move(pos, mv, lookup)
     } else {
-        return is_legal_non_king_move(pos, mv, lookup);
-    }
+        is_legal_non_king_move(pos, mv, lookup)
+    };
 }
 
 /// Determines if the given move is legal, working under the assumption that the provided move
@@ -49,6 +51,12 @@ fn is_legal_non_king_move(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool 
 
     let pinned = is_absolutely_pinned(pos, mv, lookup);
 
+    if mv.kind == MoveType::EnPassantCapture {
+        return is_legal_en_passant(pos, mv, lookup);
+    } else if mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen {
+        return is_legal_castle(pos, mv, lookup, num_checkers);
+    }
+
     // If exactly one piece puts us in check then our move is legal iff we block the incoming attack
     // or we capture the attacking piece.
     if num_checkers == 1 {
@@ -71,6 +79,58 @@ fn is_legal_non_king_move(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool 
     return is_legal_pin_move(pos, mv, lookup, pinned.1);
 }
 
+/// Determines whether or not the given move is legal, working under the assumption that the provided
+/// move represents a castling move. En Passant requires special checking since it is the only move in
+/// which the piece moves to a square but does not capture on that square.
+fn is_legal_en_passant(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
+    let us = pos.active_player();
+    let mut pos = pos.clone();
+
+    let offset: i8 = match us {
+        Color::White => 8,
+        Color::Black => -8,
+    };
+
+    pos.remove_piece(PieceType::Pawn, !us, (mv.to as i8 - offset) as u8);
+    let tmp_mv = Move {
+        to: mv.to,
+        from: mv.from,
+        kind: Capture,
+    };
+    let is_legal = is_legal_non_king_move(&pos, &tmp_mv, lookup);
+    pos.add(PieceType::Pawn, !us, (mv.to as i8 - offset) as u8);
+    is_legal
+}
+
+/// Determines whether or not the given move is legal, working under the assumption that the given
+/// move represents a castling move. A castle is illegal if the king is currently or would castle through a check.
+fn is_legal_castle(pos: &BoardState, mv: &Move, lookup: &Lookup, num_checkers: u32) -> bool {
+    if num_checkers != 0 {
+        return false;
+    }
+
+    let squares: Vec<Square> = match mv.kind {
+        MoveType::CastleKing => match pos.active_player() {
+            Color::White => vec![5, 6],
+            Color::Black => vec![61, 62],
+        },
+        MoveType::CastleQueen => match pos.active_player() {
+            Color::White => vec![2, 3],
+            Color::Black => vec![58, 59],
+        },
+        _ => vec![],
+    };
+
+    for square in squares.into_iter() {
+        let attackers = attacks_to(pos, square, lookup);
+        if attackers != 0 {
+            return false;
+        }
+    }
+
+    true
+}
+
 /// Determines whether or not the given move is legal, working under the assumption that the moved
 /// piece is currently pinned. Such a move is legal iff we move along the pinning ray or we caputre
 /// the attacking piece
@@ -86,21 +146,38 @@ fn is_legal_pin_move(pos: &BoardState, mv: &Move, lookup: &Lookup, pinner: Squar
 /// represents the square of the pinning piece.
 fn is_absolutely_pinned(pos: &BoardState, mv: &Move, lookup: &Lookup) -> (bool, Square) {
     let us = pos.active_player();
-    let rooks = pos.bb(!us, PieceType::Rook);
     let occupied = pos.bb_all();
     let piece_bb = Bitboard::for_square(mv.from);
-    for (i, _) in rooks.iter() {
-        let attacks = lookup.sliding_moves(i, occupied, PieceType::Rook);
-        let intersect = attacks & piece_bb;
-        if intersect == 0 {
-            continue;
-        }
-        let removed = occupied & !piece_bb;
-        let removed_attacks = lookup.sliding_moves(i, removed, PieceType::Rook);
-        let king = pos.bb(us, PieceType::King);
-        let intersect = removed_attacks & king;
-        if intersect != 0 {
-            return (true, i);
+    for piece in vec![PieceType::Rook, PieceType::Bishop, PieceType::Queen].into_iter() {
+        let bb_itr = pos.bb(!us, piece);
+        for (i, _) in bb_itr.iter() {
+            /*            let attacks = lookup.sliding_moves(i, occupied, piece);
+                        let reversed_attacks = lookup.sliding_moves(king_square(pos), occupied, piece);
+                        let mask = lookup.between(king_square(pos), i);
+
+                        let intersect = attacks & reversed_attacks & mask;
+                        if intersect == 0 {
+                            continue;
+                        }
+
+                        if intersect & pos.bb_for_color(us) != 0 {
+                            return (true, i);
+                        }
+            */
+            let attacks = lookup.sliding_moves(i, occupied, piece);
+            //let mask = lookup.between(king_square(pos), i);
+            let mask = ray_between(king_square(pos), i, lookup);
+            let intersect = attacks & piece_bb & mask;
+            if intersect == 0 {
+                continue;
+            }
+            let removed = occupied & !piece_bb;
+            let removed_attacks = lookup.sliding_moves(i, removed, piece);
+            let king = pos.bb(us, PieceType::King);
+            let intersect = removed_attacks & king & mask;
+            if intersect != 0 {
+                return (true, i);
+            }
         }
     }
     (false, 0)
@@ -112,7 +189,7 @@ fn king_square(pos: &BoardState) -> Square {
     pos.bb(us, PieceType::King).trailing_zeros() as Square
 }
 
-/// Returns a bitboard representing all pieces which are attacking the king.
+/// Returns a bitboard representing all pieces which are attacking the provided square.
 fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard {
     let us = pos.active_player();
     let occupancies = pos.bb_all() & !pos.bb(us, PieceType::King);
@@ -121,7 +198,7 @@ fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard {
     let rook_attacks = lookup.sliding_moves(square, occupancies, PieceType::Rook);
     let bishop_attacks = lookup.sliding_moves(square, occupancies, PieceType::Bishop);
     let queen_attacks = rook_attacks | bishop_attacks;
-    let knight_attacks = lookup.moves(square, PieceType::Bishop);
+    let knight_attacks = lookup.moves(square, PieceType::Knight);
     let king_attacks = lookup.moves(square, PieceType::King);
 
     let pawns = pawn_attacks & pos.bb(!us, PieceType::Pawn);
@@ -144,7 +221,7 @@ fn ray_between(s1: Square, s2: Square, lookup: &Lookup) -> Bitboard {
 fn king_on_square(pos: &BoardState, square: Square) -> bool {
     let b = Bitboard::for_square(square);
 
-    let king = pos.bb(Color::White, PieceType::King);
+    let king = pos.bb(pos.active_player(), PieceType::King);
 
     b & king != 0
 }
@@ -156,7 +233,8 @@ mod test {
     use crate::components::chess_move::MoveType::Quiet;
     use crate::components::square::SquareIndex;
     use crate::components::square::SquareIndex::{
-        A1, A2, B1, B2, B4, B8, C2, C5, C6, D3, D4, E2, E7, F1, F2, G1, G2, H1, H2,
+        A1, A2, A3, A4, B1, B2, B4, B8, C2, C3, C5, C6, C8, D3, D4, D5, E2, E6, E7, E8, F1, F2, F3,
+        G1, G2, G5, G8, H1, H2, H3, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
 
@@ -271,5 +349,198 @@ mod test {
         assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup), false);
         let mv = make_move(E2, D3);
         assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn king_cannot_castle_through_check() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/8/8/3b4/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let mv = make_move(C2, D3);
+        let mv = Move {
+            to: 0,
+            from: 0,
+            kind: MoveType::CastleKing,
+        };
+        assert_eq!(is_legal_castle(&pos, &mv, &lookup, 0), false);
+    }
+
+    #[test]
+    fn king_cannot_castle_in_check() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/8/8/2b5/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: 0,
+            from: 0,
+            kind: MoveType::CastleKing,
+        };
+        assert_eq!(is_legal_castle(&pos, &mv, &lookup, 1), false);
+    }
+
+    #[test]
+    fn en_passant_discovered_check() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/K2Pp2q/8/8/8/8 w - e6 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: E6 as u8,
+            from: D5 as u8,
+            kind: MoveType::EnPassantCapture,
+        };
+        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup), false);
+    }
+
+    #[test]
+    fn en_passant_out_of_check() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/3Pp2q/3K4/8/8/8 w - e6 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: E6 as u8,
+            from: D5 as u8,
+            kind: MoveType::EnPassantCapture,
+        };
+        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn random_fen_1() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: G5 as u8,
+            from: H4 as u8,
+            kind: MoveType::Quiet,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn random_fen_2() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"rnbqk1nr/pppp1ppp/8/4p3/1b1P4/P7/1PP1PPPP/RNBQKBNR w KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: B4 as u8,
+            from: A3 as u8,
+            kind: MoveType::Capture,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn random_fen_3() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/P1N2Q1p/1PPBBPPP/R3K2R w KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: A3 as u8,
+            from: B4 as u8,
+            kind: MoveType::Capture,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn random_fen_4() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R w KQkq a3 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: A3 as u8,
+            from: B4 as u8,
+            kind: MoveType::EnPassantCapture,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn castle_through_knight_attacks() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: C8 as u8,
+            from: E8 as u8,
+            kind: MoveType::CastleQueen,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), false);
+    }
+
+    #[test]
+    fn castle_through_more_knight_attacks() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqpb1/bn2pnN1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: G8 as u8,
+            from: E8 as u8,
+            kind: MoveType::CastleKing,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), false);
+    }
+
+    #[test]
+    fn castle_through_even_more_knight_attacks() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqNb1/bn2pn2/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: C8 as u8,
+            from: E8 as u8,
+            kind: MoveType::CastleQueen,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), false);
+    }
+
+    #[test]
+    fn queen_captures() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(
+            &"r3k2r/p1ppqpb1/1n2pnp1/3PN3/1p2P3/2N2Q1p/PPPBbPPP/R2K3R w KQkq - 0 1".to_string(),
+        )
+        .unwrap();
+        let mv = Move {
+            to: E2 as u8,
+            from: F3 as u8,
+            kind: MoveType::Capture,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), true);
+    }
+
+    #[test]
+    fn bishop_moves() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos =
+            parse_fen(&"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ".to_string())
+                .unwrap();
+        let mv = Move {
+            to: C8 as u8,
+            from: H3 as u8,
+            kind: MoveType::Quiet,
+        };
+        assert_eq!(is_legal(&pos, &mv, &lookup), false);
     }
 }

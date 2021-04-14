@@ -1,5 +1,7 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{AddPiece, Bitboard, ClearBit, PieceItr, Shift, RANK3, RANK7};
+use crate::components::bitboard::{
+    AddPiece, Bitboard, ClearBit, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
+};
 use crate::components::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, Capture, EnPassantCapture, KnightPromotion,
     KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
@@ -11,48 +13,58 @@ use crate::components::piece::{Color, PieceType};
 use crate::components::square::Square;
 use crate::move_gen::util::extract_moves;
 
+#[derive(Copy, Clone)]
+struct PawnDirections {
+    rank7: Bitboard,
+    rank3: Bitboard,
+    north: i8,
+    south: i8,
+}
+
 /// Generate all pseudo-legal moves for the given position and add them
 /// to the provided vector. Pseudo-legal moves are defined as a subset of
 /// all legal moves for a given position which might also leave the king in check.
 pub fn gen_pseudo_legal_pawn_moves(pos: &BoardState, list: &mut Vec<Move>) {
-    gen_quiet_pushes(pos, list);
-    gen_captures(pos, list);
-    gen_en_passant(pos, list);
-    gen_promotions(pos, list);
+    let dirs = PawnDirections::new(pos.active_player());
+    gen_quiet_pushes(pos, list, dirs);
+    gen_captures(pos, list, dirs);
+    gen_en_passant(pos, list, dirs);
+    gen_promotions(pos, list, dirs);
 }
 
 /// Generate all quiet pushes, defined as single and double pushes,
 /// but excludes all promotions.
-fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>) {
+fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
     let us = pos.active_player();
-    let pawns = pos.bb(us, PieceType::Pawn) & !RANK7;
-    let empty_squares = !pos.bb_all();
-    let single = pawns.shift(NORTH) & empty_squares;
 
-    let pawns = single & RANK3;
+    let pawns = pos.bb(us, PieceType::Pawn) & !dirs.rank7;
     let empty_squares = !pos.bb_all();
-    let double = pawns.shift(NORTH) & empty_squares;
+    let single = pawns.shift(dirs.north) & empty_squares;
 
-    extract_pawn_moves(single, NORTH, Quiet, list);
-    extract_pawn_moves(double, NORTH + NORTH, Quiet, list);
+    let pawns = single & dirs.rank3;
+    let empty_squares = !pos.bb_all();
+    let double = pawns.shift(dirs.north) & empty_squares;
+
+    extract_pawn_moves(single, dirs.north, Quiet, list);
+    extract_pawn_moves(double, dirs.north + dirs.north, Quiet, list);
 }
 
 /// Generate all captures, including en-passant, but excluding captures which
 /// result in promotions and under-promotions.
-fn gen_captures(pos: &BoardState, list: &mut Vec<Move>) {
+fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
     let us = pos.active_player();
-    let pawns = pos.bb(us, PieceType::Pawn) & !RANK7;
+    let pawns = pos.bb(us, PieceType::Pawn) & !dirs.rank7;
     let their_king = pos.bb(!us, PieceType::King);
     let valid_pieces = pos.bb_for_color(!us) & !their_king;
 
-    let left_captures = pawns.shift(NORTH + WEST) & valid_pieces;
-    let right_captures = pawns.shift(NORTH + EAST) & valid_pieces;
+    let left_captures = pawns.shift(dirs.north + WEST) & valid_pieces;
+    let right_captures = pawns.shift(dirs.north + EAST) & valid_pieces;
 
-    extract_pawn_moves(left_captures, NORTH + WEST, Capture, list);
-    extract_pawn_moves(right_captures, NORTH + EAST, Capture, list);
+    extract_pawn_moves(left_captures, dirs.north + WEST, Capture, list);
+    extract_pawn_moves(right_captures, dirs.north + EAST, Capture, list);
 }
 
-fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
+fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
     if pos.en_passant().is_none() {
         return;
     }
@@ -61,32 +73,44 @@ fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>) {
     let en_passant = en_passant_bb(pos);
     let pawns = pos.bb(us, PieceType::Pawn);
 
-    let left_captures = pawns.shift(NORTH + WEST) & en_passant;
-    let right_captures = pawns.shift(NORTH + EAST) & en_passant;
+    let shift = pawns.shift(dirs.north + WEST);
 
-    extract_pawn_moves(left_captures, NORTH + WEST, EnPassantCapture, list);
-    extract_pawn_moves(right_captures, NORTH + EAST, EnPassantCapture, list);
+    let left_captures = pawns.shift(dirs.north + WEST) & en_passant;
+    let right_captures = pawns.shift(dirs.north + EAST) & en_passant;
+
+    extract_pawn_moves(left_captures, dirs.north + WEST, EnPassantCapture, list);
+    extract_pawn_moves(right_captures, dirs.north + EAST, EnPassantCapture, list);
 }
 
 /// Generate all promotions and under promotions, including pushes and captures on the eighth rank.
-fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>) {
+fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
     let us = pos.active_player();
-    let pawns = pos.bb(us, PieceType::Pawn) & RANK7;
+    let pawns = pos.bb(us, PieceType::Pawn) & dirs.rank7;
     let empty_squares = !pos.bb_all();
     let their_king = pos.bb(!us, PieceType::King);
     let valid_captures = pos.bb_for_color(!us) & !their_king;
 
-    let pushes = pawns.shift(NORTH) & empty_squares;
-    let left_captures = pawns.shift(NORTH + WEST) & valid_captures;
-    let right_captures = pawns.shift(NORTH + EAST) & valid_captures;
+    let pushes = pawns.shift(dirs.north) & empty_squares;
+    let left_captures = pawns.shift(dirs.north + WEST) & valid_captures;
+    let right_captures = pawns.shift(dirs.north + EAST) & valid_captures;
 
-    extract_promotions(pushes, NORTH, list, PromotionType::Push);
-    extract_promotions(left_captures, NORTH + EAST, list, PromotionType::Capture);
-    extract_promotions(right_captures, NORTH + WEST, list, PromotionType::Capture);
+    extract_promotions(pushes, dirs.north, list, PromotionType::Push);
+    extract_promotions(
+        left_captures,
+        dirs.north + WEST,
+        list,
+        PromotionType::Capture,
+    );
+    extract_promotions(
+        right_captures,
+        dirs.north + EAST,
+        list,
+        PromotionType::Capture,
+    );
 }
 
 pub fn extract_pawn_moves(bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
-    for (square, bb) in bitboard.iter() {
+    for (square, _) in bitboard.iter() {
         let m = Move {
             to: square as u8,
             from: (square as i8 - offset) as u8,
@@ -112,7 +136,7 @@ fn extract_promotions(
     moves: &mut Vec<Move>,
     kind: PromotionType,
 ) {
-    for (square, bb) in bitboard.iter() {
+    for (square, _) in bitboard.iter() {
         let itr = match kind {
             PromotionType::Push => MoveType::promotion_itr(),
             PromotionType::Capture => MoveType::promotion_capture_itr(),
@@ -133,8 +157,30 @@ fn en_passant_bb(pos: &BoardState) -> Bitboard {
     if square == 0 {
         0
     } else {
-        let b: Bitboard = 0;
-        b.add_at_square(square)
+        Bitboard::for_square(square)
+    }
+}
+
+impl PawnDirections {
+    fn new(color: Color) -> PawnDirections {
+        let rank7 = match color {
+            Color::White => RANK7,
+            Color::Black => RANK2,
+        };
+        let rank3 = match color {
+            Color::White => RANK3,
+            Color::Black => RANK6,
+        };
+        let north = match color {
+            Color::White => NORTH,
+            Color::Black => SOUTH,
+        };
+        PawnDirections {
+            rank7,
+            rank3,
+            north,
+            south: -north,
+        }
     }
 }
 
@@ -212,5 +258,32 @@ mod tests {
         assert_eq!(moves.get(0).unwrap().from, D3 as u8);
         assert_eq!(moves.get(1).unwrap().to, F6 as u8);
         assert_eq!(moves.get(1).unwrap().from, F5 as u8);
+    }
+
+    #[test]
+    fn gen_en_passant() {
+        let pos = parse_fen(&"8/8/3p4/KPp4r/5R1k/8/8/8 w - c6 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_pawn_moves(&pos, &mut list);
+        assert_eq!(list.len(), 2);
+    }
+
+    #[test]
+    fn gen_a3_to_b4() {
+        let pos = parse_fen(&"8/8/8/8/1p6/P7/8/8 w - - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_pawn_moves(&pos, &mut list);
+        assert_eq!(list.len(), 2);
+    }
+
+    #[test]
+    fn gen_b4_to_a3() {
+        let mut pos = parse_fen(&"8/8/8/8/Pp6/8/8/8 b - a3 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_pawn_moves(&pos, &mut list);
+        assert_eq!(list.len(), 2);
+        let mv = *list.get(1).unwrap();
+        pos.make_move(mv);
+        assert_eq!(pos.bb_all(), 65536)
     }
 }

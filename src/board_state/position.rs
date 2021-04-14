@@ -1,6 +1,8 @@
 use crate::components::bitboard::*;
 use crate::components::piece::{Color, Piece, PieceType, COLOR_COUNT, PIECE_COUNT};
+use crate::components::square::Square;
 
+#[derive(Copy, Clone)]
 pub struct Position {
     pieces_bb: [Bitboard; PIECE_COUNT],
     colors_bb: [Bitboard; COLOR_COUNT],
@@ -22,6 +24,34 @@ impl Position {
         let color = Piece::convert_char_to_color(c);
         self.pieces_bb[piece] = self.pieces_bb[piece].add_piece(rank, file);
         self.colors_bb[color] = self.colors_bb[color].add_piece(rank, file);
+    }
+
+    pub fn add(&mut self, piece: PieceType, color: Color, square: Square) {
+        self.pieces_bb[piece] = self.pieces_bb[piece].add_at_square(square);
+        self.colors_bb[color] = self.colors_bb[color].add_at_square(square);
+    }
+
+    pub fn remove_piece(&mut self, piece: PieceType, color: Color, square: Square) {
+        self.pieces_bb[piece] = self.pieces_bb[piece].clear_bit(square);
+        self.colors_bb[color] = self.colors_bb[color].clear_bit(square);
+    }
+
+    pub fn type_on(&self, square: Square) -> Option<PieceType> {
+        let piece_bb = Bitboard::for_square(square);
+        for (i, bb) in self.pieces_bb.iter().enumerate() {
+            if piece_bb & *bb != 0 {
+                match i {
+                    0 => return Some(PieceType::Pawn),
+                    1 => return Some(PieceType::Rook),
+                    2 => return Some(PieceType::Knight),
+                    3 => return Some(PieceType::Bishop),
+                    4 => return Some(PieceType::Queen),
+                    5 => return Some(PieceType::King),
+                    _ => return None,
+                };
+            }
+        }
+        None
     }
 
     pub fn default() -> Position {

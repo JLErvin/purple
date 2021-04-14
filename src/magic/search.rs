@@ -71,7 +71,6 @@ fn search_magic(
         table.iter_mut().for_each(|m| *m = 0);
         let passed = validate_magic(magic, &searcher, table);
         if passed {
-            println!("it took {} iterations", k);
             return Some(magic);
         }
     }

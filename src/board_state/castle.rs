@@ -1,3 +1,4 @@
+#[derive(Copy, Clone)]
 pub struct Castle {
     pub white_king: bool,
     pub white_queen: bool,

@@ -11,13 +11,14 @@ pub const EAST: i8 = 1;
 pub const SOUTH: i8 = -NORTH;
 pub const WEST: i8 = -EAST;
 
+#[derive(Copy, Clone)]
 pub struct Move {
     pub to: u8,
     pub from: u8,
     pub kind: MoveType,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum MoveType {
     Capture,
     EnPassantCapture,
@@ -30,6 +31,8 @@ pub enum MoveType {
     RookPromotionCapture,
     QueenPromotionCapture,
     Quiet,
+    CastleKing,
+    CastleQueen,
 }
 
 #[derive(Clone, Copy)]

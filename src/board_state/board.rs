@@ -1,9 +1,15 @@
 use crate::board_state::castle::Castle;
 use crate::board_state::position::Position;
 use crate::components::bitboard::*;
+use crate::components::chess_move::{Move, MoveType};
+use crate::components::piece::PieceType::Rook;
 use crate::components::piece::*;
+use crate::components::square::SquareIndex::{
+    A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8,
+};
 use crate::components::square::*;
 
+#[derive(Copy, Clone)]
 pub struct BoardState {
     pub(super) position: Position,
     pub(super) active_player: Color,
@@ -58,6 +64,192 @@ impl BoardState {
         self.position.add_piece(piece, rank, file);
     }
 
+    pub fn remove_piece(&mut self, piece: PieceType, color: Color, square: Square) {
+        self.position.remove_piece(piece, color, square);
+    }
+
+    pub fn add(&mut self, piece: PieceType, color: Color, square: Square) {
+        self.position.add(piece, color, square);
+    }
+
+    pub fn switch(&mut self) {
+        self.active_player = !self.active_player;
+    }
+
+    pub fn type_on(&self, square: Square) -> Option<PieceType> {
+        self.position.type_on(square)
+    }
+
+    pub fn make_move(&mut self, mv: Move) {
+        let kind = self.position.type_on(mv.from).unwrap();
+        if kind == PieceType::King {
+            if self.active_player == Color::White {
+                self.castling_rights.white_king = false;
+                self.castling_rights.white_queen = false;
+            } else {
+                self.castling_rights.black_king = false;
+                self.castling_rights.black_queen = false;
+            }
+        }
+
+        if kind == PieceType::Pawn {
+            if ((mv.to as i8) - (mv.from as i8)).abs() == 16 {
+                if self.active_player == Color::White {
+                    self.en_passant = Some(mv.to - 8);
+                } else {
+                    self.en_passant = Some(mv.to + 8);
+                }
+            } else {
+                self.en_passant = None;
+            }
+        } else {
+            self.en_passant = None;
+        }
+
+        if kind == PieceType::Rook {
+            if self.active_player == Color::White {
+                if mv.from == H1 as u8 {
+                    self.castling_rights.white_king = false;
+                }
+                if mv.from == A1 as u8 {
+                    self.castling_rights.white_queen = false;
+                }
+            } else {
+                if mv.from == H8 as u8 {
+                    self.castling_rights.black_king = false;
+                }
+                if mv.from == A8 as u8 {
+                    self.castling_rights.black_queen = false;
+                }
+            }
+        }
+
+        let ep_offset: i8 = match self.active_player {
+            Color::White => 8,
+            Color::Black => -8,
+        };
+
+        if mv.kind == MoveType::Quiet {
+            self.position
+                .remove_piece(kind, self.active_player, mv.from);
+            self.position.add(kind, self.active_player, mv.to);
+        } else if mv.kind == MoveType::Capture {
+            let capture_kind = self.position.type_on(mv.to).unwrap();
+
+            // if the capture is on one of the corners and it is a rook, remove that player's respective
+            // castling rights
+            if capture_kind == Rook {
+                if self.active_player == Color::White {
+                    if mv.to == H8 as u8 {
+                        self.castling_rights.black_king = false;
+                    } else if mv.to == A8 as u8 {
+                        self.castling_rights.black_queen = false;
+                    }
+                } else {
+                    if self.active_player == Color::Black {
+                        if mv.to == H1 as u8 {
+                            self.castling_rights.white_king = false;
+                        } else if mv.to == A1 as u8 {
+                            self.castling_rights.white_queen = false;
+                        }
+                    }
+                }
+            }
+
+            self.position
+                .remove_piece(kind, self.active_player, mv.from);
+            self.position
+                .remove_piece(capture_kind, !self.active_player, mv.to);
+            self.position.add(kind, self.active_player, mv.to);
+        } else if mv.kind == MoveType::EnPassantCapture {
+            self.position
+                .remove_piece(kind, self.active_player, mv.from);
+            self.position
+                .remove_piece(kind, !self.active_player, (mv.to as i8 - ep_offset) as u8);
+            self.position.add(kind, self.active_player, mv.to);
+        } else if mv.kind == MoveType::RookPromotion
+            || mv.kind == MoveType::BishopPromotion
+            || mv.kind == MoveType::KnightPromotion
+            || mv.kind == MoveType::QueenPromotion
+        {
+            self.position
+                .remove_piece(kind, self.active_player, mv.from);
+            let add = match mv.kind {
+                MoveType::KnightPromotion => PieceType::Knight,
+                MoveType::BishopPromotion => PieceType::Bishop,
+                MoveType::RookPromotion => PieceType::Rook,
+                MoveType::QueenPromotion => PieceType::Queen,
+                _ => PieceType::Knight,
+            };
+            self.position.add(add, self.active_player, mv.to);
+        } else if mv.kind == MoveType::RookPromotionCapture
+            || mv.kind == MoveType::BishopPromotionCapture
+            || mv.kind == MoveType::KnightPromotionCapture
+            || mv.kind == MoveType::QueenPromotionCapture
+        {
+            let capture_kind = self.position.type_on(mv.to).unwrap();
+            self.position
+                .remove_piece(kind, self.active_player, mv.from);
+            self.position
+                .remove_piece(capture_kind, !self.active_player, mv.to);
+            let add = match mv.kind {
+                MoveType::KnightPromotionCapture => PieceType::Knight,
+                MoveType::BishopPromotionCapture => PieceType::Bishop,
+                MoveType::RookPromotionCapture => PieceType::Rook,
+                MoveType::QueenPromotionCapture => PieceType::Queen,
+                _ => PieceType::Knight,
+            };
+            self.position.add(add, self.active_player, mv.to);
+        } else if mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen {
+            if self.active_player == Color::White {
+                self.castling_rights.white_king = false;
+                self.castling_rights.white_queen = false;
+                if mv.kind == MoveType::CastleKing {
+                    self.position
+                        .remove_piece(PieceType::King, self.active_player, E1 as u8);
+                    self.position
+                        .remove_piece(PieceType::Rook, self.active_player, H1 as u8);
+                    self.position
+                        .add(PieceType::King, self.active_player, G1 as u8);
+                    self.position
+                        .add(PieceType::Rook, self.active_player, F1 as u8);
+                } else {
+                    self.position
+                        .remove_piece(PieceType::King, self.active_player, E1 as u8);
+                    self.position
+                        .remove_piece(PieceType::Rook, self.active_player, A1 as u8);
+                    self.position
+                        .add(PieceType::King, self.active_player, C1 as u8);
+                    self.position
+                        .add(PieceType::Rook, self.active_player, D1 as u8);
+                }
+            } else {
+                self.castling_rights.black_king = false;
+                self.castling_rights.black_queen = false;
+                if mv.kind == MoveType::CastleKing {
+                    self.position
+                        .remove_piece(PieceType::King, self.active_player, E8 as u8);
+                    self.position
+                        .remove_piece(PieceType::Rook, self.active_player, H8 as u8);
+                    self.position
+                        .add(PieceType::King, self.active_player, G8 as u8);
+                    self.position
+                        .add(PieceType::Rook, self.active_player, F8 as u8);
+                } else {
+                    self.position
+                        .remove_piece(PieceType::King, self.active_player, E8 as u8);
+                    self.position
+                        .remove_piece(PieceType::Rook, self.active_player, A8 as u8);
+                    self.position
+                        .add(PieceType::King, self.active_player, C8 as u8);
+                    self.position
+                        .add(PieceType::Rook, self.active_player, D8 as u8);
+                }
+            }
+        }
+        self.switch();
+    }
+
     pub fn empty() -> BoardState {
         let position = Position::empty();
         BoardState {
@@ -85,6 +277,7 @@ impl BoardState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::components::square::SquareIndex::{A2, A3, A4, B1, B4, C3, D2, D3, D4};
 
     #[test]
     fn correct_initial_values() {
@@ -150,4 +343,47 @@ mod tests {
         assert_eq!(b1 as u8, 1);
         assert_eq!(b2 as u8, 0);
     }
+
+    #[test]
+    fn makes_pawn_push() {
+        let mut b = BoardState::default();
+        let m = Move {
+            to: D4 as u8,
+            from: D2 as u8,
+            kind: MoveType::Quiet,
+        };
+        b.make_move(m);
+        assert_eq!(b.bb_all(), 18446462598867122175);
+        assert_eq!(b.en_passant, Some(D3 as u8));
+    }
+
+    #[test]
+    fn makes_knight_move() {
+        let mut b = BoardState::default();
+        let m = Move {
+            to: C3 as u8,
+            from: B1 as u8,
+            kind: MoveType::Quiet,
+        };
+        b.make_move(m);
+        assert_eq!(b.bb_all(), 18446462598733168637);
+    }
+
+    /*    fn correct_black_en_passant_capture() {
+            let mut b = BoardState::default();
+            let m = Move {
+                to: A2 as u8,
+                from: A4 as u8,
+                kind: MoveType::Quiet,
+            };
+            b.make_move(m);
+            let m = Move {
+                to: B4 as u8,
+                from: A3 as u8,
+                kind: MoveType::EnPassantCapture,
+            };
+            b.make_move(m);
+            assert_eq!(b.bb_all(), 10483662054784106129);
+        }
+    */
 }

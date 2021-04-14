@@ -118,29 +118,6 @@ impl Lookup {
                     }
                 }
             }
-            /*            for i in 0..64 {
-                            for j in 0..64 {
-                                let k = Bitboard::for_square(j);
-                                let p = Bitboard::for_square(i);
-                                let attacks_i = match piece {
-                                    MagicPiece::Rook => rook_table.moves(i, 0),
-                                    MagicPiece::Bishop => bishop_table.moves(i, 0),
-                                };
-                                if k & attacks_i != 0 {
-                                    match piece {
-                                        MagicPiece::Rook => {
-                                            b[i as usize][j as usize] =
-                                                attacks_i & rook_table.moves(j, 0) | k | p
-                                        }
-                                        MagicPiece::Bishop => {
-                                            b[i as usize][j as usize] =
-                                                attacks_i & bishop_table.moves(j, 0) | k | p
-                                        }
-                                    }
-                                }
-                            }
-                        }
-            */
         }
         b
     }

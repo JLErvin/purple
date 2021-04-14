@@ -3,7 +3,8 @@ use crate::board_state::position::Position;
 use crate::components::bitboard::{Bitboard, PieceItr};
 use crate::components::chess_move::MoveType::{Capture, Quiet};
 use crate::components::chess_move::{Move, MoveType};
-use crate::components::piece::PieceType;
+use crate::components::piece::{Color, PieceType};
+use crate::components::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::util::extract_moves;
 use std::io::empty;
@@ -32,95 +33,99 @@ pub fn gen_pseudo_legal_moves(
     }
 }
 
+pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
+    let us = pos.active_player();
+
+    let (king_mask, queen_mask) = match us {
+        Color::White => (96, 14),
+        Color::Black => (6917529027641081856, 1008806316530991104),
+    };
+
+    let occupied = pos.bb_all();
+
+    let (king_rights, queen_rights) = match us {
+        Color::White => (
+            pos.castling_rights().white_king,
+            pos.castling_rights().white_queen,
+        ),
+        Color::Black => (
+            pos.castling_rights().black_king,
+            pos.castling_rights().black_queen,
+        ),
+    };
+
+    if (occupied & king_mask == 0) && king_rights {
+        let (to, from) = match us {
+            Color::White => (G1 as u8, E1 as u8),
+            Color::Black => (G8 as u8, E8 as u8),
+        };
+        let m = Move {
+            to,
+            from,
+            kind: MoveType::CastleKing,
+        };
+        list.push(m);
+    }
+
+    if (occupied & queen_mask == 0) && queen_rights {
+        let (to, from) = match us {
+            Color::White => (C1 as u8, E1 as u8),
+            Color::Black => (C8 as u8, E8 as u8),
+        };
+        let m = Move {
+            to,
+            from,
+            kind: MoveType::CastleQueen,
+        };
+        list.push(m);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::board_state::fen::parse_fen;
     use crate::components::chess_move::Move;
-    /*
-        #[test]
-        fn moves_king_on_h1() {
-            let pos = parse_fen(&"8/8/8/8/8/8/8/7K w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 3);
-        }
+    use crate::move_gen::moves::gen_pseudo_legal_castles;
 
-        #[test]
-        fn moves_king_on_a1() {
-            let pos = parse_fen(&"8/8/8/8/8/8/8/K7 w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 3);
-        }
+    #[test]
+    fn castles_no_obstruction() {
+        let pos = parse_fen(&"8/8/8/8/8/8/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_castles(&pos, &mut list);
+        assert_eq!(list.len(), 2);
+    }
 
-        #[test]
-        fn moves_king_on_a8() {
-            let pos = parse_fen(&"K7/8/8/8/8/8/8/8 w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 3);
-        }
+    #[test]
+    fn no_castles_with_obstruction() {
+        let pos = parse_fen(&"8/8/8/8/8/8/8/R3KB1R w KQ - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_castles(&pos, &mut list);
+        assert_eq!(list.len(), 1);
 
-        #[test]
-        fn moves_king_on_h8() {
-            let pos = parse_fen(&"7K/8/8/8/8/8/8/8 w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 3);
-        }
+        let pos = parse_fen(&"8/8/8/8/8/8/8/R1B1K2R w KQ - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_castles(&pos, &mut list);
+        assert_eq!(list.len(), 1);
+    }
 
-        #[test]
-        fn moves_king_random_fen1() {
-            let pos =
-                parse_fen(&"r4n2/4p1p1/5k1P/6pB/p7/1p1Pb1n1/2PB4/2K5 w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 3);
-        }
+    #[test]
+    fn no_castles_without_rights() {
+        let pos = parse_fen(&"8/8/8/8/8/8/8/R3K2R w K - 0 1".to_string()).unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_castles(&pos, &mut list);
+        assert_eq!(list.len(), 1);
+    }
 
-        #[test]
-        fn moves_king_random_fen2() {
-            let pos =
-                parse_fen(&"6b1/P1P5/2B1P1p1/k1K2N1n/1p3N2/8/P2R3p/4b3 w - - 0 1".to_string()).unwrap();
-            let mut list: Vec<Move> = Vec::with_capacity(256);
-            gen_pseudo_legal_king_moves(&pos, &mut list);
-            assert_eq!(list.len(), 7);
-        }
-    */
-
-    /*    #[test]
-       fn identifies_number_of_moves_from_d4() {
-           let pos = parse_fen(&"8/8/8/8/3N4/8/8/8 w - - 0 1".to_string()).unwrap();
-           let mut list: Vec<Move> = Vec::new();
-           gen_pseudo_legal_knight_moves(&pos, &mut list);
-           assert_eq!(list.len(), 8);
-       }
-
-       #[test]
-       fn identifies_number_of_moves_from_h1() {
-           let pos = parse_fen(&"8/8/8/8/8/8/8/7N w - - 0 1".to_string()).unwrap();
-           let mut list: Vec<Move> = Vec::new();
-           gen_pseudo_legal_knight_moves(&pos, &mut list);
-           assert_eq!(list.len(), 2);
-       }
-
-       #[test]
-       fn identifies_number_of_moves_from_random_fen1() {
-           let pos =
-               parse_fen(&"R7/2p5/1p4PK/1PpN1PP1/4PP2/6p1/2n4k/2B5 w - - 0 1".to_string()).unwrap();
-           let mut list: Vec<Move> = Vec::new();
-           gen_pseudo_legal_knight_moves(&pos, &mut list);
-           assert_eq!(list.len(), 7);
-       }
-
-       #[test]
-       fn identifies_number_of_moves_from_random_fen2() {
-           let pos =
-               parse_fen(&"7n/QpB1N3/8/1p6/1p1b1R1P/p1PN4/4Kp2/1k6 w - - 0 1".to_string()).unwrap();
-           let mut list: Vec<Move> = Vec::new();
-           gen_pseudo_legal_knight_moves(&pos, &mut list);
-           assert_eq!(list.len(), 13);
-       }
-
-    */
+    #[test]
+    fn black_queenside_castle() {
+        let pos = parse_fen(
+            &"r3k2r/p1ppq1b1/bn2pn2/3P2N1/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 2".to_string(),
+        )
+        .unwrap();
+        let mut list: Vec<Move> = Vec::with_capacity(256);
+        gen_pseudo_legal_castles(&pos, &mut list);
+        let m1 = list.get(0).unwrap();
+        let m2 = list.get(1).unwrap();
+        assert_eq!(list.len(), 2);
+    }
 }
