@@ -8,7 +8,7 @@ use crate::components::chess_move::MoveType::{Capture, CastleKing, CastleQueen, 
 use crate::components::piece::PieceType::{King, Knight, Queen};
 use crate::components::square::rank_file_to_index;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
-use crate::move_gen::legal::is_legal;
+use crate::move_gen::legal::{calculate_blockers, is_legal};
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::{gen_pseudo_legal_castles, gen_pseudo_legal_moves};
 use itertools::Itertools;
@@ -18,8 +18,11 @@ use std::time::Instant;
 const MAX_MOVES: usize = 256;
 
 pub fn gen_all_pseudo_legal_moves(pos: &mut BoardState, depth: usize) -> usize {
+    let tic = Instant::now();
     let random = MagicRandomizer::new(GenerationScheme::PreComputed);
     let lookup = Lookup::new(random);
+    let toc = tic.elapsed().as_secs_f64();
+    println!("Took {} seconds", toc);
     let tic = Instant::now();
     let sum = gen(pos, depth, &lookup);
     let toc = tic.elapsed().as_secs_f64();
@@ -40,33 +43,14 @@ pub fn gen(pos: &mut BoardState, depth: usize, lookup: &Lookup) -> usize {
     gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Bishop);
     gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Queen);
 
-    let v = list
-        .into_iter()
-        .filter(|x| is_legal(pos, &x, &lookup))
-        .collect_vec();
+    let blockers = calculate_blockers(pos, lookup);
+    list.retain(|mv| is_legal(pos, mv, &lookup, blockers));
 
     if depth == 1 {
-        /*        for mv in v.iter() {
-                    let pt = pos.type_on(mv.from).unwrap();
-                    let pt = match pt {
-                        PieceType::Pawn => 'P',
-                        PieceType::Rook => 'R',
-                        Knight => 'N',
-                        PieceType::Bishop => 'B',
-                        King => 'K',
-                        Queen => 'Q',
-                    };
-                    if mv.from == 4 && mv.to == 6 {
-                        debug_print(pos);
-                        println!();
-                    }
-                    //println!("{} from {} to {}", pt, mv.from, mv.to);
-                }
-        */
-        return v.len();
+        return list.len();
     } else {
         let mut sum = 0;
-        for mv in v.into_iter() {
+        for mv in list.into_iter() {
             let mut new_pos = pos.clone();
             new_pos.make_move(mv);
             sum += gen(&mut new_pos, depth - 1, lookup);
@@ -75,7 +59,7 @@ pub fn gen(pos: &mut BoardState, depth: usize, lookup: &Lookup) -> usize {
     }
 }
 
-fn debug_print(pos: &BoardState) {
+pub fn debug_print(pos: &BoardState) {
     for i in 0..8 {
         for j in 0..8 {
             let file = j;

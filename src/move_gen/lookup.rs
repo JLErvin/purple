@@ -16,6 +16,8 @@ pub struct Lookup {
     king_table: Vec<Bitboard>,
     knight_table: Vec<Bitboard>,
     between: [[Bitboard; 64]; 64],
+    dumb_rooks: [Bitboard; 64],
+    dumb_bishops: [Bitboard; 64],
 }
 
 impl Lookup {
@@ -25,6 +27,8 @@ impl Lookup {
         let king_table = Lookup::init_king();
         let knight_table = Lookup::init_knight();
         let between = Lookup::init_between(&rook_table, &bishop_table);
+        let dumb_rooks = Lookup::init_dumb(&rook_table);
+        let dumb_bishops = Lookup::init_dumb(&bishop_table);
 
         Lookup {
             rook_table,
@@ -32,6 +36,8 @@ impl Lookup {
             king_table,
             knight_table,
             between,
+            dumb_rooks,
+            dumb_bishops,
         }
     }
 
@@ -39,6 +45,7 @@ impl Lookup {
         match piece {
             PieceType::Knight => *self.knight_table.get(square as usize).unwrap(),
             PieceType::King => *self.king_table.get(square as usize).unwrap(),
+            PieceType::Queen => self.sliding_moves(square, 0, PieceType::Queen),
             _ => 0,
         }
     }
@@ -82,6 +89,23 @@ impl Lookup {
             v.push(b);
         }
         v
+    }
+
+    fn init_dumb(table: &MagicTable) -> [Bitboard; 64] {
+        let mut t: [Bitboard; 64] = [0; 64];
+
+        for i in 0..64 {
+            t[i] = table.moves(i as u8, 0);
+        }
+        t
+    }
+
+    pub fn dumb_attacks(&self, piece: PieceType, square: Square) -> Bitboard {
+        match piece {
+            PieceType::Rook => self.dumb_rooks[square as usize],
+            PieceType::Bishop => self.dumb_bishops[square as usize],
+            _ => 0,
+        }
     }
 
     fn attacks(

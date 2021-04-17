@@ -19,7 +19,10 @@ mod move_gen;
 fn main() {
     println!("Hello, world!");
     let mut b = parse_fen(
-        &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
+        &"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+
+"
+        .to_string(),
     )
     .unwrap();
     gen_all_pseudo_legal_moves(&mut b, 6);

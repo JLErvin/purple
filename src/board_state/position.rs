@@ -19,6 +19,11 @@ impl Position {
         self.colors_bb[color]
     }
 
+    #[inline]
+    pub fn bb_for_piece(&self, piece: PieceType) -> Bitboard {
+        self.pieces_bb[piece]
+    }
+
     pub fn add_piece(&mut self, c: char, rank: u8, file: u8) {
         let piece = Piece::convert_char_to_piece(c);
         let color = Piece::convert_char_to_color(c);

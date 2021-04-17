@@ -56,6 +56,11 @@ impl BoardState {
     }
 
     #[inline]
+    pub fn bb_pieces(&self, piece: PieceType) -> Bitboard {
+        self.position.bb_for_piece(piece)
+    }
+
+    #[inline]
     pub fn bb_all(&self) -> Bitboard {
         self.position.bb_for_color(Color::White) | self.position.bb_for_color(Color::Black)
     }
