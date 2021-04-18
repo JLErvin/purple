@@ -16,8 +16,8 @@ pub struct Lookup {
     king_table: Vec<Bitboard>,
     knight_table: Vec<Bitboard>,
     between: [[Bitboard; 64]; 64],
-    dumb_rooks: [Bitboard; 64],
-    dumb_bishops: [Bitboard; 64],
+    pseudo_rooks: [Bitboard; 64],
+    pseudo_bishops: [Bitboard; 64],
 }
 
 impl Lookup {
@@ -27,8 +27,8 @@ impl Lookup {
         let king_table = Lookup::init_king();
         let knight_table = Lookup::init_knight();
         let between = Lookup::init_between(&rook_table, &bishop_table);
-        let dumb_rooks = Lookup::init_dumb(&rook_table);
-        let dumb_bishops = Lookup::init_dumb(&bishop_table);
+        let dumb_rooks = Lookup::init_pseudo(&rook_table);
+        let dumb_bishops = Lookup::init_pseudo(&bishop_table);
 
         Lookup {
             rook_table,
@@ -36,11 +36,13 @@ impl Lookup {
             king_table,
             knight_table,
             between,
-            dumb_rooks,
-            dumb_bishops,
+            pseudo_rooks: dumb_rooks,
+            pseudo_bishops: dumb_bishops,
         }
     }
 
+    /// Given a non-sliding piece (i.e. any piece which is not constrained in it's movement by blockers
+    /// returns a bitboard representing all possible destination squares for that piece.
     pub fn moves(&self, square: Square, piece: PieceType) -> Bitboard {
         match piece {
             PieceType::Knight => *self.knight_table.get(square as usize).unwrap(),
@@ -50,6 +52,8 @@ impl Lookup {
         }
     }
 
+    /// Given a square, piece, and blockers, returns a Bitboard which represents all possible
+    /// destination squares of that piece.
     pub fn sliding_moves(&self, square: Square, blockers: Bitboard, piece: PieceType) -> Bitboard {
         match piece {
             PieceType::Rook => self.rook_table.moves(square, blockers),
@@ -61,6 +65,10 @@ impl Lookup {
         }
     }
 
+    /// Given two squares s1 and s2, returns a bitboard which represents the line which passes
+    /// through both of them. If s1 and s2 are not on the same diagonal, 0 is returned.
+    /// Note that such a Bitboard extends the whole length of the board (i.e. if s1=A1 and s2=B1,
+    /// then the returned Bitboard is the entire first rank).
     pub fn between(&self, s1: Square, s2: Square) -> Bitboard {
         self.between[s1 as usize][s2 as usize]
     }
@@ -91,7 +99,7 @@ impl Lookup {
         v
     }
 
-    fn init_dumb(table: &MagicTable) -> [Bitboard; 64] {
+    fn init_pseudo(table: &MagicTable) -> [Bitboard; 64] {
         let mut t: [Bitboard; 64] = [0; 64];
 
         for i in 0..64 {
@@ -100,10 +108,11 @@ impl Lookup {
         t
     }
 
-    pub fn dumb_attacks(&self, piece: PieceType, square: Square) -> Bitboard {
+    /// Returns a bitboard which represents the attacks of the given piece on the empty board.
+    pub fn pseudo_attacks(&self, piece: PieceType, square: Square) -> Bitboard {
         match piece {
-            PieceType::Rook => self.dumb_rooks[square as usize],
-            PieceType::Bishop => self.dumb_bishops[square as usize],
+            PieceType::Rook => self.pseudo_rooks[square as usize],
+            PieceType::Bishop => self.pseudo_bishops[square as usize],
             _ => 0,
         }
     }

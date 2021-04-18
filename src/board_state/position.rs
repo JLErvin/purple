@@ -1,6 +1,11 @@
+use crate::board_state::castle::CastleSide;
 use crate::components::bitboard::*;
+use crate::components::chess_move::{Move, MoveType};
 use crate::components::piece::{Color, Piece, PieceType, COLOR_COUNT, PIECE_COUNT};
 use crate::components::square::Square;
+use crate::components::square::SquareIndex::{
+    A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8,
+};
 
 #[derive(Copy, Clone)]
 pub struct Position {
@@ -36,9 +41,59 @@ impl Position {
         self.colors_bb[color] = self.colors_bb[color].add_at_square(square);
     }
 
-    pub fn remove_piece(&mut self, piece: PieceType, color: Color, square: Square) {
+    pub fn remove(&mut self, piece: PieceType, color: Color, square: Square) {
         self.pieces_bb[piece] = self.pieces_bb[piece].clear_bit(square);
         self.colors_bb[color] = self.colors_bb[color].clear_bit(square);
+    }
+
+    pub fn castle(&mut self, kind: MoveType, color: Color) {
+        match kind {
+            MoveType::CastleKing => self.castle_king(color),
+            MoveType::CastleQueen => self.castle_queen(color),
+            _ => {}
+        }
+    }
+
+    pub fn capture(&mut self, mv: Move, active: Color) {
+        let captured = self.type_on(mv.to).unwrap();
+        let kind = self.type_on(mv.from).unwrap();
+        self.remove(kind, active, mv.from);
+        self.remove(captured, !active, mv.to);
+        self.add(kind, active, mv.to);
+    }
+
+    fn castle_king(&mut self, color: Color) {
+        match color {
+            Color::White => {
+                self.remove(PieceType::King, color, E1 as u8);
+                self.remove(PieceType::Rook, color, H1 as u8);
+                self.add(PieceType::King, color, G1 as u8);
+                self.add(PieceType::Rook, color, F1 as u8);
+            }
+            Color::Black => {
+                self.remove(PieceType::King, color, E8 as u8);
+                self.remove(PieceType::Rook, color, H8 as u8);
+                self.add(PieceType::King, color, G8 as u8);
+                self.add(PieceType::Rook, color, F8 as u8);
+            }
+        }
+    }
+
+    fn castle_queen(&mut self, color: Color) {
+        match color {
+            Color::White => {
+                self.remove(PieceType::King, color, E1 as u8);
+                self.remove(PieceType::Rook, color, A1 as u8);
+                self.add(PieceType::King, color, C1 as u8);
+                self.add(PieceType::Rook, color, D1 as u8);
+            }
+            Color::Black => {
+                self.remove(PieceType::King, color, E8 as u8);
+                self.remove(PieceType::Rook, color, A8 as u8);
+                self.add(PieceType::King, color, C8 as u8);
+                self.add(PieceType::Rook, color, D8 as u8);
+            }
+        }
     }
 
     pub fn type_on(&self, square: Square) -> Option<PieceType> {

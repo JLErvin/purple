@@ -125,7 +125,7 @@ impl Iterator for BitboardIterator {
         }
 
         let square = self.bb.trailing_zeros() as u8;
-        let new_bb = self.bb.clear_bit(square as u8);
+        let new_bb = self.bb & (self.bb - 1);
         self.bb = new_bb;
         Some((square, new_bb))
     }

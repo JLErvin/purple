@@ -68,6 +68,7 @@ fn is_legal_non_king_move(
     if num_checkers == 1 {
         let piece_bb = Bitboard::for_square(mv.to);
         let attacker_square = checkers.trailing_zeros() as u8;
+
         return if mv.to == attacker_square {
             !pinned
         } else {
@@ -186,6 +187,7 @@ fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard {
     (pawns | rooks | bishops | queens | knights | king) & pos.bb_for_color(!us)
 }
 
+/// Calculates the ray strictly inclusive between s1 and s2
 fn ray_between(s1: Square, s2: Square, lookup: &Lookup) -> Bitboard {
     let full: Bitboard = !0;
     let b1 = Bitboard::for_square(s1);
@@ -201,14 +203,16 @@ fn king_on_square(pos: &BoardState, square: Square) -> bool {
     b & king != 0
 }
 
+/// Given the state of a game, calculates and returns a bitboard which represents all blockers
+/// (i.e. pinned pieces) for the king.
 pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup) -> Bitboard {
     let us = pos.active_player();
     let ks = king_square(pos);
     let king_bb = pos.bb(us, PieceType::King);
 
-    let attacks_rooks = (lookup.dumb_attacks(PieceType::Rook, ks)
+    let attacks_rooks = (lookup.pseudo_attacks(PieceType::Rook, ks)
         & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen)));
-    let attacks_bishops = (lookup.dumb_attacks(PieceType::Bishop, ks)
+    let attacks_bishops = (lookup.pseudo_attacks(PieceType::Bishop, ks)
         & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen)));
 
     let snipers = (attacks_rooks | attacks_bishops) & !pos.bb(us, PieceType::King);
@@ -237,8 +241,8 @@ mod test {
     use crate::components::chess_move::MoveType::Quiet;
     use crate::components::square::SquareIndex;
     use crate::components::square::SquareIndex::{
-        A1, A2, A3, A4, B1, B2, B4, B5, B8, C2, C3, C4, C5, C6, C8, D3, D4, D5, E1, E2, E4, E6, E7,
-        E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
+        A1, A2, A3, A4, B1, B2, B4, B5, B8, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E4, E6,
+        E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
 
@@ -603,5 +607,19 @@ mod test {
         };
         let blockers = calculate_blockers(&pos, &lookup);
         assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+    }
+
+    #[test]
+    fn captures_attacker_on_ray() {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        let pos = parse_fen(&"8/8/8/8/8/8/1K1R2r1/8 w - - 0 1".to_string()).unwrap();
+        let mv = Move {
+            to: G2 as u8,
+            from: D2 as u8,
+            kind: MoveType::Capture,
+        };
+        let blockers = calculate_blockers(&pos, &lookup);
+        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
     }
 }

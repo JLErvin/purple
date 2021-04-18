@@ -210,7 +210,7 @@ mod test {
         let depth_3 = gen_all_pseudo_legal_moves(&mut pos, 3);
 
         assert_eq!(depth_1, 51);
-        assert_eq!(depth_2, 2733);
-        assert_eq!(depth_3, 109269);
+        assert_eq!(depth_2, 2778);
+        assert_eq!(depth_3, 111425);
     }
 }
