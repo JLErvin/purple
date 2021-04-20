@@ -2,8 +2,8 @@ use crate::components::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture,
     QueenPromotion, QueenPromotionCapture, RookPromotion, RookPromotionCapture,
 };
-use crate::components::piece::Piece;
 use crate::components::piece::PieceType::Knight;
+use crate::components::piece::{Piece, PieceType};
 use std::slice::Iter;
 
 pub const NORTH: i8 = 8;
@@ -39,6 +39,29 @@ pub enum MoveType {
 pub enum PromotionType {
     Push,
     Capture,
+}
+
+impl Move {
+    pub fn is_double_pawn_push(&self) -> bool {
+        ((self.to as i8) - (self.from as i8)).abs() == 16
+    }
+
+    pub fn is_promotion_capture(&self) -> bool {
+        self.kind == KnightPromotionCapture
+            || self.kind == BishopPromotion
+            || self.kind == RookPromotionCapture
+            || self.kind == QueenPromotionCapture
+    }
+
+    pub fn promoted_piece(&self) -> Option<PieceType> {
+        match self.kind {
+            MoveType::RookPromotionCapture => Some(PieceType::Rook),
+            MoveType::KnightPromotionCapture => Some(PieceType::Knight),
+            MoveType::BishopPromotionCapture => Some(PieceType::Bishop),
+            MoveType::QueenPromotionCapture => Some(PieceType::Queen),
+            _ => None,
+        }
+    }
 }
 
 impl MoveType {

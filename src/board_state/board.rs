@@ -92,23 +92,14 @@ impl BoardState {
 
     pub fn make_move(&mut self, mv: Move) {
         let kind = self.position.type_on(mv.from).unwrap();
+
         if kind == PieceType::King {
-            if self.active_player == Color::White {
-                self.castling_rights.white_king = false;
-                self.castling_rights.white_queen = false;
-            } else {
-                self.castling_rights.black_king = false;
-                self.castling_rights.black_queen = false;
-            }
+            self.castling_rights.remove_rights(self.active_player);
         }
 
         if kind == PieceType::Pawn {
-            if ((mv.to as i8) - (mv.from as i8)).abs() == 16 {
-                if self.active_player == Color::White {
-                    self.en_passant = Some(mv.to - 8);
-                } else {
-                    self.en_passant = Some(mv.to + 8);
-                }
+            if mv.is_double_pawn_push() {
+                self.make_double_push(&mv);
             } else {
                 self.en_passant = None;
             }
@@ -163,46 +154,30 @@ impl BoardState {
                 _ => PieceType::Knight,
             };
             self.position.add(add, self.active_player, mv.to);
-        } else if mv.kind == MoveType::RookPromotionCapture
-            || mv.kind == MoveType::BishopPromotionCapture
-            || mv.kind == MoveType::KnightPromotionCapture
-            || mv.kind == MoveType::QueenPromotionCapture
-        {
+        } else if mv.is_promotion_capture() {
             let capture_kind = self.position.type_on(mv.to).unwrap();
 
             if capture_kind == Rook {
-                if self.active_player == Color::White {
-                    if mv.to == H8 as u8 {
-                        self.castling_rights.black_king = false;
-                    } else if mv.to == A8 as u8 {
-                        self.castling_rights.black_queen = false;
-                    }
-                } else {
-                    if self.active_player == Color::Black {
-                        if mv.to == H1 as u8 {
-                            self.castling_rights.white_king = false;
-                        } else if mv.to == A1 as u8 {
-                            self.castling_rights.white_queen = false;
-                        }
-                    }
-                }
+                self.capture_rook(mv, self.active_player);
             }
+
             self.position.remove(kind, self.active_player, mv.from);
             self.position
                 .remove(capture_kind, !self.active_player, mv.to);
-            let add = match mv.kind {
-                MoveType::KnightPromotionCapture => PieceType::Knight,
-                MoveType::BishopPromotionCapture => PieceType::Bishop,
-                MoveType::RookPromotionCapture => PieceType::Rook,
-                MoveType::QueenPromotionCapture => PieceType::Queen,
-                _ => PieceType::Knight,
-            };
+            let add = mv.promoted_piece().unwrap();
             self.position.add(add, self.active_player, mv.to);
         } else if mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen {
             self.position.castle(mv.kind, self.active_player);
             self.castling_rights.remove_rights(self.active_player);
         }
         self.switch();
+    }
+
+    fn make_double_push(&mut self, mv: &Move) {
+        match self.active_player {
+            Color::White => self.en_passant = Some(mv.to - 8),
+            Color::Black => self.en_passant = Some(mv.to + 8),
+        }
     }
 
     fn capture(&mut self, mv: Move, active: Color) {
