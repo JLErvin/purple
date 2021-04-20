@@ -48,17 +48,24 @@ impl Move {
 
     pub fn is_promotion_capture(&self) -> bool {
         self.kind == KnightPromotionCapture
-            || self.kind == BishopPromotion
+            || self.kind == BishopPromotionCapture
             || self.kind == RookPromotionCapture
             || self.kind == QueenPromotionCapture
     }
 
+    pub fn is_promotion(&self) -> bool {
+        self.kind == KnightPromotion
+            || self.kind == BishopPromotion
+            || self.kind == RookPromotion
+            || self.kind == QueenPromotion
+    }
+
     pub fn promoted_piece(&self) -> Option<PieceType> {
         match self.kind {
-            MoveType::RookPromotionCapture => Some(PieceType::Rook),
-            MoveType::KnightPromotionCapture => Some(PieceType::Knight),
-            MoveType::BishopPromotionCapture => Some(PieceType::Bishop),
-            MoveType::QueenPromotionCapture => Some(PieceType::Queen),
+            MoveType::RookPromotionCapture | MoveType::RookPromotion => Some(PieceType::Rook),
+            MoveType::KnightPromotionCapture | MoveType::KnightPromotion => Some(PieceType::Knight),
+            MoveType::BishopPromotionCapture | MoveType::BishopPromotion => Some(PieceType::Bishop),
+            MoveType::QueenPromotionCapture | MoveType::QueenPromotion => Some(PieceType::Queen),
             _ => None,
         }
     }
