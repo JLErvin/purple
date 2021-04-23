@@ -7,7 +7,7 @@ use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
 use crate::move_gen::lookup::Lookup;
 use board_state::fen::*;
-use move_gen::generator::gen_all_pseudo_legal_moves;
+use move_gen::generator::gen_all_moves;
 use rand::rngs::ThreadRng;
 use std::time::Instant;
 
@@ -18,10 +18,8 @@ mod move_gen;
 
 fn main() {
     println!("Hello, world!");
-    let mut b = parse_fen(
-        &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
-    )
-    .unwrap();
-    gen_all_pseudo_legal_moves(&mut b, 5);
+    let mut b = BoardState::default();
+    let mut b = parse_fen(&"rnbqkbnr/1ppp1pp1/p6p/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 1".to_string()).unwrap();
+    gen_all_moves(&mut b, 1);
     println!();
 }

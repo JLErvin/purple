@@ -125,9 +125,8 @@ impl Iterator for BitboardIterator {
         }
 
         let square = self.bb.trailing_zeros() as u8;
-        let new_bb = self.bb & (self.bb - 1);
-        self.bb = new_bb;
-        Some((square, new_bb))
+        self.bb &= (self.bb - 1);
+        Some((square, self.bb))
     }
 }
 
@@ -147,10 +146,12 @@ pub trait New {
     fn for_square(square: Square) -> Bitboard;
 }
 impl New for Bitboard {
+    #[inline]
     fn empty() -> Bitboard {
         0
     }
 
+    #[inline]
     fn for_square(square: Square) -> Bitboard {
         let b: Bitboard = 0;
         b.add_at_square(square)

@@ -73,8 +73,6 @@ fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) 
     let en_passant = en_passant_bb(pos);
     let pawns = pos.bb(us, PieceType::Pawn);
 
-    let shift = pawns.shift(dirs.north + WEST);
-
     let left_captures = pawns.shift(dirs.north + WEST) & en_passant;
     let right_captures = pawns.shift(dirs.north + EAST) & en_passant;
 

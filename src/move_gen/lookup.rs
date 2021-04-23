@@ -18,6 +18,7 @@ pub struct Lookup {
     between: [[Bitboard; 64]; 64],
     pseudo_rooks: [Bitboard; 64],
     pseudo_bishops: [Bitboard; 64],
+    square: [Bitboard; 64],
 }
 
 impl Lookup {
@@ -29,6 +30,7 @@ impl Lookup {
         let between = Lookup::init_between(&rook_table, &bishop_table);
         let dumb_rooks = Lookup::init_pseudo(&rook_table);
         let dumb_bishops = Lookup::init_pseudo(&bishop_table);
+        let square = Lookup::init_square();
 
         Lookup {
             rook_table,
@@ -38,7 +40,13 @@ impl Lookup {
             between,
             pseudo_rooks: dumb_rooks,
             pseudo_bishops: dumb_bishops,
+            square,
         }
+    }
+
+    #[inline]
+    pub fn square_bb(&self, square: Square) -> Bitboard {
+        self.square[square as usize]
     }
 
     /// Given a non-sliding piece (i.e. any piece which is not constrained in it's movement by blockers
@@ -105,6 +113,16 @@ impl Lookup {
         for i in 0..64 {
             t[i] = table.moves(i as u8, 0);
         }
+        t
+    }
+
+    fn init_square() -> [Bitboard; 64] {
+        let mut t: [Bitboard; 64] = [0; 64];
+
+        for i in 0..64 {
+            t[i] = 1 << i;
+        }
+
         t
     }
 
