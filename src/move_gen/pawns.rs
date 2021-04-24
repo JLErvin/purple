@@ -26,18 +26,17 @@ struct PawnDirections {
 /// all legal moves for a given position which might also leave the king in check.
 pub fn gen_pseudo_legal_pawn_moves(pos: &BoardState, list: &mut Vec<Move>) {
     let dirs = PawnDirections::new(pos.active_player());
-    gen_quiet_pushes(pos, list, dirs);
-    gen_captures(pos, list, dirs);
-    gen_en_passant(pos, list, dirs);
-    gen_promotions(pos, list, dirs);
+    let pawns = pos.bb(pos.active_player(), PieceType::Pawn);
+    gen_quiet_pushes(pos, list, dirs, pawns);
+    gen_captures(pos, list, dirs, pawns);
+    gen_en_passant(pos, list, dirs, pawns);
+    gen_promotions(pos, list, dirs, pawns);
 }
 
 /// Generate all quiet pushes, defined as single and double pushes,
 /// but excludes all promotions.
-fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
-    let us = pos.active_player();
-
-    let pawns = pos.bb(us, PieceType::Pawn) & !dirs.rank7;
+fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
+    let pawns = pawns & !dirs.rank7;
     let empty_squares = !pos.bb_all();
     let single = pawns.shift(dirs.north) & empty_squares;
 
@@ -51,9 +50,9 @@ fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections
 
 /// Generate all captures, including en-passant, but excluding captures which
 /// result in promotions and under-promotions.
-fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
+fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
     let us = pos.active_player();
-    let pawns = pos.bb(us, PieceType::Pawn) & !dirs.rank7;
+    let pawns = pawns & !dirs.rank7;
     let their_king = pos.bb(!us, PieceType::King);
     let valid_pieces = pos.bb_for_color(!us) & !their_king;
 
@@ -64,14 +63,12 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
     extract_pawn_moves(right_captures, dirs.north + EAST, Capture, list);
 }
 
-fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
+fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
     if pos.en_passant().is_none() {
         return;
     }
 
-    let us = pos.active_player();
     let en_passant = en_passant_bb(pos);
-    let pawns = pos.bb(us, PieceType::Pawn);
 
     let left_captures = pawns.shift(dirs.north + WEST) & en_passant;
     let right_captures = pawns.shift(dirs.north + EAST) & en_passant;
@@ -81,9 +78,9 @@ fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) 
 }
 
 /// Generate all promotions and under promotions, including pushes and captures on the eighth rank.
-fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections) {
+fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
     let us = pos.active_player();
-    let pawns = pos.bb(us, PieceType::Pawn) & dirs.rank7;
+    let pawns = pawns & dirs.rank7;
     let empty_squares = !pos.bb_all();
     let their_king = pos.bb(!us, PieceType::King);
     let valid_captures = pos.bb_for_color(!us) & !their_king;

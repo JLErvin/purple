@@ -236,14 +236,14 @@ mod tests {
         assert_eq!(p.bb(Color::White, PieceType::Rook), 129);
         assert_eq!(p.bb(Color::White, PieceType::Knight), 66);
         assert_eq!(p.bb(Color::White, PieceType::Bishop), 36);
-        assert_eq!(p.bb(Color::White, PieceType::Queen), 16);
-        assert_eq!(p.bb(Color::White, PieceType::King), 8);
+        assert_eq!(p.bb(Color::White, PieceType::Queen), 8);
+        assert_eq!(p.bb(Color::White, PieceType::King), 16);
         assert_eq!(p.bb(Color::Black, PieceType::Pawn), 71776119061217280);
         assert_eq!(p.bb(Color::Black, PieceType::Rook), 9295429630892703744);
         assert_eq!(p.bb(Color::Black, PieceType::Knight), 4755801206503243776);
         assert_eq!(p.bb(Color::Black, PieceType::Bishop), 2594073385365405696);
-        assert_eq!(p.bb(Color::Black, PieceType::Queen), 1152921504606846976);
-        assert_eq!(p.bb(Color::Black, PieceType::King), 576460752303423488);
+        assert_eq!(p.bb(Color::Black, PieceType::Queen), 576460752303423488);
+        assert_eq!(p.bb(Color::Black, PieceType::King), 1152921504606846976);
         assert_eq!(p.active_player(), Color::White);
         assert_eq!(p.half_move(), 0);
         assert_eq!(p.full_move(), 1);
