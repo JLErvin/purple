@@ -9,6 +9,7 @@ use crate::move_gen::lookup::Lookup;
 use board_state::fen::*;
 use move_gen::generator::gen_all_moves;
 use rand::rngs::ThreadRng;
+use std::env;
 use std::time::Instant;
 
 mod board_state;
@@ -18,8 +19,14 @@ mod move_gen;
 
 fn main() {
     println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+
+    let depth: usize = args[1].parse::<usize>().unwrap();
+    let fen_str = &args[2];
+
+    let mut a = parse_fen(fen_str).unwrap();
+
     let mut b = BoardState::default();
-    let mut b = parse_fen(&"rnbqkbnr/1ppp1pp1/p6p/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 1".to_string()).unwrap();
-    gen_all_moves(&mut b, 1);
+    gen_all_moves(&mut b, depth);
     println!();
 }

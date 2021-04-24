@@ -27,8 +27,8 @@ pub const FILEH: Bitboard = FILEA << 7;
 pub const INIT_W_ROOKS: Bitboard = 0b_1000_0001_u64;
 pub const INIT_W_KNIGHTS: Bitboard = 0b_0100_0010_u64;
 pub const INIT_W_BISHOPS: Bitboard = 0b_0010_0100_u64;
-pub const INIT_W_QUEEN: Bitboard = 0b_0001_0000_u64;
-pub const INIT_W_KING: Bitboard = 0b_0000_1000_u64;
+pub const INIT_W_QUEEN: Bitboard = 0b_0000_1000_u64;
+pub const INIT_W_KING: Bitboard = 0b_0001_0000_u64;
 
 fn shift_left(n: u64, i: u8) -> Bitboard {
     n.checked_shl(i as u32).unwrap_or(0)

@@ -227,7 +227,7 @@ impl BoardState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::square::SquareIndex::{A2, A3, A4, B1, B4, C3, D2, D3, D4};
+    use crate::components::square::SquareIndex::{A2, A3, A4, B1, B4, B8, C3, C6, D2, D3, D4};
 
     #[test]
     fn correct_initial_values() {
@@ -305,6 +305,13 @@ mod tests {
         b.make_move(m);
         assert_eq!(b.bb_all(), 18446462598867122175);
         assert_eq!(b.en_passant, Some(D3 as u8));
+        let m = Move {
+            to: C6 as u8,
+            from: B8 as u8,
+            kind: MoveType::Quiet,
+        };
+        b.make_move(m);
+        assert_eq!(b.en_passant, None)
     }
 
     #[test]
