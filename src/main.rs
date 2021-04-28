@@ -6,8 +6,11 @@ use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
 use crate::move_gen::lookup::Lookup;
+use crate::uci::interface::uci_loop;
 use board_state::fen::*;
-use move_gen::generator::gen_all_moves;
+use clap::*;
+use itertools::Itertools;
+use move_gen::generator::perft;
 use rand::rngs::ThreadRng;
 use std::env;
 use std::time::Instant;
@@ -16,17 +19,39 @@ mod board_state;
 mod components;
 mod magic;
 mod move_gen;
+mod uci;
 
 fn main() {
     println!("Hello, world!");
-    let args: Vec<String> = env::args().collect();
 
-    let depth: usize = args[1].parse::<usize>().unwrap();
-    let fen_str = &args[2];
+    let matches = App::new("purple")
+        .author("Joshua L Ervin")
+        .about("A UCI chess engine")
+        .arg(
+            Arg::with_name("perft")
+                .short("p")
+                .long("perft")
+                .help("run a performance test")
+                .number_of_values(2)
+                .takes_value(true),
+        )
+        .get_matches();
 
-    let mut a = parse_fen(fen_str).unwrap();
+    if matches.is_present("perft") {
+        execute_perft(matches.values_of("perft").unwrap().collect_vec());
+    };
 
-    let mut b = BoardState::default();
-    gen_all_moves(&mut b, depth);
+    //uci_loop();
+
+    //gen_all_moves(&mut b, depth);
     println!();
+}
+
+fn execute_perft(args: Vec<&str>) {
+    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let fen = args.get(1).unwrap();
+
+    let pos = parse_fen(fen).unwrap();
+
+    perft(&pos, depth);
 }
