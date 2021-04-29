@@ -141,7 +141,7 @@ impl BoardState {
             self.remove_piece(capture_kind, !us, mv.to);
             let add = mv.promoted_piece().unwrap();
             self.add(add, us, mv.to);
-        } else if mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen {
+        } else if mv.is_castle() {
             self.position.castle(mv.kind, self.active_player);
             self.castling_rights.remove_rights(self.active_player);
         }

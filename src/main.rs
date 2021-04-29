@@ -33,12 +33,14 @@ fn main() {
                 .long("perft")
                 .help("run a performance test")
                 .number_of_values(2)
+                .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
         )
         .get_matches();
 
     if matches.is_present("perft") {
         execute_perft(matches.values_of("perft").unwrap().collect_vec());
+        return;
     };
 
     //uci_loop();

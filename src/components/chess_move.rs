@@ -92,6 +92,10 @@ impl Move {
             || self.kind == QueenPromotion
     }
 
+    pub fn is_castle(&self) -> bool {
+        self.kind == MoveType::CastleKing || self.kind == MoveType::CastleQueen
+    }
+
     pub fn promoted_piece(&self) -> Option<PieceType> {
         match self.kind {
             MoveType::RookPromotionCapture | MoveType::RookPromotion => Some(PieceType::Rook),
