@@ -43,9 +43,8 @@ fn main() {
         return;
     };
 
-    //uci_loop();
+    uci_loop();
 
-    //gen_all_moves(&mut b, depth);
     println!();
 }
 
