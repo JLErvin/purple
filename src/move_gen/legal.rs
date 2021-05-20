@@ -258,7 +258,6 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
     let occupancy = pos.bb_all();
 
     let mut blockers = Bitboard::empty();
-    //let mut pinners = Bitboard::empty();
 
     for (i, _) in snipers.iter() {
         let ignore = lookup.square_bb(i);
@@ -267,7 +266,6 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
 
         if potential_blockers.count_ones() == 1 {
             blockers |= potential_blockers;
-            //pinners |= Bitboard::for_square(i);
         }
     }
 
