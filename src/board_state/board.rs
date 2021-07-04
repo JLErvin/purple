@@ -325,22 +325,4 @@ mod tests {
         b.make_move(m);
         assert_eq!(b.bb_all(), 18446462598733168637);
     }
-
-    /*    fn correct_black_en_passant_capture() {
-            let mut b = BoardState::default();
-            let m = Move {
-                to: A2 as u8,
-                from: A4 as u8,
-                kind: MoveType::Quiet,
-            };
-            b.make_move(m);
-            let m = Move {
-                to: B4 as u8,
-                from: A3 as u8,
-                kind: MoveType::EnPassantCapture,
-            };
-            b.make_move(m);
-            assert_eq!(b.bb_all(), 10483662054784106129);
-        }
-    */
 }

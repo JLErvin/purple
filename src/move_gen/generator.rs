@@ -23,9 +23,6 @@ pub fn all_moves(pos: &BoardState) -> Vec<Move> {
     let random = MagicRandomizer::new(GenerationScheme::PreComputed);
     let lookup = Lookup::new(random);
 
-    let king_square = king_square(pos);
-    let checkers = attacks_to(pos, king_square, &lookup);
-
     gen_pseudo_legal_pawn_moves(pos, &mut list);
     gen_pseudo_legal_castles(pos, &mut list);
 
@@ -36,7 +33,10 @@ pub fn all_moves(pos: &BoardState) -> Vec<Move> {
 
     gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::King);
 
+    let king_square = king_square(pos);
     let blockers = calculate_blockers(pos, &lookup, king_square);
+    let checkers = attacks_to(pos, king_square, &lookup);
+
     list.retain(|mv| is_legal(pos, mv, &lookup, blockers, checkers, king_square));
 
     list

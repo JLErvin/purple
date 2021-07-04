@@ -61,10 +61,10 @@ fn is_legal_non_king_move(
         return false;
     }
 
-    let pinned = is_absolutely_pinned(pos, mv, lookup, blockers);
+    let pinned = is_absolutely_pinned(mv, lookup, blockers);
 
     if mv.kind == MoveType::EnPassantCapture {
-        return is_legal_en_passant(pos, mv, lookup, blockers, king_square);
+        return is_legal_en_passant(pos, mv, lookup, king_square);
     } else if mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen {
         return is_legal_castle(pos, mv, lookup, num_checkers);
     }
@@ -95,13 +95,7 @@ fn is_legal_non_king_move(
 /// Determines whether or not the given move is legal, working under the assumption that the provided
 /// move represents a castling move. En Passant requires special checking since it is the only move in
 /// which the piece moves to a square but does not capture on that square.
-fn is_legal_en_passant(
-    pos: &BoardState,
-    mv: &Move,
-    lookup: &Lookup,
-    blockers: Bitboard,
-    king_square: Square,
-) -> bool {
+fn is_legal_en_passant(pos: &BoardState, mv: &Move, lookup: &Lookup, king_square: Square) -> bool {
     let us = pos.active_player();
     let mut pos = pos.clone();
 
@@ -163,7 +157,7 @@ fn is_legal_pin_move(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
 
 /// Determines whether or not the given piece being moved is pinned. If the piece is pinned, the returned Square
 /// represents the square of the pinning piece.
-fn is_absolutely_pinned(pos: &BoardState, mv: &Move, lookup: &Lookup, blockers: Bitboard) -> bool {
+fn is_absolutely_pinned(mv: &Move, lookup: &Lookup, blockers: Bitboard) -> bool {
     let piece_bb = lookup.square_bb(mv.from);
 
     let intersect = blockers & piece_bb;
@@ -523,10 +517,7 @@ mod test {
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
 
-        assert_eq!(
-            is_legal_en_passant(&pos, &mv, &lookup, blockers, king_square),
-            false
-        );
+        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, king_square), false);
     }
 
     #[test]
@@ -543,10 +534,7 @@ mod test {
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
 
-        assert_eq!(
-            is_legal_en_passant(&pos, &mv, &lookup, blockers, king_square),
-            true
-        );
+        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, king_square), true);
     }
 
     #[test]
