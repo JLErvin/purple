@@ -29,7 +29,7 @@ fn go(pos: &BoardState) {
     let moves = all_moves(pos);
     let index = rng.gen_range(0..moves.len());
     let mv = moves.get(index).unwrap();
-    println!("{}", mv.to_algebraic());
+    println!("bestmove {}", mv.to_algebraic());
 }
 
 fn update_position(fen: &String) -> BoardState {
@@ -41,13 +41,13 @@ fn update_position(fen: &String) -> BoardState {
         _ => panic!("Unknown parameter to position!")
     };
 
-    let keyword = v.get(1).unwrap();
-    match &keyword[..] {
-        "moves" => {
-            v[1..].iter().for_each(|x| pos.make_move());
-        };
-        _ => {}
-    };
+    //let keyword = v.get(1).unwrap();
+    //match &keyword[..] {
+        //"moves" => {
+            //v[1..].iter().for_each(|x| pos.make_move());
+        //};
+        //_ => {}
+    //};
 
     pos
 }

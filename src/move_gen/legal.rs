@@ -319,7 +319,7 @@ mod test {
 
         assert_eq!(b, 4512412933816320);
     }
-    /*
+
     #[test]
     fn cannot_capture_checking_piece_while_pinned() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
@@ -327,9 +327,15 @@ mod test {
         let pos = parse_fen(&"2r5/8/8/2B5/8/8/8/2K3r1 w - - 0 1".to_string()).unwrap();
 
         let mv = make_move(G1, C5);
+
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
-        assert_eq!((&pos, &mv, &lookup, blockers, ), false);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -337,10 +343,16 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"2r5/8/8/2B5/8/8/8/2K4r w - - 0 1".to_string()).unwrap();
-        let blockers = calculate_blockers(&pos, &lookup);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         let mv = make_move(G1, C5);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -348,13 +360,25 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/8/8/8/1K1N3r/8/8/8 w - - 0 1".to_string()).unwrap();
-        let blockers = calculate_blockers(&pos, &lookup);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         let mv = make_move(C6, D4);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
+
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         let mv = make_move(C2, D4);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -362,23 +386,47 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/8/8/8/8/8/1K3R1r/8 w - - 0 1".to_string()).unwrap();
-        let blockers = calculate_blockers(&pos, &lookup);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         // Move towards pinner without capture
         let mv = make_move(G2, F2);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), true);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
+
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         // Move towards pinner with capture
         let mv = make_move(H2, F2);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), true);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
+
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         // Move away from pinner
         let mv = make_move(E2, F2);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), true);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
+
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
 
         // Moving off pin is illegal
         let mv = make_move(F1, F2);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -386,9 +434,16 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/1r6/8/8/3N4/8/1K5r/8 w - - 0 1".to_string()).unwrap();
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
         let mv = make_move(D4, C6);
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -396,8 +451,10 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/8/8/8/8/8/1K5r/8 w - - 0 1".to_string()).unwrap();
+
         let mv = make_move(A2, B2);
         assert_eq!(is_legal_king_move(&pos, &mv, &lookup), false);
+
         let mv = make_move(B1, B2);
         assert_eq!(is_legal_king_move(&pos, &mv, &lookup), true);
     }
@@ -407,11 +464,22 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/8/8/8/8/3B4/3K3r/8 w - - 0 1".to_string()).unwrap();
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
         let mv = make_move(C2, D3);
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), false);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
+
         let mv = make_move(E2, D3);
-        assert_eq!(is_legal_non_king_move(&pos, &mv, &lookup, blockers), true);
+        assert_eq!(
+            is_legal_non_king_move(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -451,8 +519,14 @@ mod test {
             from: D5 as u8,
             kind: MoveType::EnPassantCapture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+
+        assert_eq!(
+            is_legal_en_passant(&pos, &mv, &lookup, blockers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -465,8 +539,14 @@ mod test {
             from: D5 as u8,
             kind: MoveType::EnPassantCapture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+
+        assert_eq!(
+            is_legal_en_passant(&pos, &mv, &lookup, blockers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -479,8 +559,15 @@ mod test {
             from: H4 as u8,
             kind: MoveType::Quiet,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -496,8 +583,15 @@ mod test {
             from: A3 as u8,
             kind: MoveType::Capture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -513,8 +607,15 @@ mod test {
             from: B4 as u8,
             kind: MoveType::Capture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -530,8 +631,15 @@ mod test {
             from: B4 as u8,
             kind: MoveType::EnPassantCapture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -547,8 +655,15 @@ mod test {
             from: E8 as u8,
             kind: MoveType::CastleQueen,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -564,8 +679,15 @@ mod test {
             from: E8 as u8,
             kind: MoveType::CastleKing,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -581,8 +703,15 @@ mod test {
             from: E8 as u8,
             kind: MoveType::CastleQueen,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -598,8 +727,15 @@ mod test {
             from: F3 as u8,
             kind: MoveType::Capture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -615,8 +751,15 @@ mod test {
             from: B5 as u8,
             kind: MoveType::Capture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
     }
 
     #[test]
@@ -631,8 +774,15 @@ mod test {
             from: B4 as u8,
             kind: MoveType::EnPassantCapture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -645,8 +795,15 @@ mod test {
             from: G1 as u8,
             kind: MoveType::CastleKing,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), false);
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            false
+        );
     }
 
     #[test]
@@ -659,7 +816,14 @@ mod test {
             from: D2 as u8,
             kind: MoveType::Capture,
         };
-        let blockers = calculate_blockers(&pos, &lookup);
-        assert_eq!(is_legal(&pos, &mv, &lookup, blockers), true);
-    }*/
+
+        let king_square = king_square(&pos);
+        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let checkers = attacks_to(&pos, king_square, &lookup);
+
+        assert_eq!(
+            is_legal(&pos, &mv, &lookup, blockers, checkers, king_square),
+            true
+        );
+    }
 }

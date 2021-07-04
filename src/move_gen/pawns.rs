@@ -48,7 +48,7 @@ fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections
     extract_pawn_moves(double, dirs.north + dirs.north, Quiet, list);
 }
 
-/// Generate all captures, including en-passant, but excluding captures which
+/// Generate all captures, excluding en passant captures and those which
 /// result in promotions and under-promotions.
 fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
     let us = pos.active_player();
@@ -63,6 +63,7 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pa
     extract_pawn_moves(right_captures, dirs.north + EAST, Capture, list);
 }
 
+/// Generate all en passant captures for the given position.
 fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
     if pos.en_passant().is_none() {
         return;
@@ -104,6 +105,7 @@ fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, 
     );
 }
 
+/// Given a resulting bitboard and a relevant offset, find all pawn moves using the given offset.
 pub fn extract_pawn_moves(bitboard: Bitboard, offset: i8, kind: MoveType, moves: &mut Vec<Move>) {
     for (square, _) in bitboard.iter() {
         let m = Move {
@@ -125,6 +127,7 @@ pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
     }
 }
 
+/// Given a resulting bitboard, find and enumerate all possible promotions using the provided offset.
 fn extract_promotions(
     mut bitboard: Bitboard,
     offset: i8,
@@ -147,6 +150,7 @@ fn extract_promotions(
     }
 }
 
+/// Given a game position, return a Bitboard that includes a non-zero bit only on the target en passant square.
 fn en_passant_bb(pos: &BoardState) -> Bitboard {
     let square = pos.en_passant().unwrap_or(0);
     if square == 0 {
