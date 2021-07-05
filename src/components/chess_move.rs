@@ -71,6 +71,17 @@ impl Move {
         let mut s: String = "".to_owned();
         s.push_str(rank_file_to_algebra(from_rank, from_file).as_str());
         s.push_str(rank_file_to_algebra(to_rank, to_file).as_str());
+
+        if self.is_promotion() || self.is_promotion_capture() {
+            match self.promoted_piece().unwrap() {
+                PieceType::Rook => s.push_str("r"),
+                PieceType::Knight => s.push_str("n"),
+                PieceType::Bishop => s.push_str("b"),
+                PieceType::Queen => s.push_str("q"),
+                _ => {}
+            }
+        }
+
         s
     }
 
