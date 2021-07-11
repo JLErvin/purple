@@ -1,5 +1,5 @@
 use crate::components::chess_move::MoveType::{
-    BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture,
+    BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture, Null,
     QueenPromotion, QueenPromotionCapture, RookPromotion, RookPromotionCapture,
 };
 use crate::components::piece::PieceType::Knight;
@@ -34,6 +34,7 @@ pub enum MoveType {
     Quiet,
     CastleKing,
     CastleQueen,
+    Null,
 }
 
 #[derive(Clone, Copy)]
@@ -61,6 +62,14 @@ fn rank_file_to_algebra(rank: u8, file: u8) -> String {
 }
 
 impl Move {
+    pub fn null() -> Move {
+        Move {
+            to: 0,
+            from: 0,
+            kind: Null,
+        }
+    }
+
     pub fn to_algebraic(&self) -> String {
         let to_rank = self.to / 8;
         let to_file = self.to % 8;

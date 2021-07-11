@@ -2,6 +2,7 @@ use crate::board_state::board::BoardState;
 use crate::board_state::fen::parse_fen;
 use crate::components::chess_move::Move;
 use crate::move_gen::generator::all_moves;
+use crate::search::search::best_move;
 use itertools::Itertools;
 use rand::Rng;
 use std::io::{self, stdin, BufRead, Read};
@@ -17,7 +18,7 @@ pub fn uci_loop() {
             "quit" => break,
             "uci" => init_uci(),
             "position" => pos = update_position(&key[1..].join(" ")),
-            "go" => go(&pos),
+            "go" => go(&mut pos),
             "isready" => println!("readyok"),
             "ucinewgame" => pos = update_position(&"startpos".to_string()),
             _ => println!("Command not understood"),
@@ -25,11 +26,8 @@ pub fn uci_loop() {
     }
 }
 
-fn go(pos: &BoardState) {
-    let mut rng = rand::thread_rng();
-    let moves = all_moves(pos);
-    let index = rng.gen_range(0..moves.len());
-    let mv = moves.get(index).unwrap();
+fn go(pos: &mut BoardState) {
+    let mv = best_move(pos);
     println!("bestmove {}", mv.to_algebraic());
 }
 
@@ -44,8 +42,6 @@ fn update_position(fen: &String) -> BoardState {
 
     let keyword = v.get(1).unwrap_or(&"none");
 
-    println!("  keyword is {}", keyword);
-
     match &keyword[..] {
         "moves" => apply_moves(&mut pos, &v[2..]),
         "none" | _ => {}
@@ -57,12 +53,7 @@ fn update_position(fen: &String) -> BoardState {
 fn apply_moves(pos: &mut BoardState, moves: &[&str]) {
     for mv_str in moves.iter() {
         let move_list = all_moves(pos);
-        println!("  attempting to apply move {}", mv_str);
         let mv = move_list.iter().find(|x| x.to_algebraic() == *mv_str);
-        match mv {
-            None => println!("  Move not found"),
-            Some(_) => println!("  Move found!"),
-        };
         pos.make_move(*mv.unwrap());
     }
 }

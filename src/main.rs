@@ -19,6 +19,7 @@ mod board_state;
 mod components;
 mod magic;
 mod move_gen;
+mod search;
 mod uci;
 
 fn main() {
