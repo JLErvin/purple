@@ -59,37 +59,76 @@ impl MoveEval {
 }
 
 pub fn best_move(pos: &mut BoardState) -> Move {
-    let mv = Move::null();
-    minimax(pos, mv, 3).mv
+    let moves = all_moves(pos);
+
+    let mut best = if pos.active_player() == Color::White {
+        MoveEval::min_null()
+    } else {
+        MoveEval::max_null()
+    };
+    for child in moves.iter() {
+        let mut new_pos = pos.clone();
+        new_pos.make_move(*child);
+        let eval = minimax(&mut new_pos, 2);
+        if pos.active_player() == Color::White {
+            if eval > best.eval {
+                best = MoveEval {
+                    mv: *child,
+                    eval: eval,
+                }
+            }
+        } else {
+            if eval < best.eval {
+                best = MoveEval {
+                    mv: *child,
+                    eval: eval,
+                }
+            }
+        }
+    }
+    best.mv
 }
 
-fn minimax(pos: &mut BoardState, mv: Move, depth: usize) -> MoveEval {
+fn minimax(pos: &mut BoardState, depth: usize) -> f64 {
     if depth == 0 {
-        return apply_and_eval(pos, mv);
+        return eval(pos);
     }
 
     return if pos.active_player() == Color::White {
         let mut max = MoveEval::min_null();
+        let mut max = f64::MIN;
         for child in all_moves(pos).iter() {
             let mut new_pos = pos.clone();
-            let eval = minimax(&mut new_pos, *child, depth - 1);
-            max = MoveEval::max(max, eval);
+            new_pos.make_move(*child);
+            let mut eval = minimax(&mut new_pos, depth - 1);
+            if eval > max {
+                max = eval;
+            }
         }
         max
     } else {
-        let mut min = MoveEval::max_null();
+        let mut min = f64::MAX;
         for child in all_moves(pos).iter() {
             let mut new_pos = pos.clone();
-            let eval = minimax(&mut new_pos, *child, depth - 1);
-            min = MoveEval::min(min, eval);
+            new_pos.make_move(*child);
+            let mut eval = minimax(&mut new_pos, depth - 1);
+            if eval < min {
+                min = eval;
+            }
         }
         min
     };
 }
 
-fn apply_and_eval(pos: &BoardState, mv: Move) -> MoveEval {
-    let mut p = pos.clone();
-    p.make_move(mv);
-    let eval = eval(&p);
-    MoveEval { mv, eval }
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::board_state::fen::parse_fen;
+
+    #[test]
+    fn finds_mate_in_one() {
+        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mv = best_move(&mut pos);
+        assert_eq!(mv.to, 49)
+    }
 }
