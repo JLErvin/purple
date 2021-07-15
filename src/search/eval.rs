@@ -2,6 +2,7 @@ use crate::board_state::board::BoardState;
 use crate::components::bitboard::PieceItr;
 use crate::components::piece::{Color, PieceType};
 use crate::magic::util::MagicPiece::Rook;
+use crate::move_gen::generator::all_moves;
 
 const PAWN_VALUE: isize = 1;
 const ROOK_VALUE: isize = 5;
@@ -13,6 +14,14 @@ const QUEEN_VALUE: isize = 9;
 const MOBILITY_VALUE: f32 = 0.1;
 
 pub fn eval(pos: &BoardState) -> f64 {
+    let moves = all_moves(pos);
+    if moves.is_empty() {
+        return if pos.active_player() == Color::White {
+            f64::MIN
+        } else {
+            f64::MAX
+        };
+    }
     material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
 }
 
