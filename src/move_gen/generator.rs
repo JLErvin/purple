@@ -17,6 +17,40 @@ use std::time::Instant;
 
 const MAX_MOVES: usize = 256;
 
+pub struct MoveGenerator {
+    lookup: Lookup,
+}
+
+impl MoveGenerator {
+    pub fn new() -> MoveGenerator {
+        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let lookup = Lookup::new(random);
+        MoveGenerator { lookup }
+    }
+
+    pub fn all_moves(&self, pos: &BoardState) -> Vec<Move> {
+        let mut list: Vec<Move> = Vec::with_capacity(MAX_MOVES);
+
+        gen_pseudo_legal_pawn_moves(pos, &mut list);
+        gen_pseudo_legal_castles(pos, &mut list);
+
+        gen_pseudo_legal_moves(pos, &mut list, &self.lookup, PieceType::Knight);
+        gen_pseudo_legal_moves(pos, &mut list, &self.lookup, PieceType::Rook);
+        gen_pseudo_legal_moves(pos, &mut list, &self.lookup, PieceType::Bishop);
+        gen_pseudo_legal_moves(pos, &mut list, &self.lookup, PieceType::Queen);
+
+        gen_pseudo_legal_moves(pos, &mut list, &self.lookup, PieceType::King);
+
+        let king_square = king_square(pos);
+        let blockers = calculate_blockers(pos, &self.lookup, king_square);
+        let checkers = attacks_to(pos, king_square, &self.lookup);
+
+        list.retain(|mv| is_legal(pos, mv, &self.lookup, blockers, checkers, king_square));
+
+        list
+    }
+}
+
 pub fn all_moves(pos: &BoardState) -> Vec<Move> {
     let mut list: Vec<Move> = Vec::with_capacity(MAX_MOVES);
 

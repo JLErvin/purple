@@ -91,6 +91,9 @@ impl BoardState {
     }
 
     pub fn make_move(&mut self, mv: Move) {
+        if mv.kind == MoveType::Null {
+            return;
+        }
         let kind = self.position.type_on(mv.from).unwrap();
         let us = self.active_player;
 

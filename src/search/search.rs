@@ -4,7 +4,7 @@ use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
 use crate::components::piece::{Color, PieceType};
 use crate::components::square::Square;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
-use crate::move_gen::generator::all_moves;
+use crate::move_gen::generator::MoveGenerator;
 use crate::move_gen::lookup::Lookup;
 use crate::search::eval::eval;
 use core::mem;
@@ -55,7 +55,8 @@ impl Neg for EvaledMove {
 }
 
 pub fn best_move(pos: &mut BoardState) -> Move {
-    search(pos, 5).mv
+    let gen = MoveGenerator::new();
+    search(pos, &gen, 5).mv
 }
 
 fn simple_move(pos: &BoardState) -> EvaledMove {
@@ -65,12 +66,13 @@ fn simple_move(pos: &BoardState) -> EvaledMove {
     }
 }
 
-pub fn search(pos: &mut BoardState, depth: usize) -> EvaledMove {
+pub fn search(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> EvaledMove {
     if depth == 0 {
         return simple_move(pos);
     }
 
-    let mut moves = all_moves(pos)
+    let mut moves = gen
+        .all_moves(pos)
         .into_iter()
         .map(|mv| EvaledMove { mv, eval: 0 })
         .collect_vec();
@@ -79,8 +81,8 @@ pub fn search(pos: &mut BoardState, depth: usize) -> EvaledMove {
         .into_iter()
         .map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone();
-            pos.make_move(mv.mv);
-            mv.eval = -search(&mut new_pos, depth - 1).eval;
+            new_pos.make_move(mv.mv);
+            mv.eval = -search(&mut new_pos, gen, depth - 1).eval;
             mv
         })
         .max();
