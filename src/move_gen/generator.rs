@@ -8,9 +8,10 @@ use crate::components::chess_move::MoveType::{Capture, CastleKing, CastleQueen, 
 use crate::components::piece::PieceType::{King, Knight, Queen};
 use crate::components::square::rank_file_to_index;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
-use crate::move_gen::legal::{attacks_to, calculate_blockers, is_legal, king_square};
+use crate::move_gen::legal::{attacks_to, calculate_blockers, is_legal};
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::{gen_pseudo_legal_castles, gen_pseudo_legal_moves};
+use crate::move_gen::util::king_square;
 use itertools::Itertools;
 use rayon::prelude::IntoParallelIterator;
 use std::time::Instant;

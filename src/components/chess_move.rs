@@ -2,9 +2,9 @@ use crate::components::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture, Null,
     QueenPromotion, QueenPromotionCapture, RookPromotion, RookPromotionCapture,
 };
-use crate::components::piece::PieceType::Knight;
-use crate::components::piece::{Piece, PieceType};
-use crate::components::square::algebraic_to_square;
+
+use crate::components::piece::PieceType;
+
 use std::slice::Iter;
 
 pub const NORTH: i8 = 8;
@@ -12,14 +12,14 @@ pub const EAST: i8 = 1;
 pub const SOUTH: i8 = -NORTH;
 pub const WEST: i8 = -EAST;
 
-#[derive(PartialEq,Eq,Copy, Clone,Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Move {
     pub to: u8,
     pub from: u8,
     pub kind: MoveType,
 }
 
-#[derive(Copy, Clone, PartialEq,Eq,Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum MoveType {
     Capture,
     EnPassantCapture,
@@ -83,10 +83,10 @@ impl Move {
 
         if self.is_promotion() || self.is_promotion_capture() {
             match self.promoted_piece().unwrap() {
-                PieceType::Rook => s.push_str("r"),
-                PieceType::Knight => s.push_str("n"),
-                PieceType::Bishop => s.push_str("b"),
-                PieceType::Queen => s.push_str("q"),
+                PieceType::Rook => s.push('r'),
+                PieceType::Knight => s.push('n'),
+                PieceType::Bishop => s.push('b'),
+                PieceType::Queen => s.push('q'),
                 _ => {}
             }
         }

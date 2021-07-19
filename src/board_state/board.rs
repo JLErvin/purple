@@ -90,6 +90,12 @@ impl BoardState {
         self.position.type_on(square)
     }
 
+    pub fn clone_with_move(&self, mv: Move) -> BoardState {
+        let mut new_pos = self.clone();
+        new_pos.make_move(mv);
+        new_pos
+    }
+
     pub fn make_move(&mut self, mv: Move) {
         if mv.kind == MoveType::Null {
             return;

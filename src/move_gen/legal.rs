@@ -8,7 +8,7 @@ use crate::components::square::Square;
 use crate::move_gen::generator::debug_print;
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::pawns::pawn_attacks;
-use crate::move_gen::util::knight_destinations;
+use crate::move_gen::util::{is_attacked, knight_destinations};
 
 /// Determines whether or not the given move is legal given the provided state of the game.
 /// A move is determined to be legal if it does not leave the king in check after the move is made.
@@ -23,18 +23,18 @@ pub fn is_legal(
     let from = mv.from;
 
     let is_castle = mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen;
-    return if king_on_square(pos, lookup, from) & !is_castle {
+    if king_on_square(pos, lookup, from) & !is_castle {
         is_legal_king_move(pos, mv, lookup)
     } else {
         is_legal_non_king_move(pos, mv, lookup, blockers, checkers, king_square)
-    };
+    }
 }
 
 /// Determines if the given move is legal, working under the assumption that the provided move
 /// is a king move. Such a move is legal so long as the destination square of the king is not attacked
 /// by the opponent's pieces.
 fn is_legal_king_move(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
-    return !is_attacked(pos, mv.to, lookup);
+    !is_attacked(pos, mv.to, lookup)
 }
 
 /// Determines if the given move is legal, working under the assumption that the provided move
@@ -89,7 +89,7 @@ fn is_legal_non_king_move(
         return true;
     }
 
-    return is_legal_pin_move(pos, mv, lookup);
+    is_legal_pin_move(pos, mv, lookup)
 }
 
 /// Determines whether or not the given move is legal, working under the assumption that the provided
@@ -165,40 +165,6 @@ fn is_absolutely_pinned(mv: &Move, lookup: &Lookup, blockers: Bitboard) -> bool 
     intersect != 0
 }
 
-/// Returns the square where the active king currently sits (before the move is made).
-pub fn king_square(pos: &BoardState) -> Square {
-    let us = pos.active_player();
-    pos.bb(us, PieceType::King).trailing_zeros() as Square
-}
-
-pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
-    let us = pos.active_player();
-
-    if pawn_attacks(square, us) & pos.bb(!us, PieceType::Pawn) != 0 {
-        return true;
-    }
-
-    let occupancies = pos.bb_all() & !pos.bb(us, PieceType::King);
-
-    if lookup.sliding_moves(square, occupancies, PieceType::Rook)
-        & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen))
-        != 0
-    {
-        return true;
-    } else if lookup.sliding_moves(square, occupancies, PieceType::Bishop)
-        & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen))
-        != 0
-    {
-        return true;
-    } else if lookup.moves(square, PieceType::Knight) & pos.bb(!us, PieceType::Knight) != 0 {
-        return true;
-    } else if lookup.moves(square, PieceType::King) & pos.bb(!us, PieceType::King) != 0 {
-        return true;
-    }
-
-    false
-}
-
 /// Returns a bitboard representing all pieces which are attacking the provided square.
 pub fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard {
     let us = pos.active_player();
@@ -243,10 +209,10 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
     let us = pos.active_player();
     let king_bb = pos.bb(us, PieceType::King);
 
-    let attacks_rooks = (lookup.pseudo_attacks(PieceType::Rook, king_square)
-        & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen)));
-    let attacks_bishops = (lookup.pseudo_attacks(PieceType::Bishop, king_square)
-        & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen)));
+    let attacks_rooks = lookup.pseudo_attacks(PieceType::Rook, king_square)
+        & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen));
+    let attacks_bishops = lookup.pseudo_attacks(PieceType::Bishop, king_square)
+        & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen));
 
     let snipers = (attacks_rooks | attacks_bishops) & !pos.bb(us, PieceType::King);
     let occupancy = pos.bb_all();
@@ -277,6 +243,7 @@ mod test {
         E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
+    use crate::move_gen::util::king_square;
 
     #[test]
     fn calculates_blockers() {

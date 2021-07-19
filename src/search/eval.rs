@@ -11,6 +11,8 @@ const BISHOP_VALUE: isize = 300;
 const KING_VALUE: isize = 350;
 const QUEEN_VALUE: isize = 800;
 
+pub const MATE_VALUE: isize = 31_000;
+
 const MOBILITY_VALUE: f32 = 0.1;
 
 pub fn eval(pos: &BoardState) -> isize {

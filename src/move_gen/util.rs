@@ -1,6 +1,44 @@
+use crate::board_state::board::BoardState;
 use crate::components::bitboard::{AddPiece, PieceItr, FILEA, FILEB, FILEG, FILEH};
 use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
+use crate::components::piece::PieceType;
+use crate::components::square::Square;
 use crate::components::{bitboard::Bitboard, chess_move::MoveType};
+use crate::move_gen::lookup::Lookup;
+use crate::move_gen::pawns::pawn_attacks;
+
+pub fn king_square(pos: &BoardState) -> Square {
+    let us = pos.active_player();
+    pos.bb(us, PieceType::King).trailing_zeros() as Square
+}
+
+pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
+    let us = pos.active_player();
+
+    if pawn_attacks(square, us) & pos.bb(!us, PieceType::Pawn) != 0 {
+        return true;
+    }
+
+    let occupancies = pos.bb_all() & !pos.bb(us, PieceType::King);
+
+    if lookup.sliding_moves(square, occupancies, PieceType::Rook)
+        & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen))
+        != 0
+    {
+        return true;
+    } else if lookup.sliding_moves(square, occupancies, PieceType::Bishop)
+        & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen))
+        != 0
+    {
+        return true;
+    } else if lookup.moves(square, PieceType::Knight) & pos.bb(!us, PieceType::Knight) != 0 {
+        return true;
+    } else if lookup.moves(square, PieceType::King) & pos.bb(!us, PieceType::King) != 0 {
+        return true;
+    }
+
+    false
+}
 
 pub fn extract_moves(from: u8, bb: Bitboard, list: &mut Vec<Move>, kind: MoveType) {
     for (square, bb) in bb.iter() {

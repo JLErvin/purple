@@ -3,4 +3,4 @@ mod legal;
 pub mod lookup;
 pub mod moves;
 mod pawns;
-mod util;
+pub mod util;
