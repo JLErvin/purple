@@ -1,51 +1,147 @@
 use crate::board_state::board::BoardState;
-use crate::components::chess_move::Move;
-use crate::components::piece::Color;
+use crate::components::bitboard::{AddPiece, Bitboard, Shift};
+use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
+use crate::components::piece::{Color, PieceType};
+use crate::components::square::Square;
+use crate::magic::random::{GenerationScheme, MagicRandomizer};
 use crate::move_gen::generator::all_moves;
+use crate::move_gen::lookup::Lookup;
 use crate::search::eval::eval;
 use core::mem;
+use itertools::Itertools;
+use std::cmp::Ordering;
+use std::ops::Neg;
 
-pub fn best_move(pos: &mut BoardState) -> Move {
-    let mut best_move = Box::new(Move::null());
-    search(pos, 2, &mut best_move, true);
-    *best_move
+#[derive(Eq, Copy, Clone, Debug)]
+pub struct EvaledMove {
+    mv: Move,
+    eval: isize,
 }
 
-pub fn search(pos: &mut BoardState, depth: usize, best_move: &mut Box<Move>, set: bool) -> f64 {
+impl EvaledMove {
+    pub fn null(eval: isize) -> EvaledMove {
+        EvaledMove {
+            mv: Move::null(),
+            eval,
+        }
+    }
+}
+
+impl Ord for EvaledMove {
+    fn cmp(&self, other: &EvaledMove) -> Ordering {
+        self.eval.cmp(&other.eval)
+    }
+}
+
+impl PartialOrd for EvaledMove {
+    fn partial_cmp(&self, other: &EvaledMove) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for EvaledMove {
+    fn eq(&self, other: &EvaledMove) -> bool {
+        self.eval == other.eval
+    }
+}
+
+impl Neg for EvaledMove {
+    type Output = Self;
+
+    fn neg(mut self) -> Self::Output {
+        self.eval = self.eval.wrapping_neg();
+        self
+    }
+}
+
+pub fn best_move(pos: &mut BoardState) -> Move {
+    search(pos, 5).mv
+}
+
+fn simple_move(pos: &BoardState) -> EvaledMove {
+    EvaledMove {
+        mv: Move::null(),
+        eval: eval(pos),
+    }
+}
+
+pub fn search(pos: &mut BoardState, depth: usize) -> EvaledMove {
     if depth == 0 {
-        return eval(pos);
+        return simple_move(pos);
     }
 
-    let moves = all_moves(pos);
+    let mut moves = all_moves(pos)
+        .into_iter()
+        .map(|mv| EvaledMove { mv, eval: 0 })
+        .collect_vec();
 
-    if pos.active_player() == Color::White {
-        let mut max = f64::MIN;
-        for child in moves.iter() {
+    let best = moves
+        .into_iter()
+        .map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone();
-            new_pos.make_move(*child);
-            let mut eval = search(&mut new_pos, depth - 1, best_move, false);
-            if eval > max {
-                max = eval;
-                if set {
-                    mem::replace(best_move, Box::from(*child));
-                }
-            }
-        }
-        max
+            pos.make_move(mv.mv);
+            mv.eval = -search(&mut new_pos, depth - 1).eval;
+            mv
+        })
+        .max();
+
+    return match best {
+        None => handle_empty_moves(pos),
+        Some(mv) => mv,
+    };
+}
+
+fn handle_empty_moves(pos: &BoardState) -> EvaledMove {
+    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+    let lookup = Lookup::new(random);
+    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
+
+    return if is_in_check {
+        EvaledMove::null(-isize::MAX)
     } else {
-        let mut min = f64::MAX;
-        for child in moves.iter() {
-            let mut new_pos = pos.clone();
-            new_pos.make_move(*child);
-            let mut eval = search(&mut new_pos, depth - 1, best_move, false);
-            if eval < min {
-                min = eval;
-                if set {
-                    mem::replace(best_move, Box::from(*child));
-                }
-            }
-        }
-        min
+        EvaledMove::null(0)
+    };
+}
+
+pub fn king_square(pos: &BoardState) -> Square {
+    let us = pos.active_player();
+    pos.bb(us, PieceType::King).trailing_zeros() as Square
+}
+
+pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
+    let us = pos.active_player();
+
+    if pawn_attacks(square, us) & pos.bb(!us, PieceType::Pawn) != 0 {
+        return true;
+    }
+
+    let occupancies = pos.bb_all() & !pos.bb(us, PieceType::King);
+
+    if lookup.sliding_moves(square, occupancies, PieceType::Rook)
+        & (pos.bb(!us, PieceType::Rook) | pos.bb(!us, PieceType::Queen))
+        != 0
+    {
+        return true;
+    } else if lookup.sliding_moves(square, occupancies, PieceType::Bishop)
+        & (pos.bb(!us, PieceType::Bishop) | pos.bb(!us, PieceType::Queen))
+        != 0
+    {
+        return true;
+    } else if lookup.moves(square, PieceType::Knight) & pos.bb(!us, PieceType::Knight) != 0 {
+        return true;
+    } else if lookup.moves(square, PieceType::King) & pos.bb(!us, PieceType::King) != 0 {
+        return true;
+    }
+
+    false
+}
+
+pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
+    let mut b: Bitboard = 0;
+    let b = b.add_at_square(square);
+    match color {
+        Color::White => b.shift(NORTH + WEST) | b.shift(NORTH + EAST),
+        Color::Black => b.shift(SOUTH + WEST) | b.shift(SOUTH + EAST),
     }
 }
 

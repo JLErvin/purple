@@ -171,7 +171,7 @@ pub fn king_square(pos: &BoardState) -> Square {
     pos.bb(us, PieceType::King).trailing_zeros() as Square
 }
 
-fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
+pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
     let us = pos.active_player();
 
     if pawn_attacks(square, us) & pos.bb(!us, PieceType::Pawn) != 0 {
