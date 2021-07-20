@@ -12,6 +12,8 @@ const KING_VALUE: isize = 350;
 const QUEEN_VALUE: isize = 800;
 
 pub const MATE_VALUE: isize = 31_000;
+pub const INF: isize = 32_001;
+pub const NEG_INF: isize = -32_001;
 
 const MOBILITY_VALUE: f32 = 0.1;
 

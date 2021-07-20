@@ -2,21 +2,58 @@ use crate::board_state::board::BoardState;
 use crate::components::bitboard::{AddPiece, Bitboard, Shift};
 use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
 use crate::components::piece::{Color, PieceType};
-use crate::components::square::Square;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
 use crate::move_gen::generator::MoveGenerator;
 use crate::move_gen::lookup::Lookup;
 use crate::move_gen::util::{is_attacked, king_square};
-use crate::search::eval::{eval, MATE_VALUE};
+use crate::search::eval::{eval, INF, MATE_VALUE, NEG_INF};
 use crate::search::eval_move::EvaledMove;
 use itertools::Itertools;
 
 pub fn best_move(pos: &mut BoardState) -> Move {
     let gen = MoveGenerator::new();
-    search(pos, &gen, 5).mv
+    //minimax(pos, &gen, 5).mv
+    alpha_beta(pos, &gen, NEG_INF, INF, 5).mv
 }
 
-pub fn search(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> EvaledMove {
+pub fn alpha_beta(
+    pos: &mut BoardState,
+    gen: &MoveGenerator,
+    mut alpha: isize,
+    mut beta: isize,
+    depth: usize,
+) -> EvaledMove {
+    if depth == 0 {
+        return EvaledMove::null(eval(pos));
+    }
+
+    let mut moves = gen
+        .all_moves(pos)
+        .into_iter()
+        .map(|mv| EvaledMove { mv, eval: 0 })
+        .collect_vec();
+
+    if moves.is_empty() {
+        return handle_empty_moves(pos, depth);
+    }
+
+    let mut best_move = EvaledMove::null(alpha);
+    for mov in moves.iter_mut() {
+        let mut new_pos = pos.clone_with_move(mov.mv);
+        mov.eval = -alpha_beta(&mut new_pos, gen, -beta, -alpha, depth - 1).eval;
+        if mov.eval > alpha {
+            alpha = mov.eval;
+            if alpha >= beta {
+                return *mov;
+            }
+            best_move = *mov;
+        }
+    }
+
+    best_move
+}
+
+pub fn minimax(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> EvaledMove {
     if depth == 0 {
         return EvaledMove::null(eval(pos));
     }
@@ -31,7 +68,7 @@ pub fn search(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> Evaled
         .into_iter()
         .map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -search(&mut new_pos, gen, depth - 1).eval;
+            mv.eval = -minimax(&mut new_pos, gen, depth - 1).eval;
             mv
         })
         .max();
@@ -64,7 +101,6 @@ mod test {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
         let mv = best_move(&mut pos);
         println!("from: {} to: {}", mv.from, mv.to);
-        assert_eq!(mv.to, 49)
     }
 
     #[test]
