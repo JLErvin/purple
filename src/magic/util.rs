@@ -1,8 +1,8 @@
-use crate::components::bitboard::{
+use crate::common::bitboard::{
     AddPiece, Bitboard, ClearBit, GetBit, FILEA, FILEB, FILEC, FILED, FILEE, FILEF, FILEG, FILEH,
     RANK1, RANK2, RANK3, RANK4, RANK5, RANK6, RANK7, RANK8,
 };
-use crate::components::square::{rank_file_to_index, Square};
+use crate::common::square::{rank_file_to_index, Square};
 
 #[derive(Copy, Clone)]
 pub enum MagicPiece {
@@ -246,8 +246,8 @@ pub fn occupancy(occupancy_index: usize, bits: usize, mut attack_mask: Bitboard)
 
 #[cfg(test)]
 mod tests {
-    use crate::components::bitboard::Bitboard;
-    use crate::components::square::SquareIndex::{A1, A7, A8, B2, C7, D4, H1, H8};
+    use crate::common::bitboard::Bitboard;
+    use crate::common::square::SquareIndex::{A1, A7, A8, B2, C7, D4, H1, H8};
     use crate::magic::util::{bishop_attacks, bishop_ray, rook_attacks, rook_ray};
 
     #[test]

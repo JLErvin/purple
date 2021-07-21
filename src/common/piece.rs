@@ -1,4 +1,4 @@
-use crate::components::bitboard::Bitboard;
+use crate::common::bitboard::Bitboard;
 use std::ops::{Index, IndexMut, Not};
 
 pub const PIECE_COUNT: usize = 6;

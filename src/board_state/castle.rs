@@ -1,4 +1,4 @@
-use crate::components::piece::Color;
+use crate::common::piece::Color;
 
 #[derive(Copy, Clone)]
 pub enum CastleSide {

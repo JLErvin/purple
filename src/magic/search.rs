@@ -1,5 +1,5 @@
-use crate::components::bitboard::Bitboard;
-use crate::components::square::Square;
+use crate::common::bitboard::Bitboard;
+use crate::common::square::Square;
 use crate::magic::magic::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 use crate::magic::random::Random;
 use crate::magic::util::{

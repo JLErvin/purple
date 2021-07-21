@@ -1,10 +1,10 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{AddPiece, PieceItr, FILEA, FILEB, FILEG, FILEH};
-use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
-use crate::components::piece::PieceType;
-use crate::components::square::Square;
-use crate::components::{bitboard::Bitboard, chess_move::MoveType};
-use crate::move_gen::lookup::Lookup;
+use crate::common::bitboard::{AddPiece, PieceItr, FILEA, FILEB, FILEG, FILEH};
+use crate::common::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
+use crate::common::lookup::Lookup;
+use crate::common::piece::PieceType;
+use crate::common::square::Square;
+use crate::common::{bitboard::Bitboard, chess_move::MoveType};
 use crate::move_gen::pawns::pawn_attacks;
 
 pub fn king_square(pos: &BoardState) -> Square {
@@ -94,8 +94,8 @@ pub fn knight_destinations(square: u8) -> Bitboard {
 #[cfg(test)]
 mod tests {
     use crate::board_state::fen::parse_fen;
-    use crate::components::chess_move::Move;
-    use crate::components::square::SquareIndex::{A1, A8, D4, H1, H8};
+    use crate::common::chess_move::Move;
+    use crate::common::square::SquareIndex::{A1, A8, D4, H1, H8};
     use crate::move_gen::util::knight_destinations;
 
     #[test]

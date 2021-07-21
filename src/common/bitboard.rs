@@ -1,5 +1,5 @@
-use crate::components::chess_move::{EAST, NORTH, SOUTH, WEST};
-use crate::components::square::*;
+use crate::common::chess_move::{EAST, NORTH, SOUTH, WEST};
+use crate::common::square::*;
 use std::slice::Iter;
 
 use super::piece::PieceType;
@@ -161,7 +161,7 @@ impl New for Bitboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::chess_move::{Move, MoveType, EAST, NORTH, WEST};
+    use crate::common::chess_move::{Move, MoveType, EAST, NORTH, WEST};
 
     #[test]
     fn adds_piece_eight_rank() {

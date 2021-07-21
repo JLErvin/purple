@@ -1,9 +1,9 @@
-use crate::components::bitboard::{
+use crate::common::bitboard::{
     AddPiece, Bitboard, ClearBit, New, Shift, FILEA, FILEB, FILEG, FILEH,
 };
-use crate::components::chess_move::{MoveType, EAST, NORTH, SOUTH, WEST};
-use crate::components::piece::PieceType;
-use crate::components::square::Square;
+use crate::common::chess_move::{MoveType, EAST, NORTH, SOUTH, WEST};
+use crate::common::piece::PieceType;
+use crate::common::square::Square;
 use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::{rook_ray, MagicPiece};
@@ -176,9 +176,9 @@ impl Lookup {
 
 #[cfg(test)]
 mod test {
-    use crate::components::square::SquareIndex::{A1, A8, D4, H1, H8};
+    use crate::common::lookup::Lookup;
+    use crate::common::square::SquareIndex::{A1, A8, D4, H1, H8};
     use crate::magic::random::*;
-    use crate::move_gen::lookup::Lookup;
 
     #[test]
     fn init_between() {

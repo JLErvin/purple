@@ -1,12 +1,12 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{AddPiece, Bitboard, New, PieceItr};
-use crate::components::chess_move::MoveType::Capture;
-use crate::components::chess_move::{Move, MoveType, SOUTH};
-use crate::components::piece::PieceType::Queen;
-use crate::components::piece::{Color, PieceType};
-use crate::components::square::Square;
+use crate::common::bitboard::{AddPiece, Bitboard, New, PieceItr};
+use crate::common::chess_move::MoveType::Capture;
+use crate::common::chess_move::{Move, MoveType, SOUTH};
+use crate::common::lookup::Lookup;
+use crate::common::piece::PieceType::Queen;
+use crate::common::piece::{Color, PieceType};
+use crate::common::square::Square;
 use crate::move_gen::generator::debug_print;
-use crate::move_gen::lookup::Lookup;
 use crate::move_gen::pawns::pawn_attacks;
 use crate::move_gen::util::{is_attacked, knight_destinations};
 
@@ -236,9 +236,9 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
 mod test {
     use super::*;
     use crate::board_state::fen::parse_fen;
-    use crate::components::chess_move::MoveType::Quiet;
-    use crate::components::square::SquareIndex;
-    use crate::components::square::SquareIndex::{
+    use crate::common::chess_move::MoveType::Quiet;
+    use crate::common::square::SquareIndex;
+    use crate::common::square::SquareIndex::{
         A1, A2, A3, A4, B1, B2, B4, B5, B8, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E4, E6,
         E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
     };

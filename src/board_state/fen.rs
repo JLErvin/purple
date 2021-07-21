@@ -1,8 +1,8 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::castle::*;
 use crate::board_state::position::*;
-use crate::components::piece::Color;
-use crate::components::square::*;
+use crate::common::piece::Color;
+use crate::common::square::*;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
@@ -98,7 +98,7 @@ fn parse_move(fen: &str) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::piece::PieceType;
+    use crate::common::piece::PieceType;
 
     #[test]
     fn parses_default_board() {

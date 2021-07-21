@@ -1,15 +1,15 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{Bitboard, ClearBit, GetBit, Shift, RANK3, RANK7};
-use crate::components::chess_move::{Move, MoveType, NORTH};
-use crate::components::piece::{Color, PieceType};
+use crate::common::bitboard::{Bitboard, ClearBit, GetBit, Shift, RANK3, RANK7};
+use crate::common::chess_move::{Move, MoveType, NORTH};
+use crate::common::piece::{Color, PieceType};
 
 use super::pawns::gen_pseudo_legal_pawn_moves;
-use crate::components::chess_move::MoveType::{Capture, CastleKing, CastleQueen, EnPassantCapture};
-use crate::components::piece::PieceType::{King, Knight, Queen};
-use crate::components::square::rank_file_to_index;
+use crate::common::chess_move::MoveType::{Capture, CastleKing, CastleQueen, EnPassantCapture};
+use crate::common::lookup::Lookup;
+use crate::common::piece::PieceType::{King, Knight, Queen};
+use crate::common::square::rank_file_to_index;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
 use crate::move_gen::legal::{attacks_to, calculate_blockers, is_legal};
-use crate::move_gen::lookup::Lookup;
 use crate::move_gen::moves::{gen_pseudo_legal_castles, gen_pseudo_legal_moves};
 use crate::move_gen::util::king_square;
 use itertools::Itertools;
@@ -52,73 +52,6 @@ impl MoveGenerator {
     }
 }
 
-pub fn all_moves(pos: &BoardState) -> Vec<Move> {
-    let mut list: Vec<Move> = Vec::with_capacity(MAX_MOVES);
-
-    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
-    let lookup = Lookup::new(random);
-
-    gen_pseudo_legal_pawn_moves(pos, &mut list);
-    gen_pseudo_legal_castles(pos, &mut list);
-
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Knight);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Rook);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Bishop);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Queen);
-
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::King);
-
-    let king_square = king_square(pos);
-    let blockers = calculate_blockers(pos, &lookup, king_square);
-    let checkers = attacks_to(pos, king_square, &lookup);
-
-    list.retain(|mv| is_legal(pos, mv, &lookup, blockers, checkers, king_square));
-
-    list
-}
-
-pub fn perft(pos: &BoardState, depth: usize) -> usize {
-    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
-    let lookup = Lookup::new(random);
-    let tic = Instant::now();
-    let sum = perft_inner(pos, depth, &lookup);
-    let toc = tic.elapsed().as_secs_f64();
-    println!("Took {} seconds to evaluate {}", toc, sum);
-    sum
-}
-
-pub fn perft_inner(pos: &BoardState, depth: usize, lookup: &Lookup) -> usize {
-    let mut list: Vec<Move> = Vec::with_capacity(MAX_MOVES);
-
-    let king_square = king_square(pos);
-    let checkers = attacks_to(pos, king_square, lookup);
-
-    gen_pseudo_legal_pawn_moves(pos, &mut list);
-    gen_pseudo_legal_castles(pos, &mut list);
-
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Knight);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Rook);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Bishop);
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::Queen);
-
-    gen_pseudo_legal_moves(pos, &mut list, &lookup, PieceType::King);
-
-    let blockers = calculate_blockers(pos, lookup, king_square);
-    list.retain(|mv| is_legal(pos, mv, &lookup, blockers, checkers, king_square));
-
-    if depth == 1 {
-        return list.len();
-    } else {
-        let mut sum = 0;
-        for mv in list.into_iter() {
-            let mut new_pos = pos.clone();
-            new_pos.make_move(mv);
-            sum += perft_inner(&mut new_pos, depth - 1, lookup);
-        }
-        sum
-    }
-}
-
 pub fn debug_print(pos: &BoardState) {
     for i in 0..8 {
         for j in 0..8 {
@@ -150,7 +83,7 @@ mod test {
     use super::*;
     use crate::board_state::board::BoardState;
     use crate::board_state::fen::parse_fen;
-    use crate::move_gen::generator::perft;
+    use crate::move_gen::perft::perft;
 
     #[test]
     #[ignore]

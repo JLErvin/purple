@@ -1,4 +1,4 @@
-use crate::components::chess_move::Move;
+use crate::common::chess_move::Move;
 use std::cmp::Ordering;
 use std::ops::Neg;
 

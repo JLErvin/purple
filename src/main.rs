@@ -1,22 +1,22 @@
 use crate::board_state::board::BoardState;
-use crate::components::chess_move::Move;
-use crate::components::piece::PieceType;
-use crate::components::square::SquareIndex::{A1, D4};
+use crate::common::chess_move::Move;
+use crate::common::piece::PieceType;
+use crate::common::square::SquareIndex::{A1, D4};
 use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
-use crate::move_gen::lookup::Lookup;
+use crate::move_gen::perft::perft;
 use crate::uci::interface::uci_loop;
 use board_state::fen::*;
 use clap::*;
+use common::lookup::Lookup;
 use itertools::Itertools;
-use move_gen::generator::perft;
 use rand::rngs::ThreadRng;
 use std::env;
 use std::time::Instant;
 
 mod board_state;
-mod components;
+mod common;
 mod magic;
 mod move_gen;
 mod search;

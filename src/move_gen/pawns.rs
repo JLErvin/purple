@@ -1,16 +1,16 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{
+use crate::common::bitboard::{
     AddPiece, Bitboard, ClearBit, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
 };
-use crate::components::chess_move::MoveType::{
+use crate::common::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, Capture, EnPassantCapture, KnightPromotion,
     KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
     RookPromotionCapture,
 };
-use crate::components::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
-use crate::components::piece::PieceType::{Knight, Queen};
-use crate::components::piece::{Color, PieceType};
-use crate::components::square::Square;
+use crate::common::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
+use crate::common::piece::PieceType::{Knight, Queen};
+use crate::common::piece::{Color, PieceType};
+use crate::common::square::Square;
 use crate::move_gen::util::extract_moves;
 
 #[derive(Copy, Clone)]
@@ -187,8 +187,8 @@ impl PawnDirections {
 mod tests {
     use super::*;
     use crate::board_state::fen::parse_fen;
-    use crate::components::bitboard::RANK2;
-    use crate::components::square::SquareIndex::*;
+    use crate::common::bitboard::RANK2;
+    use crate::common::square::SquareIndex::*;
 
     #[test]
     fn gen_random_pawn_moves1() {

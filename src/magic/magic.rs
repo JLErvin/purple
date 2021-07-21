@@ -1,6 +1,6 @@
-use crate::components::bitboard::Bitboard;
+use crate::common::bitboard::Bitboard;
 
-use crate::components::square::Square;
+use crate::common::square::Square;
 use crate::magic::random::{MagicRandomizer, Random};
 
 use crate::magic::search::{compute_magic, key};
@@ -123,7 +123,7 @@ impl MagicTable {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::square::SquareIndex::{A1, A8, B2, C7, D4, H1, H8};
+    use crate::common::square::SquareIndex::{A1, A8, B2, C7, D4, H1, H8};
 
     #[test]
     fn correct_combinations() {}

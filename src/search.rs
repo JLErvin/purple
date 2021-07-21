@@ -1,3 +1,2 @@
-mod eval;
-mod eval_move;
+pub mod eval;
 pub(crate) mod search;

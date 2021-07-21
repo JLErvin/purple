@@ -1,13 +1,8 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::{AddPiece, Bitboard, Shift};
-use crate::components::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
-use crate::components::piece::{Color, PieceType};
-use crate::magic::random::{GenerationScheme, MagicRandomizer};
+use crate::common::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
+use crate::common::eval_move::EvaledMove;
 use crate::move_gen::generator::MoveGenerator;
-use crate::move_gen::lookup::Lookup;
-use crate::move_gen::util::{is_attacked, king_square};
-use crate::search::eval::{eval, INF, MATE_VALUE, NEG_INF};
-use crate::search::eval_move::EvaledMove;
+use crate::search::eval::{eval, no_move_eval, INF, NEG_INF};
 use itertools::Itertools;
 
 pub fn best_move(pos: &mut BoardState) -> Move {
@@ -20,7 +15,7 @@ pub fn alpha_beta(
     pos: &mut BoardState,
     gen: &MoveGenerator,
     mut alpha: isize,
-    mut beta: isize,
+    beta: isize,
     depth: usize,
 ) -> EvaledMove {
     if depth == 0 {
@@ -34,7 +29,7 @@ pub fn alpha_beta(
         .collect_vec();
 
     if moves.is_empty() {
-        return handle_empty_moves(pos, depth);
+        return no_move_eval(pos, depth);
     }
 
     let mut best_move = EvaledMove::null(alpha);
@@ -74,20 +69,8 @@ pub fn minimax(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> Evale
         .max();
 
     match best {
-        None => handle_empty_moves(pos, depth),
+        None => no_move_eval(pos, depth),
         Some(mv) => mv,
-    }
-}
-
-fn handle_empty_moves(pos: &BoardState, depth: usize) -> EvaledMove {
-    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
-    let lookup = Lookup::new(random);
-    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
-
-    if is_in_check {
-        EvaledMove::null(-MATE_VALUE - depth as isize)
-    } else {
-        EvaledMove::null(0)
     }
 }
 
@@ -101,6 +84,7 @@ mod test {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
         let mv = best_move(&mut pos);
         println!("from: {} to: {}", mv.from, mv.to);
+        assert_eq!(mv.to, 49)
     }
 
     #[test]

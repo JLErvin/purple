@@ -1,13 +1,11 @@
 use crate::board_state::castle::Castle;
 use crate::board_state::position::Position;
-use crate::components::bitboard::*;
-use crate::components::chess_move::{Move, MoveType};
-use crate::components::piece::PieceType::Rook;
-use crate::components::piece::*;
-use crate::components::square::SquareIndex::{
-    A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8,
-};
-use crate::components::square::*;
+use crate::common::bitboard::*;
+use crate::common::chess_move::{Move, MoveType};
+use crate::common::piece::PieceType::Rook;
+use crate::common::piece::*;
+use crate::common::square::SquareIndex::{A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8};
+use crate::common::square::*;
 
 #[derive(Copy, Clone)]
 pub struct BoardState {
@@ -236,7 +234,7 @@ impl BoardState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::square::SquareIndex::{A2, A3, A4, B1, B4, B8, C3, C6, D2, D3, D4};
+    use crate::common::square::SquareIndex::{A2, A3, A4, B1, B4, B8, C3, C6, D2, D3, D4};
 
     #[test]
     fn correct_initial_values() {

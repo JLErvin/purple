@@ -1,8 +1,10 @@
 use crate::board_state::board::BoardState;
-use crate::components::bitboard::PieceItr;
-use crate::components::piece::{Color, PieceType};
-use crate::magic::util::MagicPiece::Rook;
-use crate::move_gen::generator::all_moves;
+use crate::common::bitboard::PieceItr;
+use crate::common::eval_move::EvaledMove;
+use crate::common::lookup::Lookup;
+use crate::common::piece::{Color, PieceType};
+use crate::magic::random::{GenerationScheme, MagicRandomizer};
+use crate::move_gen::util::{is_attacked, king_square};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -17,6 +19,25 @@ pub const NEG_INF: isize = -32_001;
 
 const MOBILITY_VALUE: f32 = 0.1;
 
+/// Returns an evaluation of the given position, at the given depth in the search tree.
+/// Depth is assumed to be decreasing (depth 0 means a leaf node), and is used to evaluate
+/// lower mates as slightly superior to mates further down the search tree.
+pub fn no_move_eval(pos: &BoardState, depth: usize) -> EvaledMove {
+    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+    let lookup = Lookup::new(random);
+    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
+
+    if is_in_check {
+        EvaledMove::null(-MATE_VALUE - depth as isize)
+    } else {
+        EvaledMove::null(0)
+    }
+}
+
+/// Given a given position, returns an estimated evaluation of the position based on a number of
+/// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
+/// Positive values are better for white, negative values are better for black, and an evaluation
+/// of zero represents a dead draw for the two players.
 pub fn eval(pos: &BoardState) -> isize {
     material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
 }

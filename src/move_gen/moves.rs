@@ -1,11 +1,11 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::position::Position;
-use crate::components::bitboard::{Bitboard, PieceItr};
-use crate::components::chess_move::MoveType::{Capture, Quiet};
-use crate::components::chess_move::{Move, MoveType};
-use crate::components::piece::{Color, PieceType};
-use crate::components::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
-use crate::move_gen::lookup::Lookup;
+use crate::common::bitboard::{Bitboard, PieceItr};
+use crate::common::chess_move::MoveType::{Capture, Quiet};
+use crate::common::chess_move::{Move, MoveType};
+use crate::common::lookup::Lookup;
+use crate::common::piece::{Color, PieceType};
+use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
 use crate::move_gen::util::extract_moves;
 use std::io::empty;
 
@@ -84,7 +84,7 @@ pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
 #[cfg(test)]
 mod test {
     use crate::board_state::fen::parse_fen;
-    use crate::components::chess_move::Move;
+    use crate::common::chess_move::Move;
     use crate::move_gen::moves::gen_pseudo_legal_castles;
 
     #[test]

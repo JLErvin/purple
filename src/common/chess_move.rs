@@ -1,9 +1,9 @@
-use crate::components::chess_move::MoveType::{
+use crate::common::chess_move::MoveType::{
     BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture, Null,
     QueenPromotion, QueenPromotionCapture, RookPromotion, RookPromotionCapture,
 };
 
-use crate::components::piece::PieceType;
+use crate::common::piece::PieceType;
 
 use std::slice::Iter;
 
@@ -165,9 +165,9 @@ impl MoveType {
 
 #[cfg(test)]
 mod test {
-    use crate::components::chess_move::Move;
-    use crate::components::chess_move::MoveType::Quiet;
-    use crate::components::square::SquareIndex::{A2, A3};
+    use crate::common::chess_move::Move;
+    use crate::common::chess_move::MoveType::Quiet;
+    use crate::common::square::SquareIndex::{A2, A3};
 
     #[test]
     fn basic_move_to_long_algebra() {

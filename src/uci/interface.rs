@@ -1,7 +1,7 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::fen::parse_fen;
-use crate::components::chess_move::Move;
-use crate::move_gen::generator::all_moves;
+use crate::common::chess_move::Move;
+use crate::move_gen::generator::MoveGenerator;
 use crate::search::search::best_move;
 use itertools::Itertools;
 use rand::Rng;
@@ -52,7 +52,8 @@ fn update_position(fen: &String) -> BoardState {
 
 fn apply_moves(pos: &mut BoardState, moves: &[&str]) {
     for mv_str in moves.iter() {
-        let move_list = all_moves(pos);
+        let gen = MoveGenerator::new();
+        let move_list = gen.all_moves(pos);
         let mv = move_list.iter().find(|x| x.to_algebraic() == *mv_str);
         pos.make_move(*mv.unwrap());
     }
