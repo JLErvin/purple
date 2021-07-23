@@ -1,77 +1,97 @@
 use crate::board_state::board::BoardState;
 use crate::common::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
 use crate::common::eval_move::EvaledMove;
+use crate::common::stats::Stats;
 use crate::move_gen::generator::MoveGenerator;
 use crate::search::eval::{eval, no_move_eval, INF, NEG_INF};
 use itertools::Itertools;
 
-pub fn best_move(pos: &mut BoardState) -> Move {
-    let gen = MoveGenerator::new();
-    //minimax(pos, &gen, 5).mv
-    alpha_beta(pos, &gen, NEG_INF, INF, 5).mv
+pub struct Searcher {
+    gen: MoveGenerator,
+    stats: Stats,
 }
 
-pub fn alpha_beta(
-    pos: &mut BoardState,
-    gen: &MoveGenerator,
-    mut alpha: isize,
-    beta: isize,
-    depth: usize,
-) -> EvaledMove {
-    if depth == 0 {
-        return EvaledMove::null(eval(pos));
+impl Searcher {
+    pub fn new() -> Searcher {
+        let gen = MoveGenerator::new();
+        let stats = Stats::new();
+        Searcher { gen, stats }
     }
 
-    let mut moves = gen
-        .all_moves(pos)
-        .into_iter()
-        .map(|mv| EvaledMove { mv, eval: 0 })
-        .collect_vec();
-
-    if moves.is_empty() {
-        return no_move_eval(pos, depth);
+    pub fn stats(&self) -> &Stats {
+        &self.stats
     }
 
-    let mut best_move = EvaledMove::null(alpha);
-    for mov in moves.iter_mut() {
-        let mut new_pos = pos.clone_with_move(mov.mv);
-        mov.eval = -alpha_beta(&mut new_pos, gen, -beta, -alpha, depth - 1).eval;
-        if mov.eval > alpha {
-            alpha = mov.eval;
-            if alpha >= beta {
-                return *mov;
+    pub fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
+        self.stats.reset();
+        self.alpha_beta(pos, NEG_INF, INF, 5)
+    }
+
+    fn alpha_beta(
+        &mut self,
+        pos: &mut BoardState,
+        mut alpha: isize,
+        beta: isize,
+        depth: usize,
+    ) -> EvaledMove {
+        self.stats.count_node();
+        if depth == 0 {
+            self.stats.count_leaf_node();
+            return EvaledMove::null(eval(pos));
+        }
+
+        let mut moves = evaled_moves(self.gen.all_moves(pos));
+
+        if moves.is_empty() {
+            self.stats.count_leaf_node();
+            return no_move_eval(pos, depth);
+        }
+
+        let mut best_move = EvaledMove::null(alpha);
+        for mv in moves.iter_mut() {
+            let mut new_pos = pos.clone_with_move(mv.mv);
+            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
+            if mv.eval > alpha {
+                alpha = mv.eval;
+                if alpha >= beta {
+                    return *mv;
+                }
+                best_move = *mv;
             }
-            best_move = *mov;
+        }
+
+        best_move
+    }
+
+    fn minimax(&self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        if depth == 0 {
+            return EvaledMove::null(eval(pos));
+        }
+
+        let moves = evaled_moves(self.gen.all_moves(pos));
+
+        let best = moves
+            .into_iter()
+            .map(|mut mv: EvaledMove| {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = -self.minimax(&mut new_pos, depth - 1).eval;
+                mv
+            })
+            .max();
+
+        match best {
+            None => no_move_eval(pos, depth),
+            Some(mv) => mv,
         }
     }
-
-    best_move
 }
 
-pub fn minimax(pos: &mut BoardState, gen: &MoveGenerator, depth: usize) -> EvaledMove {
-    if depth == 0 {
-        return EvaledMove::null(eval(pos));
-    }
-
-    let moves = gen
-        .all_moves(pos)
-        .into_iter()
-        .map(|mv| EvaledMove { mv, eval: 0 })
-        .collect_vec();
-
-    let best = moves
-        .into_iter()
-        .map(|mut mv: EvaledMove| {
-            let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -minimax(&mut new_pos, gen, depth - 1).eval;
-            mv
-        })
-        .max();
-
-    match best {
-        None => no_move_eval(pos, depth),
-        Some(mv) => mv,
-    }
+#[inline]
+fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
+    moves
+        .iter()
+        .map(|mv| EvaledMove { mv: *mv, eval: 0 })
+        .collect_vec()
 }
 
 #[cfg(test)]
@@ -82,16 +102,16 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_white() {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mv = best_move(&mut pos);
-        println!("from: {} to: {}", mv.from, mv.to);
+        let mut searcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
 
     #[test]
     fn finds_mate_in_one_as_black() {
         let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mv = best_move(&mut pos);
-        println!("from: {} to: {}", mv.from, mv.to);
+        let mut searcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
 }

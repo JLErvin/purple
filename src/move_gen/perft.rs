@@ -13,8 +13,8 @@ fn perft_inner(pos: &BoardState, gen: &MoveGenerator, depth: usize) -> usize {
     } else {
         let mut sum = 0;
         for mv in moves.into_iter() {
-            let mut new_pos = pos.clone_with_move(mv);
-            sum += perft_inner(&mut new_pos, gen, depth - 1);
+            let new_pos = pos.clone_with_move(mv);
+            sum += perft_inner(&new_pos, gen, depth - 1);
         }
         sum
     }

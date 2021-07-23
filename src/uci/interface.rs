@@ -2,7 +2,7 @@ use crate::board_state::board::BoardState;
 use crate::board_state::fen::parse_fen;
 use crate::common::chess_move::Move;
 use crate::move_gen::generator::MoveGenerator;
-use crate::search::search::best_move;
+use crate::search::search::Searcher;
 use itertools::Itertools;
 use rand::Rng;
 use std::io::{self, stdin, BufRead, Read};
@@ -10,6 +10,7 @@ use std::process;
 
 pub fn uci_loop() {
     let mut pos = BoardState::default();
+    let mut searcher = Searcher::new();
     loop {
         let mut buffer = String::new();
         stdin().lock().read_line(&mut buffer).unwrap();
@@ -18,7 +19,7 @@ pub fn uci_loop() {
             "quit" => break,
             "uci" => init_uci(),
             "position" => pos = update_position(&key[1..].join(" ")),
-            "go" => go(&mut pos),
+            "go" => go(&mut pos, &mut searcher),
             "isready" => println!("readyok"),
             "ucinewgame" => pos = update_position(&"startpos".to_string()),
             _ => println!("Command not understood"),
@@ -26,8 +27,8 @@ pub fn uci_loop() {
     }
 }
 
-fn go(pos: &mut BoardState) {
-    let mv = best_move(pos);
+fn go(pos: &mut BoardState, searcher: &mut Searcher) {
+    let mv = searcher.best_move(pos).mv;
     println!("bestmove {}", mv.to_algebraic());
 }
 
@@ -40,12 +41,12 @@ fn update_position(fen: &String) -> BoardState {
         _ => panic!("Unknown parameter to position!"),
     };
 
-    let keyword = v.get(1).unwrap_or(&"none");
+    let keyword = v.get(1);
 
-    match &keyword[..] {
-        "moves" => apply_moves(&mut pos, &v[2..]),
-        "none" | _ => {}
-    };
+    match keyword {
+        Some(_) => apply_moves(&mut pos, &v[2..]),
+        None => {}
+    }
 
     pos
 }
