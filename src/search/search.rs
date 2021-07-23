@@ -27,6 +27,16 @@ impl Searcher {
         self.alpha_beta(pos, NEG_INF, INF, 5)
     }
 
+    pub fn best_move_alpha(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        self.stats.reset();
+        self.alpha_beta(pos, NEG_INF, INF, depth)
+    }
+
+    pub fn best_move_minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        self.stats.reset();
+        self.minimax(pos, depth)
+    }
+
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
@@ -34,16 +44,15 @@ impl Searcher {
         beta: isize,
         depth: usize,
     ) -> EvaledMove {
-        self.stats.count_node();
         if depth == 0 {
-            self.stats.count_leaf_node();
+            self.stats.count_node();
             return EvaledMove::null(eval(pos));
         }
 
         let mut moves = evaled_moves(self.gen.all_moves(pos));
 
         if moves.is_empty() {
-            self.stats.count_leaf_node();
+            self.stats.count_node();
             return no_move_eval(pos, depth);
         }
 
@@ -63,8 +72,9 @@ impl Searcher {
         best_move
     }
 
-    fn minimax(&self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+    fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         if depth == 0 {
+            self.stats.count_node();
             return EvaledMove::null(eval(pos));
         }
 
@@ -80,7 +90,10 @@ impl Searcher {
             .max();
 
         match best {
-            None => no_move_eval(pos, depth),
+            None => {
+                self.stats.count_node();
+                no_move_eval(pos, depth)
+            }
             Some(mv) => mv,
         }
     }

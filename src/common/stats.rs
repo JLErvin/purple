@@ -1,5 +1,5 @@
 pub struct Stats {
-    nodes: usize,
+    pub(crate) nodes: usize,
     leaf_nodes: usize,
 }
 

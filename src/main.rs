@@ -6,6 +6,7 @@ use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
 use crate::move_gen::perft::perft;
+use crate::search::search::Searcher;
 use crate::uci::interface::uci_loop;
 use board_state::fen::*;
 use clap::*;
@@ -37,10 +38,38 @@ fn main() {
                 .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("alpha-perft")
+                .short("a")
+                .long("alpha-perft")
+                .help("run a performance test on the alpha-beta searcher")
+                .number_of_values(2)
+                .value_names(&*vec!["depth", "fen"])
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("minimax-perft")
+                .short("m")
+                .long("minimax-perft")
+                .help("run a performance test on the minimax searcher")
+                .number_of_values(2)
+                .value_names(&*vec!["depth", "fen"])
+                .takes_value(true),
+        )
         .get_matches();
 
     if matches.is_present("perft") {
         execute_perft(matches.values_of("perft").unwrap().collect_vec());
+        return;
+    };
+
+    if matches.is_present("alpha-perft") {
+        execute_alpha_perft(matches.values_of("alpha-perft").unwrap().collect_vec());
+        return;
+    };
+
+    if matches.is_present("minimax-perft") {
+        execute_minimax_perft(matches.values_of("minimax-perft").unwrap().collect_vec());
         return;
     };
 
@@ -56,4 +85,33 @@ fn execute_perft(args: Vec<&str>) {
     let pos = parse_fen(fen).unwrap();
 
     perft(&pos, depth);
+}
+
+fn execute_alpha_perft(args: Vec<&str>) {
+    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let fen = args.get(1).unwrap();
+
+    let mut pos = parse_fen(fen).unwrap();
+
+    let mut searcher = Searcher::new();
+    let mv = searcher.best_move_alpha(&mut pos, depth);
+
+    let stats = searcher.stats();
+    println!("Explored {} nodes", stats.nodes);
+    println!("Best Move {}", mv.mv.to_algebraic());
+    println!("Move Evaluation {}", mv.eval);
+}
+fn execute_minimax_perft(args: Vec<&str>) {
+    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let fen = args.get(1).unwrap();
+
+    let mut pos = parse_fen(fen).unwrap();
+
+    let mut searcher = Searcher::new();
+    let mv = searcher.best_move_minimax(&mut pos, depth);
+
+    let stats = searcher.stats();
+    println!("Explored {} nodes", stats.nodes);
+    println!("Best Move {}", mv.mv.to_algebraic());
+    println!("Move Evaluation {}", mv.eval);
 }
