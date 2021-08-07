@@ -68,11 +68,6 @@ fn main() {
         return;
     };
 
-    if matches.is_present("minimax-perft") {
-        execute_minimax_perft(matches.values_of("minimax-perft").unwrap().collect_vec());
-        return;
-    };
-
     uci_loop();
 
     println!();
@@ -95,20 +90,6 @@ fn execute_alpha_perft(args: Vec<&str>) {
 
     let mut searcher = Searcher::new();
     let mv = searcher.best_move_alpha(&mut pos, depth);
-
-    let stats = searcher.stats();
-    println!("Explored {} nodes", stats.nodes);
-    println!("Best Move {}", mv.mv.to_algebraic());
-    println!("Move Evaluation {}", mv.eval);
-}
-fn execute_minimax_perft(args: Vec<&str>) {
-    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
-    let fen = args.get(1).unwrap();
-
-    let mut pos = parse_fen(fen).unwrap();
-
-    let mut searcher = Searcher::new();
-    let mv = searcher.best_move_minimax(&mut pos, depth);
 
     let stats = searcher.stats();
     println!("Explored {} nodes", stats.nodes);

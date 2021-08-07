@@ -38,8 +38,56 @@ impl PartialEq for EvaledMove {
 impl Neg for EvaledMove {
     type Output = Self;
 
-    fn neg(mut self) -> Self::Output {
-        self.eval = self.eval.wrapping_neg();
-        self
+    fn neg(self) -> Self::Output {
+        let mut new = self;
+        new.mv = self.mv;
+        new.eval = self.eval.wrapping_neg();
+        new
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::common::eval_move::EvaledMove;
+    use std::cmp::{max, min};
+
+    #[test]
+    fn equal_for_same_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(1);
+        assert_eq!(mv1, mv2);
+    }
+
+    #[test]
+    fn not_equal_for_different_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(2);
+        assert_ne!(mv1, mv2);
+    }
+
+    #[test]
+    fn cmp_for_different_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(2);
+        assert!(mv1 < mv2);
+    }
+
+    #[test]
+    fn cmp_for_different_eval_neg() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(-2);
+        assert!(mv1 > mv2);
+    }
+
+    #[test]
+    fn min_max_work() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(-2);
+
+        let max = max(mv1, mv2);
+        assert_eq!(max.eval, 1);
+
+        let min = min(mv1, mv2);
+        assert_eq!(min.eval, -2);
     }
 }

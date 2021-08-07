@@ -1,10 +1,12 @@
 use crate::board_state::board::BoardState;
 use crate::common::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
 use crate::common::eval_move::EvaledMove;
+use crate::common::piece::Color;
 use crate::common::stats::Stats;
 use crate::move_gen::generator::MoveGenerator;
 use crate::search::eval::{eval, no_move_eval, INF, NEG_INF};
 use itertools::Itertools;
+use std::cmp::{max, min};
 
 pub struct Searcher {
     gen: MoveGenerator,
@@ -32,69 +34,47 @@ impl Searcher {
         self.alpha_beta(pos, NEG_INF, INF, depth)
     }
 
-    pub fn best_move_minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
-        self.stats.reset();
-        self.minimax(pos, depth)
-    }
-
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
         mut alpha: isize,
-        beta: isize,
+        mut beta: isize,
         depth: usize,
     ) -> EvaledMove {
         if depth == 0 {
-            self.stats.count_node();
-            return EvaledMove::null(eval(pos));
-        }
-
-        let mut moves = evaled_moves(self.gen.all_moves(pos));
-
-        if moves.is_empty() {
-            self.stats.count_node();
-            return no_move_eval(pos, depth);
-        }
-
-        let mut best_move = EvaledMove::null(alpha);
-        for mv in moves.iter_mut() {
-            let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
-            if mv.eval > alpha {
-                alpha = mv.eval;
-                if alpha >= beta {
-                    return *mv;
-                }
-                best_move = *mv;
-            }
-        }
-
-        best_move
-    }
-
-    fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
-        if depth == 0 {
-            self.stats.count_node();
             return EvaledMove::null(eval(pos));
         }
 
         let moves = evaled_moves(self.gen.all_moves(pos));
 
-        let best = moves
-            .into_iter()
-            .map(|mut mv: EvaledMove| {
-                let mut new_pos = pos.clone_with_move(mv.mv);
-                mv.eval = -self.minimax(&mut new_pos, depth - 1).eval;
-                mv
-            })
-            .max();
+        if moves.is_empty() {
+            return no_move_eval(pos, depth);
+        }
 
-        match best {
-            None => {
-                self.stats.count_node();
-                no_move_eval(pos, depth)
+        if pos.active_player() == Color::White {
+            let mut best_move = EvaledMove::null(-INF);
+            for mut mv in moves.into_iter() {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = self.alpha_beta(&mut new_pos, alpha, beta, depth - 1).eval;
+                best_move = max(mv, best_move);
+                if best_move.eval >= beta {
+                    break;
+                }
+                alpha = max(alpha, best_move.eval);
             }
-            Some(mv) => mv,
+            best_move
+        } else {
+            let mut best_move = EvaledMove::null(INF);
+            for mut mv in moves.into_iter() {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = self.alpha_beta(&mut new_pos, alpha, beta, depth - 1).eval;
+                best_move = min(best_move, mv);
+                if best_move.eval <= alpha {
+                    break;
+                }
+                beta = min(beta, best_move.eval);
+            }
+            best_move
         }
     }
 }
@@ -111,6 +91,7 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 mod test {
     use super::*;
     use crate::board_state::fen::parse_fen;
+    use crate::move_gen::generator::debug_print;
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -126,5 +107,36 @@ mod test {
         let mut searcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn best_move_random_1() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 21)
+    }
+
+    #[test]
+    fn best_move_random_2() {
+        let mut pos =
+            parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
+                .unwrap();
+        let mut searcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 45)
+    }
+
+    #[test]
+    fn best_move_random_3() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        debug_print(&pos);
+        assert_eq!(mv.to, 3)
     }
 }

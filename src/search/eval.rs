@@ -28,7 +28,10 @@ pub fn no_move_eval(pos: &BoardState, depth: usize) -> EvaledMove {
     let is_in_check = is_attacked(pos, king_square(pos), &lookup);
 
     if is_in_check {
-        EvaledMove::null(-MATE_VALUE - depth as isize)
+        match pos.active_player() {
+            Color::White => EvaledMove::null(-MATE_VALUE - depth as isize),
+            Color::Black => EvaledMove::null(MATE_VALUE + depth as isize),
+        }
     } else {
         EvaledMove::null(0)
     }

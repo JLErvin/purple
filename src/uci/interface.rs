@@ -37,15 +37,14 @@ fn update_position(fen: &String) -> BoardState {
     let keyword = v.get(0).unwrap();
     let mut pos = match &keyword[..] {
         "startpos" => BoardState::default(),
-        "fen" => parse_fen(&fen[1..]).unwrap(),
+        "fen" => parse_fen(&fen[2..]).unwrap(),
         _ => panic!("Unknown parameter to position!"),
     };
 
     let keyword = v.get(1);
 
-    match keyword {
-        Some(_) => apply_moves(&mut pos, &v[2..]),
-        None => {}
+    if keyword.is_some() {
+        apply_moves(&mut pos, &v[2..])
     }
 
     pos
