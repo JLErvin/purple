@@ -24,8 +24,6 @@ mod search;
 mod uci;
 
 fn main() {
-    println!("Hello, world!");
-
     let matches = App::new("purple")
         .author("Joshua L Ervin")
         .about("A UCI chess engine")
@@ -33,7 +31,7 @@ fn main() {
             Arg::with_name("perft")
                 .short("p")
                 .long("perft")
-                .help("run a performance test")
+                .help("run a performance test on the move generator")
                 .number_of_values(2)
                 .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
@@ -43,15 +41,6 @@ fn main() {
                 .short("a")
                 .long("alpha-perft")
                 .help("run a performance test on the alpha-beta searcher")
-                .number_of_values(2)
-                .value_names(&*vec!["depth", "fen"])
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("minimax-perft")
-                .short("m")
-                .long("minimax-perft")
-                .help("run a performance test on the minimax searcher")
                 .number_of_values(2)
                 .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
