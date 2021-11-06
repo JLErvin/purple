@@ -22,6 +22,7 @@ mod magic;
 mod move_gen;
 mod search;
 mod uci;
+mod table;
 
 fn main() {
     let matches = App::new("purple")
@@ -68,7 +69,8 @@ fn execute_perft(args: Vec<&str>) {
 
     let pos = parse_fen(fen).unwrap();
 
-    perft(&pos, depth);
+    let nodes = perft(&pos, depth);
+    println!("Nodes: {}", nodes);
 }
 
 fn execute_alpha_perft(args: Vec<&str>) {
