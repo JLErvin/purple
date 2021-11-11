@@ -41,11 +41,13 @@ impl Searcher for MinimaxSearcher {
 impl MinimaxSearcher {
     fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         if depth == 0 {
+            self.stats.count_node();
             return EvaledMove::null(eval(pos));
         }
 
         let moves = evaled_moves(self.gen.all_moves(pos));
         if moves.is_empty() {
+            self.stats.count_node();
             return no_move_eval(pos, depth);
         }
 

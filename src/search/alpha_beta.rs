@@ -46,12 +46,14 @@ impl AlphaBetaSearcher {
         depth: usize,
     ) -> EvaledMove {
         if depth == 0 {
+            self.stats.count_node();
             return EvaledMove::null(eval(pos));
         }
 
         let moves = evaled_moves(self.gen.all_moves(pos));
 
         if moves.is_empty() {
+            self.stats.count_node();
             return no_move_eval(pos, depth);
         }
 
@@ -154,8 +156,9 @@ mod test {
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
                 .unwrap();
         let mut searcher: AlphaBetaSearcher = Searcher::new();
-        let mv = searcher.best_move(&mut pos).mv;
+        let mv = searcher.best_move(&mut pos);
         debug_print(&pos);
-        assert_eq!(mv.to, 3)
+        println!("{}", mv.eval);
+        assert_eq!(mv.mv.to, 3)
     }
 }

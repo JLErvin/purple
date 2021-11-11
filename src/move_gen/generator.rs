@@ -19,7 +19,7 @@ use std::time::Instant;
 const MAX_MOVES: usize = 256;
 
 pub struct MoveGenerator {
-    lookup: Lookup,
+    pub lookup: Lookup,
 }
 
 impl MoveGenerator {
