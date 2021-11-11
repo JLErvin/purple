@@ -8,7 +8,7 @@ pub struct Entry {
 }
 
 pub struct TranspositionTable {
-    table: Vec<Option<Entry>>
+    table: Vec<Option<Entry>>,
 }
 
 /// A transpositon table is a lightweight hash map which maps Zobrist hashes (u64s) to entries.
@@ -17,7 +17,9 @@ pub struct TranspositionTable {
 impl TranspositionTable {
     /// Constructs a new TranspositionTable with the given number of entries
     pub fn new(size: usize) -> TranspositionTable {
-        TranspositionTable { table: vec![None; size] }
+        TranspositionTable {
+            table: vec![None; size],
+        }
     }
 
     /// Saves the given entry into the table, returns whether

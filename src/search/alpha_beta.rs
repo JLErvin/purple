@@ -1,18 +1,25 @@
-use std::cmp::{max, min};
-use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator};
-use super::{eval::{INF, NEG_INF, eval, no_move_eval}, search::Searcher};
+use super::{
+    eval::{eval, no_move_eval, INF, NEG_INF},
+    search::Searcher,
+};
+use crate::{
+    board_state::board::BoardState,
+    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
+    move_gen::generator::MoveGenerator,
+};
 use itertools::Itertools;
+use std::cmp::{max, min};
 
 pub struct AlphaBetaSearcher {
     gen: MoveGenerator,
-    stats: Stats
+    stats: Stats,
 }
 
 impl Searcher for AlphaBetaSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        AlphaBetaSearcher {gen, stats}
+        AlphaBetaSearcher { gen, stats }
     }
 
     fn stats(&self) -> &Stats {

@@ -1,20 +1,26 @@
-
-use std::cmp::{max, min};
 use itertools::Itertools;
+use std::cmp::{max, min};
 
-use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator};
-use super::{eval::{INF, NEG_INF, eval, no_move_eval}, search::Searcher};
+use super::{
+    eval::{eval, no_move_eval, INF, NEG_INF},
+    search::Searcher,
+};
+use crate::{
+    board_state::board::BoardState,
+    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
+    move_gen::generator::MoveGenerator,
+};
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
-    stats: Stats
+    stats: Stats,
 }
 
 impl Searcher for MinimaxSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        MinimaxSearcher {gen, stats}
+        MinimaxSearcher { gen, stats }
     }
 
     fn stats(&self) -> &Stats {
@@ -23,7 +29,7 @@ impl Searcher for MinimaxSearcher {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.minimax(pos,  5)
+        self.minimax(pos, 5)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
@@ -42,12 +48,12 @@ impl MinimaxSearcher {
         if moves.is_empty() {
             return no_move_eval(pos, depth);
         }
-    
+
         return if pos.active_player() == Color::White {
             let mut best_move = EvaledMove::null(-INF);
             for mut mv in moves.into_iter() {
                 let mut new_pos = pos.clone_with_move(mv.mv);
-                mv.eval = self.minimax(&mut new_pos,  depth - 1).eval;
+                mv.eval = self.minimax(&mut new_pos, depth - 1).eval;
                 best_move = max(mv, best_move);
             }
             best_move

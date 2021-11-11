@@ -31,12 +31,12 @@ impl ZobristTable {
             black_table,
             whites_turn,
             castling_rights,
-            en_passant_file
+            en_passant_file,
         }
     }
 
     fn gen_pieces(rng: &mut ThreadRng) -> [ZobristBoard; PIECE_COUNT] {
-        let mut table  = [[0u64; 64]; PIECE_COUNT];
+        let mut table = [[0u64; 64]; PIECE_COUNT];
         for i in 0..PIECE_COUNT {
             let mut piece = table[i];
             for j in 0..64 {

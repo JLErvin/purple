@@ -23,8 +23,8 @@ mod common;
 mod magic;
 mod move_gen;
 mod search;
-mod uci;
 mod table;
+mod uci;
 
 fn main() {
     let matches = App::new("purple")

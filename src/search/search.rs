@@ -8,7 +8,6 @@ use crate::search::eval::{eval, no_move_eval, INF, NEG_INF};
 use itertools::Itertools;
 use std::cmp::{max, min};
 
-
 pub trait Searcher {
     fn new() -> Self;
     fn stats(&self) -> &Stats;

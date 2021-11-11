@@ -1,2 +1,2 @@
-pub mod zobrist;
 pub mod transposition;
+pub mod zobrist;
