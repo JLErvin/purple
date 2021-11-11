@@ -6,6 +6,8 @@ use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
 use crate::move_gen::perft::perft;
+use crate::search::alpha_beta::AlphaBetaSearcher;
+use crate::search::minimax::MinimaxSearcher;
 use crate::search::search::Searcher;
 use crate::uci::interface::uci_loop;
 use board_state::fen::*;
@@ -46,10 +48,24 @@ fn main() {
                 .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("mini-perft")
+                .short("m")
+                .long("mini-perft")
+                .help("run a performance test on the alpha-beta searcher")
+                .number_of_values(2)
+                .value_names(&*vec!["depth", "fen"])
+                .takes_value(true),
+        )
         .get_matches();
 
     if matches.is_present("perft") {
         execute_perft(matches.values_of("perft").unwrap().collect_vec());
+        return;
+    };
+
+    if matches.is_present("mini-perft") {
+        execute_mini_perft(matches.values_of("mini-perft").unwrap().collect_vec());
         return;
     };
 
@@ -73,14 +89,29 @@ fn execute_perft(args: Vec<&str>) {
     println!("Nodes: {}", nodes);
 }
 
+fn execute_mini_perft(args: Vec<&str>) {
+    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let fen = args.get(1).unwrap();
+
+    let mut pos = parse_fen(fen).unwrap();
+
+    let mut searcher = MinimaxSearcher::new();
+    let mv = searcher.best_move_depth(&mut pos, depth);
+
+    let stats = searcher.stats();
+    println!("Explored {} nodes", stats.nodes);
+    println!("Best Move {}", mv.mv.to_algebraic());
+    println!("Move Evaluation {}", mv.eval);
+}
+
 fn execute_alpha_perft(args: Vec<&str>) {
     let depth = args.get(0).unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
     let mut pos = parse_fen(fen).unwrap();
 
-    let mut searcher = Searcher::new();
-    let mv = searcher.best_move_alpha(&mut pos, depth);
+    let mut searcher = AlphaBetaSearcher::new();
+    let mv = searcher.best_move_depth(&mut pos, depth);
 
     let stats = searcher.stats();
     println!("Explored {} nodes", stats.nodes);

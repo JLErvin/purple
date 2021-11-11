@@ -1,0 +1,125 @@
+
+use std::cmp::{max, min};
+use itertools::Itertools;
+
+use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator};
+use super::{eval::{INF, NEG_INF, eval, no_move_eval}, search::Searcher};
+
+pub struct MinimaxSearcher {
+    gen: MoveGenerator,
+    stats: Stats
+}
+
+impl Searcher for MinimaxSearcher {
+    fn new() -> Self {
+        let gen = MoveGenerator::new();
+        let stats = Stats::new();
+        MinimaxSearcher {gen, stats}
+    }
+
+    fn stats(&self) -> &Stats {
+        &self.stats
+    }
+
+    fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
+        self.stats.reset();
+        self.minimax(pos,  5)
+    }
+
+    fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        self.stats.reset();
+        self.minimax(pos, depth)
+    }
+}
+
+impl MinimaxSearcher {
+    fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        if depth == 0 {
+            return EvaledMove::null(eval(pos));
+        }
+
+        let moves = evaled_moves(self.gen.all_moves(pos));
+        if moves.is_empty() {
+            return no_move_eval(pos, depth);
+        }
+    
+        return if pos.active_player() == Color::White {
+            let mut best_move = EvaledMove::null(-INF);
+            for mut mv in moves.into_iter() {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = self.minimax(&mut new_pos,  depth - 1).eval;
+                best_move = max(mv, best_move);
+            }
+            best_move
+        } else {
+            let mut best_move = EvaledMove::null(INF);
+            for mut mv in moves.into_iter() {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = self.minimax(&mut new_pos, depth - 1).eval;
+                best_move = min(best_move, mv);
+            }
+            best_move
+        };
+    }
+}
+
+#[inline]
+fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
+    moves
+        .iter()
+        .map(|mv| EvaledMove { mv: *mv, eval: 0 })
+        .collect_vec()
+}
+
+mod test {
+    use super::*;
+    use crate::board_state::fen::parse_fen;
+    use crate::move_gen::generator::debug_print;
+
+    #[test]
+    fn finds_mate_in_one_as_white() {
+        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn finds_mate_in_one_as_black() {
+        let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn best_move_random_1() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 21)
+    }
+
+    #[test]
+    fn best_move_random_2() {
+        let mut pos =
+            parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
+                .unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 45)
+    }
+
+    #[test]
+    fn best_move_random_3() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        debug_print(&pos);
+        assert_eq!(mv.to, 3)
+    }
+}

@@ -1,2 +1,4 @@
 pub mod eval;
-pub(crate) mod search;
+pub mod search;
+pub mod minimax;
+pub mod alpha_beta;

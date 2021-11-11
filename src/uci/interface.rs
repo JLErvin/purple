@@ -2,6 +2,7 @@ use crate::board_state::board::BoardState;
 use crate::board_state::fen::parse_fen;
 use crate::common::chess_move::Move;
 use crate::move_gen::generator::MoveGenerator;
+use crate::search::alpha_beta::AlphaBetaSearcher;
 use crate::search::search::Searcher;
 use itertools::Itertools;
 use rand::Rng;
@@ -10,7 +11,7 @@ use std::process;
 
 pub fn uci_loop() {
     let mut pos = BoardState::default();
-    let mut searcher = Searcher::new();
+    let mut searcher = AlphaBetaSearcher::new();
     loop {
         let mut buffer = String::new();
         stdin().lock().read_line(&mut buffer).unwrap();
@@ -27,7 +28,7 @@ pub fn uci_loop() {
     }
 }
 
-fn go(pos: &mut BoardState, searcher: &mut Searcher) {
+fn go(pos: &mut BoardState, searcher: &mut AlphaBetaSearcher) {
     let mv = searcher.best_move(pos).mv;
     println!("bestmove {}", mv.to_algebraic());
 }
