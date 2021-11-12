@@ -5,22 +5,22 @@ use super::{
     eval::{eval, no_move_eval, INF, NEG_INF},
     search::Searcher,
 };
-use crate::{
-    board_state::board::BoardState,
-    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
-    move_gen::generator::MoveGenerator,
-};
+use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator, table::{transposition::{Entry, TranspositionTable}, zobrist::ZobristTable}};
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
     stats: Stats,
+    table: TranspositionTable,
+    zobrist: ZobristTable
 }
 
 impl Searcher for MinimaxSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        MinimaxSearcher { gen, stats }
+        let table = TranspositionTable::new_mb(5);
+        let zobrist = ZobristTable::init();
+        MinimaxSearcher { gen, stats, table, zobrist}
     }
 
     fn stats(&self) -> &Stats {
@@ -40,9 +40,27 @@ impl Searcher for MinimaxSearcher {
 
 impl MinimaxSearcher {
     fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+
+        let hash = self.zobrist.hash(pos);
+        let cached_move = self.table.get(hash, depth);
+        match cached_move {
+            None => (),
+            Some(m) => return m.best_move
+        };
+
         if depth == 0 {
             self.stats.count_node();
-            return EvaledMove::null(eval(pos));
+            let e = EvaledMove::null(eval(pos));
+            let hash = self.zobrist.hash(pos);
+            let entry = Entry {
+                score: e.eval as i32,
+                best_move: e,
+                hash16: (hash >> 48) as u16,
+                depth: depth as u8
+            };
+            self.table.save(hash, entry);
+
+            return e;
         }
 
         let moves = evaled_moves(self.gen.all_moves(pos));
@@ -51,7 +69,7 @@ impl MinimaxSearcher {
             return no_move_eval(pos, depth);
         }
 
-        return if pos.active_player() == Color::White {
+        let best_move = if pos.active_player() == Color::White {
             let mut best_move = EvaledMove::null(-INF);
             for mut mv in moves.into_iter() {
                 let mut new_pos = pos.clone_with_move(mv.mv);
@@ -68,6 +86,16 @@ impl MinimaxSearcher {
             }
             best_move
         };
+
+            let hash = self.zobrist.hash(pos);
+            let entry = Entry {
+                score: best_move.eval as i32,
+                best_move: best_move,
+                hash16: (hash >> 48) as u16,
+                depth: depth as u8
+            };
+            self.table.save(hash, entry);
+            best_move
     }
 }
 

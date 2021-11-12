@@ -71,6 +71,14 @@ pub fn rank_file_to_index(rank: u8, file: u8) -> Square {
     8 * rank + file
 }
 
+pub fn square_to_file(s: Square) -> u8 {
+    s % 8
+}
+
+pub fn square_to_rank(s: Square) -> u8 {
+    s % 8
+}
+
 pub fn algebraic_to_square(alg: &str) -> Square {
     let mut s = alg.chars();
     let file = s.next().unwrap();

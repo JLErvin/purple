@@ -1,8 +1,10 @@
-use crate::common::chess_move::Move;
+use std::mem;
+
+use crate::common::{chess_move::Move, eval_move::EvaledMove};
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub score: i32,
-    pub best_move: Move,
+    pub best_move: EvaledMove,
     pub hash16: u16,
     pub depth: u8,
 }
@@ -17,6 +19,14 @@ pub struct TranspositionTable {
 impl TranspositionTable {
     /// Constructs a new TranspositionTable with the given number of entries
     pub fn new(size: usize) -> TranspositionTable {
+        TranspositionTable {
+            table: vec![None; size],
+        }
+    }
+
+    /// Constructs a new TranspositionTable with the given number of entries
+    pub fn new_mb(size: usize) -> TranspositionTable {
+        let size = size * 1024 * 1024 / mem::size_of::<Entry>();
         TranspositionTable {
             table: vec![None; size],
         }
@@ -38,8 +48,21 @@ impl TranspositionTable {
     }
 
     /// Using the given hash, return the Entry which is associated with it in the table.
-    pub fn get(&self, hash: u64) -> Option<Entry> {
+    pub fn get(&self, hash: u64, depth: usize) -> Option<Entry> {
         let index = hash as usize % self.table.len();
-        self.table[index]
+        let entry = self.table[index];
+        match entry {
+            None => None,
+            Some(e) => {
+                //if e.depth >= depth as u8 && e.hash16 == ((hash >> 48) as u16) {
+                if e.best_move.mv == Move::null() {
+                    return None
+                }
+                if e.depth >= depth as u8 {
+                    return Some(e)
+                }
+                None
+            }
+        }
     }
 }
