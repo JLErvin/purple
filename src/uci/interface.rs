@@ -29,7 +29,7 @@ pub fn uci_loop() {
 }
 
 fn go(pos: &mut BoardState, searcher: &mut AlphaBetaSearcher) {
-    let mv = searcher.best_move(pos).mv;
+    let mv = searcher.best_move_depth(pos, 7).mv;
     println!("bestmove {}", mv.to_algebraic());
 }
 

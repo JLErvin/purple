@@ -142,4 +142,18 @@ mod test {
 
         assert_ne!(hash1, hash2);
     }
+
+    #[test]
+    fn should_differentiate_between_plaeyers() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 b - - 0 1".to_string()).unwrap();
+
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
 }

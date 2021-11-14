@@ -1,0 +1,254 @@
+use super::{eval::MATE_VALUE, search::Searcher};
+use crate::{board_state::board::BoardState, common::{bitboard::PieceItr, chess_move::Move, eval_move::EvaledMove, lookup::Lookup, piece::{Color, PieceType}, stats::Stats}, magic::random::{GenerationScheme, MagicRandomizer}, move_gen::{generator::MoveGenerator, util::{is_attacked, king_square}}, table::{transposition::TranspositionTable, zobrist::ZobristTable}};
+use itertools::Itertools;
+use std::cmp::{max, min};
+
+pub struct AlphaBetaNegaSearcher {
+    gen: MoveGenerator,
+    stats: Stats,
+    zobrist: ZobristTable,
+    table: TranspositionTable,
+}
+
+impl Searcher for AlphaBetaNegaSearcher {
+    fn new() -> Self {
+        let gen = MoveGenerator::new();
+        let stats = Stats::new();
+        let zobrist = crate::table::zobrist::ZobristTable::init();
+        let table = TranspositionTable::new_mb(5);
+        AlphaBetaNegaSearcher { gen, stats, zobrist, table }
+    }
+
+    fn stats(&self) -> &Stats {
+        &self.stats
+    }
+
+    fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
+        self.stats.reset();
+        self.alpha_beta(pos, NEG_INF, INF, 5)
+    }
+
+    fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+        self.stats.reset();
+        self.alpha_beta(pos, NEG_INF, INF, depth)
+    }
+}
+
+impl AlphaBetaNegaSearcher {
+    fn alpha_beta(
+        &mut self,
+        pos: &mut BoardState,
+        mut alpha: isize,
+        beta: isize,
+        depth: usize,
+    ) -> EvaledMove {
+        if depth == 0 {
+            self.stats.count_node();
+            return self.q_search(pos, alpha, beta, 4);
+        }
+
+        let mut moves = evaled_moves(self.gen.all_moves(pos));
+
+        if moves.is_empty() {
+            self.stats.count_node();
+            return no_move_eval(pos, depth);
+        }
+
+        let mut best_move = EvaledMove::null(alpha);
+        for mv in moves.iter_mut() {
+            let mut new_pos = pos.clone_with_move(mv.mv);
+            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
+            if mv.eval > alpha {
+                alpha = mv.eval;
+                if alpha >= beta {
+                    return *mv;
+                }
+                best_move = *mv;
+            }
+        }
+
+        best_move
+    }
+
+    fn q_search(&mut self, pos: &mut BoardState, mut alpha: isize, beta: isize, depth: usize) -> EvaledMove {
+        let static_eval = EvaledMove::null(eval(pos));
+        if depth == 0 || static_eval.eval >= beta { return static_eval };
+        if static_eval.eval > alpha {
+            alpha = static_eval.eval;
+        }
+        
+        let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
+            evaled_moves(self.gen.all_moves(pos))
+        } else {
+            evaled_moves(self.gen.all_moves(pos)).into_iter().filter(|mv| mv.mv.is_capture()).collect()
+        };
+
+        //let mut moves: Vec<EvaledMove> = evaled_moves(self.gen.all_moves(pos)).into_iter().filter(|mv| mv.mv.is_capture()).collect();
+        //let mut moves = evaled_moves(self.gen.all_moves(pos));
+        if moves.is_empty() {
+            self.stats.count_node();
+            return no_move_eval(pos, depth);
+        }
+
+        for mv in moves.iter_mut() {
+            let mut new_pos = pos.clone_with_move(mv.mv);
+            mv.eval = -self.q_search(&mut new_pos, -alpha, -beta, depth -1).eval;
+            if mv.eval > alpha {
+                if mv.eval >= beta {
+                    return *mv;
+                }
+                alpha = mv.eval;
+            }
+        }
+
+        EvaledMove::null(alpha)
+    }
+}
+
+pub fn no_move_eval(pos: &BoardState, depth: usize) -> EvaledMove {
+    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+    let lookup = Lookup::new(random);
+    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
+
+    if is_in_check {
+        EvaledMove::null(-MATE_VALUE - depth as isize)
+    } else {
+        EvaledMove::null(0)
+    }
+}
+
+pub fn eval(pos: &BoardState) -> isize {
+    material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
+}
+
+const PAWN_VALUE: isize = 100;
+const ROOK_VALUE: isize = 500;
+const KNIGHT_VALUE: isize = 300;
+const BISHOP_VALUE: isize = 300;
+const KING_VALUE: isize = 350;
+const QUEEN_VALUE: isize = 800;
+
+pub const INF: isize = 32_001;
+pub const NEG_INF: isize = -32_001;
+
+#[inline]
+fn material_eval(pos: &BoardState) -> isize {
+    let pawn_eval = piece_difference(pos, PieceType::Pawn) * PAWN_VALUE;
+    let rook_eval = piece_difference(pos, PieceType::Rook) * ROOK_VALUE;
+    let knight_eval = piece_difference(pos, PieceType::Knight) * KNIGHT_VALUE;
+    let bishop_eval = piece_difference(pos, PieceType::Bishop) * BISHOP_VALUE;
+    let queen_eval = piece_difference(pos, PieceType::Queen) * QUEEN_VALUE;
+    let king_eval = piece_difference(pos, PieceType::King) * KING_VALUE;
+
+    pawn_eval + rook_eval + knight_eval + bishop_eval + queen_eval + king_eval
+}
+
+#[inline]
+fn piece_difference(pos: &BoardState, piece: PieceType) -> isize {
+    num_pieces(pos, pos.active_player(), piece) - num_pieces(pos, !pos.active_player(), piece)
+}
+
+#[inline]
+fn num_pieces(pos: &BoardState, color: Color, piece: PieceType) -> isize {
+    pos.bb(color, piece).iter().count() as isize
+}
+
+#[inline]
+fn mobility_eval(pos: &BoardState) -> isize {
+    0
+}
+
+#[inline]
+fn pawn_eval(pos: &BoardState) -> isize {
+    0
+}
+
+#[inline]
+fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
+    moves
+        .iter()
+        .map(|mv| EvaledMove { mv: *mv, eval: 0 })
+        .collect_vec()
+}
+
+mod test {
+    use super::*;
+    use crate::board_state::fen::parse_fen;
+    use crate::move_gen::generator::debug_print;
+
+    #[test]
+    fn finds_mate_in_one_as_white() {
+        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn finds_mate_in_one_as_white_mini() {
+        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 3).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn finds_mate_in_one_as_black_mini() {
+        let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 3).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn finds_mate_in_one_as_black() {
+        let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 49)
+    }
+
+    #[test]
+    fn best_move_random_1() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 21)
+    }
+
+    #[test]
+    fn best_move_random_2() {
+        let mut pos =
+            parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
+                .unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos).mv;
+        assert_eq!(mv.to, 45)
+    }
+
+    #[test]
+    fn best_move_random_3() {
+        let mut pos =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
+                .unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos);
+        debug_print(&pos);
+        println!("{}", mv.eval);
+        assert_eq!(mv.mv.to, 3)
+    }
+
+    #[test]
+    fn best_move_random_4() {
+        let mut pos =
+            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
+                .unwrap();
+        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 7);
+        println!("{}", mv.eval);
+        println!("to: {}", mv.mv.to);
+        println!("from: {}", mv.mv.from);
+    }
+}

@@ -10,17 +10,13 @@ use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
     stats: Stats,
-    table: TranspositionTable,
-    zobrist: ZobristTable
 }
 
 impl Searcher for MinimaxSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        let table = TranspositionTable::new_mb(5);
-        let zobrist = ZobristTable::init();
-        MinimaxSearcher { gen, stats, table, zobrist}
+        MinimaxSearcher { gen, stats}
     }
 
     fn stats(&self) -> &Stats {
@@ -40,26 +36,9 @@ impl Searcher for MinimaxSearcher {
 
 impl MinimaxSearcher {
     fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
-
-        let hash = self.zobrist.hash(pos);
-        let cached_move = self.table.get(hash, depth);
-        match cached_move {
-            None => (),
-            Some(m) => return m.best_move
-        };
-
         if depth == 0 {
             self.stats.count_node();
             let e = EvaledMove::null(eval(pos));
-            let hash = self.zobrist.hash(pos);
-            let entry = Entry {
-                score: e.eval as i32,
-                best_move: e,
-                hash16: (hash >> 48) as u16,
-                depth: depth as u8
-            };
-            self.table.save(hash, entry);
-
             return e;
         }
 
@@ -87,15 +66,7 @@ impl MinimaxSearcher {
             best_move
         };
 
-            let hash = self.zobrist.hash(pos);
-            let entry = Entry {
-                score: best_move.eval as i32,
-                best_move: best_move,
-                hash16: (hash >> 48) as u16,
-                depth: depth as u8
-            };
-            self.table.save(hash, entry);
-            best_move
+        best_move
     }
 }
 
@@ -157,5 +128,17 @@ mod test {
         let mv = searcher.best_move(&mut pos).mv;
         debug_print(&pos);
         assert_eq!(mv.to, 3)
+    }
+
+    #[test]
+    fn best_move_random_4() {
+        let mut pos =
+            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
+                .unwrap();
+        let mut searcher: MinimaxSearcher = Searcher::new();
+        let mv = searcher.best_move(&mut pos);
+        println!("{}", mv.eval);
+        println!("to: {}", mv.mv.to);
+        println!("from: {}", mv.mv.from);
     }
 }

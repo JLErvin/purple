@@ -5,7 +5,7 @@ use crate::common::{chess_move::Move, eval_move::EvaledMove};
 pub struct Entry {
     pub score: i32,
     pub best_move: EvaledMove,
-    pub hash16: u16,
+    pub hash: u64,
     pub depth: u8,
 }
 
@@ -34,17 +34,12 @@ impl TranspositionTable {
 
     /// Saves the given entry into the table, returns whether
     /// or not the entry could be successfully added to the transposition table.
-    pub fn save(&mut self, hash: u64, entry: Entry) -> bool {
+    pub fn save(&mut self, hash: u64, entry: Entry, depth: usize) -> bool {
         let index = hash as usize % self.table.len();
         let current_entry = self.table[index];
 
-        match current_entry {
-            Some(_) => false,
-            None => {
-                self.table[index] = Some(entry);
-                true
-            }
-        }
+        self.table[index] = Some(entry);
+        true
     }
 
     /// Using the given hash, return the Entry which is associated with it in the table.
@@ -54,11 +49,7 @@ impl TranspositionTable {
         match entry {
             None => None,
             Some(e) => {
-                //if e.depth >= depth as u8 && e.hash16 == ((hash >> 48) as u16) {
-                if e.best_move.mv == Move::null() {
-                    return None
-                }
-                if e.depth >= depth as u8 {
+                if e.depth < depth as u8 && e.hash == hash {
                     return Some(e)
                 }
                 None

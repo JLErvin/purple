@@ -10,16 +10,16 @@ use crate::{
 use itertools::Itertools;
 use std::cmp::{max, min};
 
-pub struct AlphaBetaSearcher {
+pub struct AlphaBetaTableSearcher {
     gen: MoveGenerator,
     stats: Stats,
 }
 
-impl Searcher for AlphaBetaSearcher {
+impl Searcher for AlphaBetaTableSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        AlphaBetaSearcher { gen, stats }
+        AlphaBetaTableSearcher { gen, stats }
     }
 
     fn stats(&self) -> &Stats {
@@ -37,7 +37,7 @@ impl Searcher for AlphaBetaSearcher {
     }
 }
 
-impl AlphaBetaSearcher {
+impl AlphaBetaTableSearcher {
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
@@ -101,7 +101,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_white() {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
@@ -109,7 +109,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_white_mini() {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 3).mv;
         assert_eq!(mv.to, 49)
     }
@@ -117,7 +117,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_black_mini() {
         let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 3).mv;
         assert_eq!(mv.to, 49)
     }
@@ -125,7 +125,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_black() {
         let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
@@ -135,7 +135,7 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 21)
     }
@@ -145,7 +145,7 @@ mod test {
         let mut pos =
             parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 45)
     }
@@ -155,22 +155,10 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
+        let mut searcher: AlphaBetaTableSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         debug_print(&pos);
         println!("{}", mv.eval);
         assert_eq!(mv.mv.to, 3)
-    }
-
-    #[test]
-    fn best_move_random_4() {
-        let mut pos =
-            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
-                .unwrap();
-        let mut searcher: AlphaBetaSearcher = Searcher::new();
-        let mv = searcher.best_move_depth(&mut pos, 7);
-        println!("{}", mv.eval);
-        println!("to: {}", mv.mv.to);
-        println!("from: {}", mv.mv.from);
     }
 }

@@ -7,8 +7,10 @@ use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
 use crate::move_gen::perft::perft;
 use crate::search::alpha_beta::AlphaBetaSearcher;
+use crate::search::alpha_beta_table::AlphaBetaTableSearcher;
 use crate::search::minimax::MinimaxSearcher;
 use crate::search::par_minimax::ParallelMinimaxSearcher;
+use crate::search::par_minimax_table::ParallelTableMinimaxSearcher;
 use crate::search::search::Searcher;
 use crate::uci::interface::uci_loop;
 use board_state::fen::*;
@@ -125,12 +127,11 @@ fn execute_par_mini_perft(args: Vec<&str>) {
 
     let mut pos = parse_fen(fen).unwrap();
 
-    let mut searcher = ParallelMinimaxSearcher::new();
+    let mut searcher = ParallelTableMinimaxSearcher::new();
     let mv = searcher.best_move_depth(&mut pos, depth);
 
     let stats = searcher.stats();
     println!("Explored {} nodes", stats.nodes);
-    println!("huh");
     println!("Best Move {}", mv.mv.to_algebraic());
     println!("Move Evaluation {}", mv.eval);
 }
@@ -141,7 +142,7 @@ fn execute_alpha_perft(args: Vec<&str>) {
 
     let mut pos = parse_fen(fen).unwrap();
 
-    let mut searcher = AlphaBetaSearcher::new();
+    let mut searcher = AlphaBetaTableSearcher::new();
     let mv = searcher.best_move_depth(&mut pos, depth);
 
     let stats = searcher.stats();
