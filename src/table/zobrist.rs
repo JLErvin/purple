@@ -1,6 +1,6 @@
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
-use crate::common::piece::{Color, PIECE_COUNT, PieceType};
+use crate::common::piece::{Color, PieceType, PIECE_COUNT};
 use crate::common::square::square_to_file;
 use rand::prelude::ThreadRng;
 use rand::RngCore;
@@ -68,13 +68,23 @@ impl ZobristTable {
 
     pub fn hash(&self, pos: &mut BoardState) -> ZobristHash {
         let mut hash: ZobristHash = 0;
-        for (i, piece) in vec![PieceType::Pawn, PieceType::Rook, PieceType::Bishop, PieceType::Knight, PieceType::Queen, PieceType::King].iter().enumerate() {
+        for (i, piece) in vec![
+            PieceType::Pawn,
+            PieceType::Rook,
+            PieceType::Bishop,
+            PieceType::Knight,
+            PieceType::Queen,
+            PieceType::King,
+        ]
+        .iter()
+        .enumerate()
+        {
             for (_, color) in vec![Color::White, Color::Black].iter().enumerate() {
                 let bb: Bitboard = pos.bb(*color, *piece);
                 for (j, _) in bb.iter() {
                     let z = match pos.active_player() {
                         Color::White => self.white_table[i][j as usize],
-                        Color::Black => self.black_table[i][j as usize]
+                        Color::Black => self.black_table[i][j as usize],
                     };
                     hash ^= z;
                 }
@@ -99,7 +109,7 @@ impl ZobristTable {
 
         match pos.en_passant() {
             None => (),
-            Some(e) => hash ^= self.en_passant_file[square_to_file(e) as usize]
+            Some(e) => hash ^= self.en_passant_file[square_to_file(e) as usize],
         };
 
         if pos.active_player() == Color::White {
@@ -134,8 +144,9 @@ mod test {
         let zobrist = ZobristTable::init();
 
         let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut pos2 = parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string()).unwrap();
-
+        let mut pos2 =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+                .unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -144,12 +155,11 @@ mod test {
     }
 
     #[test]
-    fn should_differentiate_between_plaeyers() {
+    fn should_differentiate_between_players() {
         let zobrist = ZobristTable::init();
 
         let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
         let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 b - - 0 1".to_string()).unwrap();
-
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);

@@ -1,12 +1,12 @@
 pub mod alpha_beta;
+pub mod alpha_beta_neg;
 pub mod alpha_beta_table;
 pub mod eval;
 pub mod minimax;
 pub mod minimax_table;
-pub mod search;
 pub mod par_minimax;
 pub mod par_minimax_table;
-pub mod alpha_beta_neg;
+pub mod search;
 
 /*
     pub fn q_search(&mut self, board: &Board, depth: u8, mut alpha: i32, beta: i32) -> i32 {

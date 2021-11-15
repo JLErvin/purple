@@ -1,22 +1,46 @@
 use super::{eval::MATE_VALUE, search::Searcher};
-use crate::{board_state::board::BoardState, common::{bitboard::PieceItr, chess_move::Move, eval_move::EvaledMove, lookup::Lookup, piece::{Color, PieceType}, stats::Stats}, magic::random::{GenerationScheme, MagicRandomizer}, move_gen::{generator::MoveGenerator, util::{is_attacked, king_square}}, table::{transposition::TranspositionTable, zobrist::ZobristTable}};
+use crate::{
+    board_state::board::BoardState,
+    common::{
+        bitboard::PieceItr,
+        chess_move::Move,
+        eval_move::EvaledMove,
+        lookup::Lookup,
+        piece::{Color, PieceType},
+        stats::Stats,
+    },
+    magic::random::{GenerationScheme, MagicRandomizer},
+    move_gen::{
+        generator::MoveGenerator,
+        util::{is_attacked, king_square},
+    },
+    table::{
+        transposition::{Bound, Entry, TranspositionTable},
+        zobrist::ZobristTable,
+    },
+};
 use itertools::Itertools;
 use std::cmp::{max, min};
 
-pub struct AlphaBetaNegaSearcher {
+pub struct AlphaBeta {
     gen: MoveGenerator,
     stats: Stats,
     zobrist: ZobristTable,
     table: TranspositionTable,
 }
 
-impl Searcher for AlphaBetaNegaSearcher {
+impl Searcher for AlphaBeta {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
         let table = TranspositionTable::new_mb(5);
-        AlphaBetaNegaSearcher { gen, stats, zobrist, table }
+        AlphaBeta {
+            gen,
+            stats,
+            zobrist,
+            table,
+        }
     }
 
     fn stats(&self) -> &Stats {
@@ -30,30 +54,66 @@ impl Searcher for AlphaBetaNegaSearcher {
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.stats.reset();
-        self.alpha_beta(pos, NEG_INF, INF, depth)
+        self.alpha_beta(pos, NEG_INF, INF, depth as u8)
     }
 }
 
-impl AlphaBetaNegaSearcher {
+impl AlphaBeta {
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
         mut alpha: isize,
         beta: isize,
-        depth: usize,
+        depth: u8,
     ) -> EvaledMove {
+        // First, see if we can get a TT hit
+        let hash = self.zobrist.hash(pos);
+        let entry = self.table.get(hash, depth as usize);
+        if let Some(e) = entry {
+            let is_bound_ok = match e.bound {
+                Bound::Lower => e.best_move.eval >= beta,
+                Bound::Upper => e.best_move.eval <= alpha,
+                Bound::Exact => true 
+            };
+            if e.depth >= depth && is_bound_ok && e.hash == hash {
+                return e.best_move
+            } 
+        };
+
+        // Otherwise, search normally
         if depth == 0 {
             self.stats.count_node();
-            return self.q_search(pos, alpha, beta, 4);
+            let eval = EvaledMove::null(eval(pos));
+
+            let bound = if eval.eval >= beta {
+                Bound::Lower
+            } else if eval.eval > alpha {
+                Bound::Exact
+            } else {
+                Bound::Upper
+            };
+
+            let hash = self.zobrist.hash(pos);
+            let entry = Entry {
+                best_move: eval,
+                depth,
+                bound,
+                hash,
+            };
+
+            self.table.save(hash, entry, depth as usize);
+
+            return eval;
         }
 
         let mut moves = evaled_moves(self.gen.all_moves(pos));
 
         if moves.is_empty() {
             self.stats.count_node();
-            return no_move_eval(pos, depth);
+            return self.no_move_eval(pos, depth as usize);
         }
 
+        let mut prev_alpha = alpha;
         let mut best_move = EvaledMove::null(alpha);
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
@@ -61,30 +121,49 @@ impl AlphaBetaNegaSearcher {
             if mv.eval > alpha {
                 alpha = mv.eval;
                 if alpha >= beta {
+                    let hash = self.zobrist.hash(&mut new_pos);
+                    let entry = Entry {
+                        best_move: *mv,
+                        depth,
+                        bound: Bound::Lower,
+                        hash,
+                    };
+
+                    self.table.save(hash, entry, depth as usize);
                     return *mv;
                 }
                 best_move = *mv;
             }
         }
 
+        //let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
+        let bound = Bound::Upper;
+        let hash = self.zobrist.hash(pos);
+        let entry = Entry {
+            hash,
+            best_move,
+            depth,
+            bound
+        };
+        self.table.save(hash, entry, depth as usize);
+
         best_move
     }
 
+    /*
     fn q_search(&mut self, pos: &mut BoardState, mut alpha: isize, beta: isize, depth: usize) -> EvaledMove {
         let static_eval = EvaledMove::null(eval(pos));
         if depth == 0 || static_eval.eval >= beta { return static_eval };
         if static_eval.eval > alpha {
             alpha = static_eval.eval;
         }
-        
+
         let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
             evaled_moves(self.gen.all_moves(pos))
         } else {
             evaled_moves(self.gen.all_moves(pos)).into_iter().filter(|mv| mv.mv.is_capture()).collect()
         };
 
-        //let mut moves: Vec<EvaledMove> = evaled_moves(self.gen.all_moves(pos)).into_iter().filter(|mv| mv.mv.is_capture()).collect();
-        //let mut moves = evaled_moves(self.gen.all_moves(pos));
         if moves.is_empty() {
             self.stats.count_node();
             return no_move_eval(pos, depth);
@@ -103,17 +182,16 @@ impl AlphaBetaNegaSearcher {
 
         EvaledMove::null(alpha)
     }
-}
+    */
 
-pub fn no_move_eval(pos: &BoardState, depth: usize) -> EvaledMove {
-    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
-    let lookup = Lookup::new(random);
-    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
+    fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
+        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
 
-    if is_in_check {
-        EvaledMove::null(-MATE_VALUE - depth as isize)
-    } else {
-        EvaledMove::null(0)
+        if is_in_check {
+            EvaledMove::null(-MATE_VALUE - depth as isize)
+        } else {
+            EvaledMove::null(0)
+        }
     }
 }
 
@@ -179,31 +257,15 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_white() {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
-        assert_eq!(mv.to, 49)
-    }
-
-    #[test]
-    fn finds_mate_in_one_as_white_mini() {
-        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
-        let mv = searcher.best_move_depth(&mut pos, 3).mv;
-        assert_eq!(mv.to, 49)
-    }
-
-    #[test]
-    fn finds_mate_in_one_as_black_mini() {
-        let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
-        let mv = searcher.best_move_depth(&mut pos, 3).mv;
         assert_eq!(mv.to, 49)
     }
 
     #[test]
     fn finds_mate_in_one_as_black() {
         let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
@@ -213,7 +275,7 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 21)
     }
@@ -223,7 +285,7 @@ mod test {
         let mut pos =
             parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 45)
     }
@@ -233,22 +295,9 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
+        let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         debug_print(&pos);
-        println!("{}", mv.eval);
         assert_eq!(mv.mv.to, 3)
-    }
-
-    #[test]
-    fn best_move_random_4() {
-        let mut pos =
-            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
-                .unwrap();
-        let mut searcher: AlphaBetaNegaSearcher = Searcher::new();
-        let mv = searcher.best_move_depth(&mut pos, 7);
-        println!("{}", mv.eval);
-        println!("to: {}", mv.mv.to);
-        println!("from: {}", mv.mv.from);
     }
 }

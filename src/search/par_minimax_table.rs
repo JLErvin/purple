@@ -1,8 +1,20 @@
 use itertools::Itertools;
 use std::cmp::{max, min};
 
-use super::{eval::{INF, MATE_VALUE, NEG_INF, eval, no_move_eval}, search::Searcher};
-use crate::{board_state::board::BoardState, common::{bitboard::PieceItr, chess_move::Move, eval_move::EvaledMove, piece::{Color, PieceType}, stats::Stats}, move_gen::{generator::MoveGenerator, util::{is_attacked, king_square}}, table::{transposition::{Entry, TranspositionTable}, zobrist::ZobristTable}};
+use super::{
+    eval::{eval, no_move_eval, INF, MATE_VALUE, NEG_INF},
+    search::Searcher,
+};
+use crate::{board_state::board::BoardState, common::{
+        bitboard::PieceItr,
+        chess_move::Move,
+        eval_move::EvaledMove,
+        piece::{Color, PieceType},
+        stats::Stats,
+    }, move_gen::{
+        generator::MoveGenerator,
+        util::{is_attacked, king_square},
+    }, table::{transposition::{Bound, Entry, TranspositionTable}, zobrist::ZobristTable}};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -44,7 +56,14 @@ impl Searcher for ParallelTableMinimaxSearcher {
 }
 
 impl ParallelTableMinimaxSearcher {
-    fn minimax(&self, pos: &mut BoardState, gen: &MoveGenerator, depth: usize, table: &mut TranspositionTable, z: &ZobristTable) -> EvaledMove {
+    fn minimax(
+        &self,
+        pos: &mut BoardState,
+        gen: &MoveGenerator,
+        depth: usize,
+        table: &mut TranspositionTable,
+        z: &ZobristTable,
+    ) -> EvaledMove {
         if depth == 0 {
             //self.stats.count_node();
             return EvaledMove::null(eval(pos));
@@ -54,16 +73,16 @@ impl ParallelTableMinimaxSearcher {
         if moves.is_empty() {
             //self.stats.count_node();
             let eval = no_move_eval(pos, depth);
-            /* 
-        let hash = z.hash(pos);
-            let entry = Entry {
-                score: eval.eval as i32,
-                best_move: eval,
-                hash: hash,
-                depth: depth as u8
-            };
-        table.save(hash, entry, depth);
-        */
+            /*
+            let hash = z.hash(pos);
+                let entry = Entry {
+                    score: eval.eval as i32,
+                    best_move: eval,
+                    hash: hash,
+                    depth: depth as u8
+                };
+            table.save(hash, entry, depth);
+            */
             return no_move_eval(pos, depth);
         }
 
@@ -71,11 +90,10 @@ impl ParallelTableMinimaxSearcher {
         let best_move = table.get(hash, depth);
         match best_move {
             None => (),
-            Some(e) => return e.best_move
+            Some(e) => return e.best_move,
         };
 
-        let moves = moves.into_iter()
-        .map(|mut mv: EvaledMove| {
+        let moves = moves.into_iter().map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone_with_move(mv.mv);
             mv.eval = self.minimax(&mut new_pos, gen, depth - 1, table, z).eval;
             mv
@@ -88,15 +106,15 @@ impl ParallelTableMinimaxSearcher {
         };
 
         let hash = z.hash(pos);
-            let entry = Entry {
-                score: best_move.eval as i32,
-                best_move: best_move,
-                hash: hash,
-                depth: depth as u8
-            };
+        let entry = Entry {
+            best_move: best_move,
+            hash: hash,
+            depth: depth as u8,
+            bound: Bound::Exact
+        };
         table.save(hash, entry, depth);
 
-        /* 
+        /*
         let best_move = moves.into_iter()
         .map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone_with_move(mv.mv);

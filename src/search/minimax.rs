@@ -5,7 +5,15 @@ use super::{
     eval::{eval, no_move_eval, INF, NEG_INF},
     search::Searcher,
 };
-use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator, table::{transposition::{Entry, TranspositionTable}, zobrist::ZobristTable}};
+use crate::{
+    board_state::board::BoardState,
+    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
+    move_gen::generator::MoveGenerator,
+    table::{
+        transposition::{Entry, TranspositionTable},
+        zobrist::ZobristTable,
+    },
+};
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
@@ -16,7 +24,7 @@ impl Searcher for MinimaxSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        MinimaxSearcher { gen, stats}
+        MinimaxSearcher { gen, stats }
     }
 
     fn stats(&self) -> &Stats {
@@ -132,9 +140,10 @@ mod test {
 
     #[test]
     fn best_move_random_4() {
-        let mut pos =
-            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
-                .unwrap();
+        let mut pos = parse_fen(
+            &"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string(),
+        )
+        .unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         println!("{}", mv.eval);

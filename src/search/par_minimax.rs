@@ -1,9 +1,25 @@
 use itertools::Itertools;
-use std::cmp::{max, min};
 use rayon::prelude::*;
+use std::cmp::{max, min};
 
-use super::{eval::{INF, MATE_VALUE, NEG_INF, eval, no_move_eval}, search::Searcher};
-use crate::{board_state::board::BoardState, common::{bitboard::PieceItr, chess_move::Move, eval_move::EvaledMove, piece::{Color, PieceType}, stats::Stats}, move_gen::{generator::MoveGenerator, util::{is_attacked, king_square}}};
+use super::{
+    eval::{eval, no_move_eval, INF, MATE_VALUE, NEG_INF},
+    search::Searcher,
+};
+use crate::{
+    board_state::board::BoardState,
+    common::{
+        bitboard::PieceItr,
+        chess_move::Move,
+        eval_move::EvaledMove,
+        piece::{Color, PieceType},
+        stats::Stats,
+    },
+    move_gen::{
+        generator::MoveGenerator,
+        util::{is_attacked, king_square},
+    },
+};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -53,8 +69,7 @@ impl ParallelMinimaxSearcher {
             return no_move_eval(pos, depth);
         }
 
-        let moves = moves.into_par_iter()
-        .map(|mut mv: EvaledMove| {
+        let moves = moves.into_par_iter().map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone_with_move(mv.mv);
             mv.eval = ParallelMinimaxSearcher::minimax(&mut new_pos, gen, depth - 1).eval;
             mv
@@ -66,7 +81,7 @@ impl ParallelMinimaxSearcher {
             moves.min().unwrap()
         };
 
-        /* 
+        /*
         let best_move = moves.into_iter()
         .map(|mut mv: EvaledMove| {
             let mut new_pos = pos.clone_with_move(mv.mv);
@@ -151,9 +166,10 @@ mod test {
     }
     #[test]
     fn best_move_random_4() {
-        let mut pos =
-            parse_fen(&"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string())
-                .unwrap();
+        let mut pos = parse_fen(
+            &"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string(),
+        )
+        .unwrap();
         let mut searcher: ParallelMinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         println!("{}", mv.eval);

@@ -117,7 +117,9 @@ impl Move {
     }
 
     pub fn is_capture(&self) -> bool {
-        self.kind == MoveType::Capture || self.kind == MoveType::EnPassantCapture || self.is_promotion_capture()
+        self.kind == MoveType::Capture
+            || self.kind == MoveType::EnPassantCapture
+            || self.is_promotion_capture()
     }
 
     pub fn promoted_piece(&self) -> Option<PieceType> {
