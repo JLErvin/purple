@@ -34,7 +34,7 @@ impl Searcher for AlphaBeta {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
-        let table = TranspositionTable::new_mb(5);
+        let table = TranspositionTable::new_mb(50);
         AlphaBeta {
             gen,
             stats,
@@ -49,7 +49,7 @@ impl Searcher for AlphaBeta {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.alpha_beta(pos, NEG_INF, INF, 5)
+        self.best_move_depth(pos, 5)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
@@ -136,8 +136,8 @@ impl AlphaBeta {
             }
         }
 
-        //let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
-        let bound = Bound::Upper;
+        let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
+        //let bound = Bound::Upper;
         let hash = self.zobrist.hash(pos);
         let entry = Entry {
             hash,
