@@ -75,7 +75,7 @@ impl AlphaBeta {
                 Bound::Upper => e.best_move.eval <= alpha,
                 Bound::Exact => true 
             };
-            if e.depth >= depth && is_bound_ok && e.hash == hash {
+            if e.depth == depth && is_bound_ok && e.hash == hash {
                 return e.best_move
             } 
         };
@@ -101,7 +101,7 @@ impl AlphaBeta {
                 hash,
             };
 
-            self.table.save(hash, entry, depth as usize);
+            //self.table.save(hash, entry, depth as usize);
 
             return eval;
         }
@@ -136,8 +136,8 @@ impl AlphaBeta {
             }
         }
 
-        let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
-        //let bound = Bound::Upper;
+        //let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
+        let bound = Bound::Upper;
         let hash = self.zobrist.hash(pos);
         let entry = Entry {
             hash,
@@ -149,40 +149,6 @@ impl AlphaBeta {
 
         best_move
     }
-
-    /*
-    fn q_search(&mut self, pos: &mut BoardState, mut alpha: isize, beta: isize, depth: usize) -> EvaledMove {
-        let static_eval = EvaledMove::null(eval(pos));
-        if depth == 0 || static_eval.eval >= beta { return static_eval };
-        if static_eval.eval > alpha {
-            alpha = static_eval.eval;
-        }
-
-        let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
-            evaled_moves(self.gen.all_moves(pos))
-        } else {
-            evaled_moves(self.gen.all_moves(pos)).into_iter().filter(|mv| mv.mv.is_capture()).collect()
-        };
-
-        if moves.is_empty() {
-            self.stats.count_node();
-            return no_move_eval(pos, depth);
-        }
-
-        for mv in moves.iter_mut() {
-            let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.q_search(&mut new_pos, -alpha, -beta, depth -1).eval;
-            if mv.eval > alpha {
-                if mv.eval >= beta {
-                    return *mv;
-                }
-                alpha = mv.eval;
-            }
-        }
-
-        EvaledMove::null(alpha)
-    }
-    */
 
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
         let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);

@@ -45,8 +45,12 @@ impl TranspositionTable {
         let index = hash as usize % self.table.len();
         let current_entry = self.table[index];
 
-        self.table[index] = Some(entry);
-        true
+        if current_entry.is_none() || current_entry.unwrap().depth <= depth as u8 {
+            self.table[index] = Some(entry);
+            return true;
+        }
+
+        false
     }
 
     /// Using the given hash, return the Entry which is associated with it in the table.
@@ -55,3 +59,39 @@ impl TranspositionTable {
         self.table[index]
     }
 }
+
+/*
+function AlphaBetaWithMemory(n : node_type; alpha , beta , d : integer) : integer;
+    if retrieve(n) == OK then /* Transposition table lookup */
+        if n.lowerbound >= beta then return n.lowerbound;
+        if n.upperbound <= alpha then return n.upperbound;
+        alpha := max(alpha, n.lowerbound);
+        beta := min(beta, n.upperbound);
+    if d == 0 then g := evaluate(n); /* leaf node */
+    else if n == MAXNODE then
+        g := -INFINITY; a := alpha; /* save original alpha value */
+        c := firstchild(n);
+        while (g < beta) and (c != NOCHILD) do
+            g := max(g, AlphaBetaWithMemory(c, a, beta, d - 1));
+            a := max(a, g);
+            c := nextbrother(c);
+    else /* n is a MINNODE */
+        g := +INFINITY; b := beta; /* save original beta value */
+        c := firstchild(n);
+        while (g > alpha) and (c != NOCHILD) do
+            g := min(g, AlphaBetaWithMemory(c, alpha, b, d - 1));
+            b := min(b, g);
+            c := nextbrother(c);
+
+    if g <= alpha then 
+        n.upperbound := g; 
+        store n.upperbound;
+    if g >  alpha and g < beta then
+        n.lowerbound := g; 
+        n.upperbound := g; 
+        store n.lowerbound, n.upperbound;
+    if g >= beta then 
+        n.lowerbound := g; 
+        store n.lowerbound;
+return g;
+*/
