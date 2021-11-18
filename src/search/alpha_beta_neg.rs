@@ -22,20 +22,20 @@ use crate::{
 use itertools::Itertools;
 use std::cmp::{max, min};
 
-pub struct AlphaBeta {
+pub struct AlphaBetaNeg {
     gen: MoveGenerator,
     stats: Stats,
     zobrist: ZobristTable,
     table: TranspositionTable,
 }
 
-impl Searcher for AlphaBeta {
+impl Searcher for AlphaBetaNeg {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
-        AlphaBeta {
+        AlphaBetaNeg {
             gen,
             stats,
             zobrist,
@@ -58,7 +58,7 @@ impl Searcher for AlphaBeta {
     }
 }
 
-impl AlphaBeta {
+impl AlphaBetaNeg {
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
@@ -75,7 +75,7 @@ impl AlphaBeta {
                 Bound::Upper => e.best_move.eval <= alpha,
                 Bound::Exact => true 
             };
-            if e.depth == depth && is_bound_ok && e.hash == hash {
+            if e.depth >= depth && is_bound_ok && e.hash == hash {
                 return e.best_move
             } 
         };
@@ -101,7 +101,7 @@ impl AlphaBeta {
                 hash,
             };
 
-            //self.table.save(hash, entry, depth as usize);
+            self.table.save(hash, entry, depth as usize);
 
             return eval;
         }
@@ -136,8 +136,8 @@ impl AlphaBeta {
             }
         }
 
-        //let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
-        let bound = Bound::Upper;
+        let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
+        //let bound = Bound::Upper;
         let hash = self.zobrist.hash(pos);
         let entry = Entry {
             hash,
@@ -223,7 +223,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_white() {
         let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBeta = Searcher::new();
+        let mut searcher: AlphaBetaNeg = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
@@ -231,7 +231,7 @@ mod test {
     #[test]
     fn finds_mate_in_one_as_black() {
         let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
-        let mut searcher: AlphaBeta = Searcher::new();
+        let mut searcher: AlphaBetaNeg = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
     }
@@ -241,7 +241,7 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBeta = Searcher::new();
+        let mut searcher: AlphaBetaNeg = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 21)
     }
@@ -251,7 +251,7 @@ mod test {
         let mut pos =
             parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
                 .unwrap();
-        let mut searcher: AlphaBeta = Searcher::new();
+        let mut searcher: AlphaBetaNeg = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 45)
     }
@@ -261,7 +261,7 @@ mod test {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
                 .unwrap();
-        let mut searcher: AlphaBeta = Searcher::new();
+        let mut searcher: AlphaBetaNeg = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         debug_print(&pos);
         assert_eq!(mv.mv.to, 3)

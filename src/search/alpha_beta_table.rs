@@ -2,24 +2,24 @@ use super::{
     eval::{eval, no_move_eval, INF, NEG_INF},
     search::Searcher,
 };
-use crate::{
-    board_state::board::BoardState,
-    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
-    move_gen::generator::MoveGenerator,
-};
+use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator, table::{transposition::TranspositionTable, zobrist::{self, ZobristTable}}};
 use itertools::Itertools;
 use std::cmp::{max, min};
 
 pub struct AlphaBetaTableSearcher {
     gen: MoveGenerator,
     stats: Stats,
+    zobrist: ZobristTable,
+    table: TranspositionTable,
 }
 
 impl Searcher for AlphaBetaTableSearcher {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        AlphaBetaTableSearcher { gen, stats }
+        let zobrist = ZobristTable::init();
+        let table = TranspositionTable::new_mb(50);
+        AlphaBetaTableSearcher { gen, stats, zobrist, table }
     }
 
     fn stats(&self) -> &Stats {
@@ -45,6 +45,24 @@ impl AlphaBetaTableSearcher {
         mut beta: isize,
         depth: usize,
     ) -> EvaledMove {
+        let hash = self.zobrist.hash(pos);
+        let entry = self.table.get(hash, depth);
+        if entry.is_some() {
+            let entry = entry.unwrap();
+            /*
+            if entry.lower >= beta {
+                //entry.best_move.eval = entry.lower;
+                return entry.best_move;
+            }
+            if entry.upper <= alpha {
+                //entry.best_move.eval = entry.upper;
+                return entry.best_move;
+            }
+            alpha = max(alpha, entry.lower);
+            beta = min(beta, entry.upper);
+            */
+        }
+
         if depth == 0 {
             self.stats.count_node();
             return EvaledMove::null(eval(pos));
@@ -67,6 +85,13 @@ impl AlphaBetaTableSearcher {
                     break;
                 }
                 alpha = max(alpha, best_move.eval);
+            }
+            if best_move.eval <= alpha {
+                /*
+                entry = Entry {
+                    lower: best_move.eval
+                }
+                */
             }
             best_move
         } else {

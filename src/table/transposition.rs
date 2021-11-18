@@ -1,7 +1,7 @@
 use std::mem;
 
 use crate::common::{chess_move::Move, eval_move::EvaledMove};
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Entry {
     pub best_move: EvaledMove,
     pub hash: u64,
@@ -9,7 +9,7 @@ pub struct Entry {
     pub bound: Bound,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Bound {
     Upper,
     Lower,
@@ -45,10 +45,10 @@ impl TranspositionTable {
         let index = hash as usize % self.table.len();
         let current_entry = self.table[index];
 
-        if current_entry.is_none() || current_entry.unwrap().depth <= depth as u8 {
+        //if current_entry.is_none() || current_entry.unwrap().depth <= depth as u8 {
             self.table[index] = Some(entry);
             return true;
-        }
+        //}
 
         false
     }

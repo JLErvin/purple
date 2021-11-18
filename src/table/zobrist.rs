@@ -11,8 +11,7 @@ type ZobristBoard = [ZobristHash; 64];
 /// A ZobristTable maintains the random values needed to create Zobrist hashes
 /// for use in a transposition table.
 pub struct ZobristTable {
-    pub white_table: [ZobristBoard; PIECE_COUNT],
-    pub black_table: [ZobristBoard; PIECE_COUNT],
+    pub table: [u64; 2 * 6 * 64],
     pub whites_turn: ZobristHash,
     pub castling_rights: [ZobristHash; 4],
     pub en_passant_file: [ZobristHash; 8],
@@ -23,15 +22,18 @@ impl ZobristTable {
     pub fn init() -> ZobristTable {
         let mut rng = rand::thread_rng();
 
-        let white_table = ZobristTable::gen_pieces(&mut rng);
-        let black_table = ZobristTable::gen_pieces(&mut rng);
+        let len = 2 * 6 * 64;
+        let mut table: [u64; 2*64*6] = [0; 2*6*64];
+        for i in 0..len {
+            table[i] = rng.next_u64();
+        }
+
         let whites_turn = rng.next_u64();
         let castling_rights = ZobristTable::gen_castling(&mut rng);
         let en_passant_file = ZobristTable::gen_enpassant(&mut rng);
 
         ZobristTable {
-            white_table,
-            black_table,
+            table,
             whites_turn,
             castling_rights,
             en_passant_file,
@@ -83,8 +85,8 @@ impl ZobristTable {
                 let bb: Bitboard = pos.bb(*color, *piece);
                 for (j, _) in bb.iter() {
                     let z = match pos.active_player() {
-                        Color::White => self.white_table[i][j as usize],
-                        Color::Black => self.black_table[i][j as usize],
+                        Color::White => self.table[i * j as usize * 1],
+                        Color::Black => self.table[i * j as usize * 2],
                     };
                     hash ^= z;
                 }

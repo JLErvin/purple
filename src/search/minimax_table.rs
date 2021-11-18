@@ -5,7 +5,7 @@ use super::{
     eval::{eval, no_move_eval, INF, NEG_INF},
     search::Searcher,
 };
-use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator, table::{transposition::{Bound, Entry, TranspositionTable}, zobrist::ZobristTable}};
+use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::{MoveGenerator, debug_print}, table::{transposition::{Bound, Entry, TranspositionTable}, zobrist::ZobristTable}};
 
 pub struct MinimaxTableSearcher {
     gen: MoveGenerator,
@@ -34,12 +34,14 @@ impl Searcher for MinimaxTableSearcher {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.minimax(pos, 5)
+        self.best_move_depth(pos, 5)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.stats.reset();
-        self.minimax(pos, depth)
+        self.minimax(pos, depth);
+        let hash = self.zobrist.hash(pos);
+        self.table.get(hash, 0).unwrap().best_move
     }
 }
 
@@ -49,7 +51,11 @@ impl MinimaxTableSearcher {
         let cached_move = self.table.get(hash, depth);
         match cached_move {
             None => (),
-            Some(m) => return m.best_move,
+            Some(m) => {
+                if m.depth == depth as u8 && m.hash == hash {
+                    return m.best_move
+                }
+            }
         };
 
         if depth == 0 {
@@ -98,6 +104,11 @@ impl MinimaxTableSearcher {
             depth: depth as u8,
             bound: Bound::Exact
         };
+        /*
+        debug_print(pos);
+        println!("{:?}", entry);
+        println!();
+        */
         self.table.save(hash, entry, depth);
         best_move
     }
