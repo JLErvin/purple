@@ -19,28 +19,9 @@ pub const NEG_INF: isize = -32_001;
 
 const MOBILITY_VALUE: f32 = 0.1;
 
-/// Returns an evaluation of the given position, at the given depth in the search tree.
-/// Depth is assumed to be decreasing (depth 0 means a leaf node), and is used to evaluate
-/// lower mates as slightly superior to mates further down the search tree.
-pub fn no_move_eval(pos: &BoardState, depth: usize) -> EvaledMove {
-    let random = MagicRandomizer::new(GenerationScheme::PreComputed);
-    let lookup = Lookup::new(random);
-    let is_in_check = is_attacked(pos, king_square(pos), &lookup);
-
-    if is_in_check {
-        match pos.active_player() {
-            Color::White => EvaledMove::null(-MATE_VALUE - depth as isize),
-            Color::Black => EvaledMove::null(MATE_VALUE + depth as isize),
-        }
-    } else {
-        EvaledMove::null(0)
-    }
-}
-
 /// Given a given position, returns an estimated evaluation of the position based on a number of
 /// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
-/// Positive values are better for white, negative values are better for black, and an evaluation
-/// of zero represents a dead draw for the two players.
+/// Evaluations are determined to be relative to the active player.
 pub fn eval(pos: &BoardState) -> isize {
     material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
 }
@@ -59,7 +40,7 @@ fn material_eval(pos: &BoardState) -> isize {
 
 #[inline]
 fn piece_difference(pos: &BoardState, piece: PieceType) -> isize {
-    num_pieces(pos, Color::White, piece) - num_pieces(pos, Color::Black, piece)
+    num_pieces(pos, pos.active_player(), piece) - num_pieces(pos, !pos.active_player(), piece)
 }
 
 #[inline]

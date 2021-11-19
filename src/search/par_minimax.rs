@@ -3,7 +3,7 @@ use rayon::prelude::*;
 use std::cmp::{max, min};
 
 use super::{
-    eval::{eval, no_move_eval, INF, MATE_VALUE, NEG_INF},
+    eval::{eval, INF, MATE_VALUE, NEG_INF},
     search::Searcher,
 };
 use crate::{
@@ -66,7 +66,7 @@ impl ParallelMinimaxSearcher {
         let moves = evaled_moves(gen.all_moves(pos));
         if moves.is_empty() {
             //self.stats.count_node();
-            return no_move_eval(pos, depth);
+           // return no_move_eval(pos, depth);
         }
 
         let moves = moves.into_par_iter().map(|mut mv: EvaledMove| {

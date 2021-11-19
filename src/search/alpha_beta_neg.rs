@@ -21,12 +21,18 @@ use crate::{
 };
 use itertools::Itertools;
 use std::cmp::{max, min};
+use crate::search::eval::{eval, INF, NEG_INF};
+
+pub struct Settings {
+    use_table: bool,
+}
 
 pub struct AlphaBetaNeg {
     gen: MoveGenerator,
     stats: Stats,
     zobrist: ZobristTable,
     table: TranspositionTable,
+    settings: Settings
 }
 
 impl Searcher for AlphaBetaNeg {
@@ -35,11 +41,13 @@ impl Searcher for AlphaBetaNeg {
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
+        let settings = Settings { use_table: true };
         AlphaBetaNeg {
             gen,
             stats,
             zobrist,
             table,
+            settings
         }
     }
 
@@ -93,7 +101,8 @@ impl AlphaBetaNeg {
 
         if depth == 0 {
             self.stats.count_node();
-            let eval = EvaledMove::null(eval(pos));
+            //let eval = self.q_search(pos, alpha, beta, 5);
+            let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             let bound = leaf_bound(eval, alpha, beta);
             self.save(pos, eval, bound, depth);
 
@@ -132,6 +141,37 @@ impl AlphaBetaNeg {
         best_move
     }
 
+    fn q_search(&mut self, pos: &mut BoardState, mut alpha: isize, beta: isize, depth: usize) -> isize {
+        if depth == 0 {
+            return eval(pos)
+        }
+
+        let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
+            self.gen.all_moves(pos)
+        } else {
+            self.gen.all_moves(pos).into_iter().filter(|mv| mv.is_capture()).collect()
+        };
+
+        if moves.is_empty() {
+            self.stats.count_node();
+            return self.no_move_eval(pos, depth).eval;
+        }
+
+        let mut best_move = 0;
+        for mv in moves.iter_mut() {
+            let mut new_pos = pos.clone_with_move(*mv);
+            let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
+            if eval > alpha {
+                alpha = eval;
+                best_move = alpha;
+                if alpha >= beta {
+                    return eval;
+                }
+            }
+        }
+        best_move
+    }
+
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
         let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
 
@@ -152,6 +192,10 @@ impl AlphaBetaNeg {
         beta: isize,
         depth: u8,
     ) -> Option<EvaledMove> {
+        if !self.settings.use_table {
+            return None;
+        }
+
         let hash = self.zobrist.hash(pos);
         let entry = self.table.get(hash);
         if entry.is_none() {
@@ -167,6 +211,10 @@ impl AlphaBetaNeg {
 
     /// Saves the given entry in the transposition table.
     fn save(&mut self, pos: &mut BoardState, best_move: EvaledMove, bound: Bound, depth: u8) {
+        if !self.settings.use_table {
+            return;
+        }
+
         let hash = self.zobrist.hash(pos);
         let entry = Entry {
             best_move,
@@ -176,52 +224,11 @@ impl AlphaBetaNeg {
         };
         self.table.save(hash, entry);
     }
-}
 
-pub fn eval(pos: &BoardState) -> isize {
-    material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
-}
-
-const PAWN_VALUE: isize = 100;
-const ROOK_VALUE: isize = 500;
-const KNIGHT_VALUE: isize = 300;
-const BISHOP_VALUE: isize = 300;
-const KING_VALUE: isize = 350;
-const QUEEN_VALUE: isize = 800;
-
-pub const INF: isize = 32_001;
-pub const NEG_INF: isize = -32_001;
-
-#[inline]
-fn material_eval(pos: &BoardState) -> isize {
-    let pawn_eval = piece_difference(pos, PieceType::Pawn) * PAWN_VALUE;
-    let rook_eval = piece_difference(pos, PieceType::Rook) * ROOK_VALUE;
-    let knight_eval = piece_difference(pos, PieceType::Knight) * KNIGHT_VALUE;
-    let bishop_eval = piece_difference(pos, PieceType::Bishop) * BISHOP_VALUE;
-    let queen_eval = piece_difference(pos, PieceType::Queen) * QUEEN_VALUE;
-    let king_eval = piece_difference(pos, PieceType::King) * KING_VALUE;
-
-    pawn_eval + rook_eval + knight_eval + bishop_eval + queen_eval + king_eval
-}
-
-#[inline]
-fn piece_difference(pos: &BoardState, piece: PieceType) -> isize {
-    num_pieces(pos, pos.active_player(), piece) - num_pieces(pos, !pos.active_player(), piece)
-}
-
-#[inline]
-fn num_pieces(pos: &BoardState, color: Color, piece: PieceType) -> isize {
-    pos.bb(color, piece).iter().count() as isize
-}
-
-#[inline]
-fn mobility_eval(pos: &BoardState) -> isize {
-    0
-}
-
-#[inline]
-fn pawn_eval(pos: &BoardState) -> isize {
-    0
+    /// Set whether or not the searcher should use a transposition table to lookup previous evaluations.
+    fn use_table(&mut self, setting: bool) {
+        self.settings.use_table = setting;
+    }
 }
 
 #[inline]

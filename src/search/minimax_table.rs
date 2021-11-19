@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::cmp::{max, min};
 
 use super::{
-    eval::{eval, no_move_eval, INF, NEG_INF},
+    eval::{eval, INF, NEG_INF},
     search::Searcher,
 };
 use crate::{
@@ -14,6 +14,8 @@ use crate::{
         zobrist::ZobristTable,
     },
 };
+use crate::move_gen::util::{is_attacked, king_square};
+use crate::search::eval::MATE_VALUE;
 
 pub struct MinimaxTableSearcher {
     gen: MoveGenerator,
@@ -84,7 +86,7 @@ impl MinimaxTableSearcher {
         let moves = evaled_moves(self.gen.all_moves(pos));
         if moves.is_empty() {
             self.stats.count_node();
-            return no_move_eval(pos, depth);
+            return self.no_move_eval(pos, depth);
         }
 
         let best_move = if pos.active_player() == Color::White {
@@ -119,6 +121,16 @@ impl MinimaxTableSearcher {
         */
         //self.table.save(hash, entry, depth);
         best_move
+    }
+
+    fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
+        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
+
+        if is_in_check {
+            EvaledMove::null(-MATE_VALUE - depth as isize)
+        } else {
+            EvaledMove::null(0)
+        }
     }
 }
 

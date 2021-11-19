@@ -1,5 +1,5 @@
 use super::{
-    eval::{eval, no_move_eval, INF, NEG_INF},
+    eval::{eval, INF, NEG_INF},
     search::Searcher,
 };
 use crate::{
@@ -13,6 +13,8 @@ use crate::{
 };
 use itertools::Itertools;
 use std::cmp::{max, min};
+use crate::move_gen::util::{is_attacked, king_square};
+use crate::search::eval::MATE_VALUE;
 
 pub struct AlphaBetaTableSearcher {
     gen: MoveGenerator,
@@ -85,7 +87,7 @@ impl AlphaBetaTableSearcher {
 
         if moves.is_empty() {
             self.stats.count_node();
-            return no_move_eval(pos, depth);
+            return self.no_move_eval(pos, depth);
         }
 
         if pos.active_player() == Color::White {
@@ -119,6 +121,16 @@ impl AlphaBetaTableSearcher {
                 beta = min(beta, best_move.eval);
             }
             best_move
+        }
+    }
+
+    fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
+        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
+
+        if is_in_check {
+            EvaledMove::null(-MATE_VALUE - depth as isize)
+        } else {
+            EvaledMove::null(0)
         }
     }
 }

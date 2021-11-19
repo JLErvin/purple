@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::cmp::{max, min};
 
 use super::{
-    eval::{eval, no_move_eval, INF, MATE_VALUE, NEG_INF},
+    eval::{eval, INF, MATE_VALUE, NEG_INF},
     search::Searcher,
 };
 use crate::{
@@ -80,7 +80,7 @@ impl ParallelTableMinimaxSearcher {
         let moves = evaled_moves(gen.all_moves(pos));
         if moves.is_empty() {
             //self.stats.count_node();
-            let eval = no_move_eval(pos, depth);
+            let eval = self.no_move_eval(pos, depth);
             /*
             let hash = z.hash(pos);
                 let entry = Entry {
@@ -91,7 +91,7 @@ impl ParallelTableMinimaxSearcher {
                 };
             table.save(hash, entry, depth);
             */
-            return no_move_eval(pos, depth);
+            return self.no_move_eval(pos, depth);
         }
 
         let hash = z.hash(pos);
@@ -136,6 +136,15 @@ impl ParallelTableMinimaxSearcher {
         */
 
         best_move
+    }
+    fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
+        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
+
+        if is_in_check {
+            EvaledMove::null(-MATE_VALUE - depth as isize)
+        } else {
+            EvaledMove::null(0)
+        }
     }
 }
 
