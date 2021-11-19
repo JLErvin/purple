@@ -2,7 +2,15 @@ use super::{
     eval::{eval, no_move_eval, INF, NEG_INF},
     search::Searcher,
 };
-use crate::{board_state::board::BoardState, common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats}, move_gen::generator::MoveGenerator, table::{transposition::TranspositionTable, zobrist::{self, ZobristTable}}};
+use crate::{
+    board_state::board::BoardState,
+    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
+    move_gen::generator::MoveGenerator,
+    table::{
+        transposition::TranspositionTable,
+        zobrist::{self, ZobristTable},
+    },
+};
 use itertools::Itertools;
 use std::cmp::{max, min};
 
@@ -19,7 +27,12 @@ impl Searcher for AlphaBetaTableSearcher {
         let stats = Stats::new();
         let zobrist = ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
-        AlphaBetaTableSearcher { gen, stats, zobrist, table }
+        AlphaBetaTableSearcher {
+            gen,
+            stats,
+            zobrist,
+            table,
+        }
     }
 
     fn stats(&self) -> &Stats {
@@ -46,7 +59,7 @@ impl AlphaBetaTableSearcher {
         depth: usize,
     ) -> EvaledMove {
         let hash = self.zobrist.hash(pos);
-        let entry = self.table.get(hash, depth);
+        let entry = self.table.get(hash);
         if entry.is_some() {
             let entry = entry.unwrap();
             /*

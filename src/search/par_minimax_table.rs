@@ -5,16 +5,24 @@ use super::{
     eval::{eval, no_move_eval, INF, MATE_VALUE, NEG_INF},
     search::Searcher,
 };
-use crate::{board_state::board::BoardState, common::{
+use crate::{
+    board_state::board::BoardState,
+    common::{
         bitboard::PieceItr,
         chess_move::Move,
         eval_move::EvaledMove,
         piece::{Color, PieceType},
         stats::Stats,
-    }, move_gen::{
+    },
+    move_gen::{
         generator::MoveGenerator,
         util::{is_attacked, king_square},
-    }, table::{transposition::{Bound, Entry, TranspositionTable}, zobrist::ZobristTable}};
+    },
+    table::{
+        transposition::{Bound, Entry, TranspositionTable},
+        zobrist::ZobristTable,
+    },
+};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -87,7 +95,7 @@ impl ParallelTableMinimaxSearcher {
         }
 
         let hash = z.hash(pos);
-        let best_move = table.get(hash, depth);
+        let best_move = table.get(hash);
         match best_move {
             None => (),
             Some(e) => return e.best_move,
@@ -110,9 +118,9 @@ impl ParallelTableMinimaxSearcher {
             best_move: best_move,
             hash: hash,
             depth: depth as u8,
-            bound: Bound::Exact
+            bound: Bound::Exact,
         };
-        table.save(hash, entry, depth);
+        //table.save(hash, entry, depth);
 
         /*
         let best_move = moves.into_iter()

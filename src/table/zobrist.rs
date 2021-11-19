@@ -23,7 +23,7 @@ impl ZobristTable {
         let mut rng = rand::thread_rng();
 
         let len = 2 * 6 * 64;
-        let mut table: [u64; 2*64*6] = [0; 2*6*64];
+        let mut table: [u64; 2 * 64 * 6] = [0; 2 * 6 * 64];
         for i in 0..len {
             table[i] = rng.next_u64();
         }
@@ -84,7 +84,7 @@ impl ZobristTable {
             for (_, color) in vec![Color::White, Color::Black].iter().enumerate() {
                 let bb: Bitboard = pos.bb(*color, *piece);
                 for (j, _) in bb.iter() {
-                    let z = match pos.active_player() {
+                    let z = match color {
                         Color::White => self.table[i * j as usize * 1],
                         Color::Black => self.table[i * j as usize * 2],
                     };

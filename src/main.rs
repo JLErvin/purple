@@ -129,7 +129,7 @@ fn execute_par_mini_perft(args: Vec<&str>) {
 
     let mut pos = parse_fen(fen).unwrap();
 
-    let mut searcher = MinimaxTableSearcher::new();
+    let mut searcher = AlphaBetaSearcher::new();
     let mv = searcher.best_move_depth(&mut pos, depth);
 
     let stats = searcher.stats();

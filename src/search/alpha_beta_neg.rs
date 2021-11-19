@@ -58,6 +58,27 @@ impl Searcher for AlphaBetaNeg {
     }
 }
 
+/// Given an entry to save and values for alpha/beta in a negamax implementation, returns whether
+/// or not the given entry can be used for those values of alpha and beta in a TT lookup
+fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
+    match entry.bound {
+        Bound::Lower => entry.best_move.eval >= beta,
+        Bound::Upper => entry.best_move.eval <= alpha,
+        Bound::Exact => true,
+    }
+}
+
+/// Returns the proper Bound when evaluating a leaf node in alpha beta
+fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
+    if best_move.eval >= beta {
+        Bound::Lower
+    } else if best_move.eval > alpha {
+        Bound::Exact
+    } else {
+        Bound::Upper
+    }
+}
+
 impl AlphaBetaNeg {
     fn alpha_beta(
         &mut self,
@@ -66,42 +87,15 @@ impl AlphaBetaNeg {
         beta: isize,
         depth: u8,
     ) -> EvaledMove {
-        // First, see if we can get a TT hit
-        let hash = self.zobrist.hash(pos);
-        let entry = self.table.get(hash, depth as usize);
-        if let Some(e) = entry {
-            let is_bound_ok = match e.bound {
-                Bound::Lower => e.best_move.eval >= beta,
-                Bound::Upper => e.best_move.eval <= alpha,
-                Bound::Exact => true 
-            };
-            if e.depth >= depth && is_bound_ok && e.hash == hash {
-                return e.best_move
-            } 
-        };
+        if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
+            return e;
+        }
 
-        // Otherwise, search normally
         if depth == 0 {
             self.stats.count_node();
             let eval = EvaledMove::null(eval(pos));
-
-            let bound = if eval.eval >= beta {
-                Bound::Lower
-            } else if eval.eval > alpha {
-                Bound::Exact
-            } else {
-                Bound::Upper
-            };
-
-            let hash = self.zobrist.hash(pos);
-            let entry = Entry {
-                best_move: eval,
-                depth,
-                bound,
-                hash,
-            };
-
-            self.table.save(hash, entry, depth as usize);
+            let bound = leaf_bound(eval, alpha, beta);
+            self.save(pos, eval, bound, depth);
 
             return eval;
         }
@@ -121,31 +115,19 @@ impl AlphaBetaNeg {
             if mv.eval > alpha {
                 alpha = mv.eval;
                 if alpha >= beta {
-                    let hash = self.zobrist.hash(&mut new_pos);
-                    let entry = Entry {
-                        best_move: *mv,
-                        depth,
-                        bound: Bound::Lower,
-                        hash,
-                    };
-
-                    self.table.save(hash, entry, depth as usize);
+                    self.save(pos, *mv, Bound::Lower, depth);
                     return *mv;
                 }
                 best_move = *mv;
             }
         }
 
-        let bound = if best_move.eval > prev_alpha { Bound::Exact } else { Bound::Upper };
-        //let bound = Bound::Upper;
-        let hash = self.zobrist.hash(pos);
-        let entry = Entry {
-            hash,
-            best_move,
-            depth,
-            bound
+        let bound = if best_move.eval > prev_alpha {
+            Bound::Exact
+        } else {
+            Bound::Upper
         };
-        self.table.save(hash, entry, depth as usize);
+        self.save(pos, best_move, bound, depth);
 
         best_move
     }
@@ -158,6 +140,41 @@ impl AlphaBetaNeg {
         } else {
             EvaledMove::null(0)
         }
+    }
+
+    /// Given a position, alpha/beta, and a depth from the bottom of the tree, attempts to fetch the
+    /// evaluated move from the transposition table. Only entries with valid bounds and depths will
+    /// be returned.
+    fn table_fetch(
+        &self,
+        pos: &mut BoardState,
+        alpha: isize,
+        beta: isize,
+        depth: u8,
+    ) -> Option<EvaledMove> {
+        let hash = self.zobrist.hash(pos);
+        let entry = self.table.get(hash);
+        if entry.is_none() {
+            return None;
+        };
+        let entry = entry.unwrap();
+        return if entry.depth >= depth && is_bound_ok(&entry, alpha, beta) {
+            Some(entry.best_move)
+        } else {
+            None
+        };
+    }
+
+    /// Saves the given entry in the transposition table.
+    fn save(&mut self, pos: &mut BoardState, best_move: EvaledMove, bound: Bound, depth: u8) {
+        let hash = self.zobrist.hash(pos);
+        let entry = Entry {
+            best_move,
+            depth,
+            bound,
+            hash,
+        };
+        self.table.save(hash, entry);
     }
 }
 
