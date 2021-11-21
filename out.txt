@@ -1,0 +1,32 @@
+Explored 20 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 39 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 464 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 1229 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 11491 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 723278 nodes
+Best Move a2a3
+Move Evaluation -100
+
+Explored 356535 nodes
+Best Move a2a3
+Move Evaluation 0
+
+Explored 32301462 nodes
+Best Move a2a3
+Move Evaluation -100
+

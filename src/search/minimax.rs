@@ -1,12 +1,12 @@
-use itertools::Itertools;
-use std::cmp::{max, min};
+use crate::common::eval_move::EvaledMove;
+use crate::common::piece::Color;
 use crate::common::stats::Stats;
 use crate::move_gen::generator::MoveGenerator;
 use crate::move_gen::util::{is_attacked, king_square};
 use crate::search::eval::{eval, INF, MATE_VALUE};
 use crate::{BoardState, Move, Searcher};
-use crate::common::eval_move::EvaledMove;
-use crate::common::piece::Color;
+use itertools::Itertools;
+use std::cmp::{max, min};
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,

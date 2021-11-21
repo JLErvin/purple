@@ -1,4 +1,6 @@
 use super::{eval::MATE_VALUE, search::Searcher};
+use crate::move_gen::generator::debug_print;
+use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
     board_state::board::BoardState,
     common::{
@@ -21,8 +23,6 @@ use crate::{
 };
 use itertools::Itertools;
 use std::cmp::{max, min};
-use crate::move_gen::generator::debug_print;
-use crate::search::eval::{eval, INF, NEG_INF};
 
 pub struct Settings {
     use_table: bool,
@@ -33,7 +33,7 @@ pub struct AlphaBeta {
     stats: Stats,
     zobrist: ZobristTable,
     table: TranspositionTable,
-    settings: Settings
+    settings: Settings,
 }
 
 impl Searcher for AlphaBeta {
@@ -48,7 +48,7 @@ impl Searcher for AlphaBeta {
             stats,
             zobrist,
             table,
-            settings
+            settings,
         }
     }
 
@@ -143,7 +143,13 @@ impl AlphaBeta {
 
     /// Perform a Quiescence search, which evaluates up to a certain provided maximum depth
     /// or until a position reaches a "quiet" state (i.e., one in which there are no captures).
-    fn q_search(&mut self, pos: &mut BoardState, mut alpha: isize, beta: isize, depth: usize) -> isize {
+    fn q_search(
+        &mut self,
+        pos: &mut BoardState,
+        mut alpha: isize,
+        beta: isize,
+        depth: usize,
+    ) -> isize {
         let eval = eval(pos);
 
         if depth == 0 {
@@ -151,7 +157,7 @@ impl AlphaBeta {
         }
 
         if eval >= beta {
-            return beta
+            return beta;
         } else if eval > alpha {
             alpha = eval;
         };
@@ -159,7 +165,11 @@ impl AlphaBeta {
         let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
             self.gen.all_moves(pos)
         } else {
-            self.gen.all_moves(pos).into_iter().filter(|mv| mv.is_capture()).collect()
+            self.gen
+                .all_moves(pos)
+                .into_iter()
+                .filter(|mv| mv.is_capture())
+                .collect()
         };
         if moves.is_empty() {
             return self.no_move_eval(pos, depth).eval;
@@ -305,9 +315,7 @@ mod test {
 
     #[test]
     fn avoids_horizon() {
-        let mut pos =
-            parse_fen(&"7k/8/r7/r7/8/8/p1RR3K/8 w - - 0 1".to_string())
-                .unwrap();
+        let mut pos = parse_fen(&"7k/8/r7/r7/8/8/p1RR3K/8 w - - 0 1".to_string()).unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 3);
         debug_print(&pos);

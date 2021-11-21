@@ -3,11 +3,11 @@ use crate::board_state::fen::parse_fen;
 use crate::common::chess_move::Move;
 use crate::move_gen::generator::MoveGenerator;
 use crate::search::search::Searcher;
+use crate::AlphaBeta;
 use itertools::Itertools;
 use rand::Rng;
 use std::io::{self, stdin, BufRead, Read};
 use std::process;
-use crate::AlphaBeta;
 
 pub fn uci_loop() {
     let mut pos = BoardState::default();
