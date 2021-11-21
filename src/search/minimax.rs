@@ -1,21 +1,12 @@
 use itertools::Itertools;
 use std::cmp::{max, min};
-
-use super::{
-    eval::{eval, INF, NEG_INF},
-    search::Searcher,
-};
-use crate::{
-    board_state::board::BoardState,
-    common::{chess_move::Move, eval_move::EvaledMove, piece::Color, stats::Stats},
-    move_gen::generator::MoveGenerator,
-    table::{
-        transposition::{Entry, TranspositionTable},
-        zobrist::ZobristTable,
-    },
-};
+use crate::common::stats::Stats;
+use crate::move_gen::generator::MoveGenerator;
 use crate::move_gen::util::{is_attacked, king_square};
-use crate::search::eval::MATE_VALUE;
+use crate::search::eval::{eval, INF, MATE_VALUE};
+use crate::{BoardState, Move, Searcher};
+use crate::common::eval_move::EvaledMove;
+use crate::common::piece::Color;
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
