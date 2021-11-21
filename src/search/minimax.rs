@@ -39,8 +39,7 @@ impl MinimaxSearcher {
     fn minimax(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         if depth == 0 {
             self.stats.count_node();
-            let e = EvaledMove::null(eval(pos));
-            return e;
+            return EvaledMove::null(eval(pos));
         }
 
         let moves = evaled_moves(self.gen.all_moves(pos));
@@ -49,25 +48,11 @@ impl MinimaxSearcher {
             return self.no_move_eval(pos, depth);
         }
 
-        let best_move = if pos.active_player() == Color::White {
-            let mut best_move = EvaledMove::null(-INF);
-            for mut mv in moves.into_iter() {
-                let mut new_pos = pos.clone_with_move(mv.mv);
-                mv.eval = self.minimax(&mut new_pos, depth - 1).eval;
-                best_move = max(mv, best_move);
-            }
-            best_move
-        } else {
-            let mut best_move = EvaledMove::null(INF);
-            for mut mv in moves.into_iter() {
-                let mut new_pos = pos.clone_with_move(mv.mv);
-                mv.eval = self.minimax(&mut new_pos, depth - 1).eval;
-                best_move = min(best_move, mv);
-            }
-            best_move
-        };
-
-        best_move
+        moves.into_iter().map(|mut mv: EvaledMove| {
+            let mut new_pos = pos.clone_with_move(mv.mv);
+            mv.eval = -self.minimax(&mut new_pos, depth - 1).eval;
+            mv
+        }).max().unwrap()
     }
 
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
