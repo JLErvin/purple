@@ -2,7 +2,7 @@
     <h1>purple</h1><br>
 </div>
 
-Purple is a strong and simple UCI-compliant chess engine and move generator written in Rust.
+Purple is a simple UCI-compliant chess engine and move generator written in Rust.
 It aims to be performant while maintaining a readable and understandable codebase.
 
 ## Features
