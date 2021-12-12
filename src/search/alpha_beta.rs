@@ -89,7 +89,6 @@ fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
 }
 
 impl AlphaBeta {
-    // Perform an alpha-beta search of the given position to the given depth.
     fn alpha_beta(
         &mut self,
         pos: &mut BoardState,
@@ -162,7 +161,9 @@ impl AlphaBeta {
             alpha = eval;
         };
 
-        let mut moves = if is_attacked(pos, king_square(pos), &self.gen.lookup) {
+        let is_attacked = is_attacked(pos, king_square(pos), &self.gen.lookup);
+
+        let mut moves = if is_attacked {
             self.gen.all_moves(pos)
         } else {
             self.gen
@@ -171,8 +172,13 @@ impl AlphaBeta {
                 .filter(|mv| mv.is_capture())
                 .collect()
         };
+
         if moves.is_empty() {
-            return self.no_move_eval(pos, depth).eval;
+            if is_attacked {
+                return self.no_move_eval(pos, depth).eval;
+            } else {
+                return eval;
+            }
         }
 
         for mv in moves.iter_mut() {
@@ -186,7 +192,6 @@ impl AlphaBeta {
                 alpha = eval;
             }
         }
-
         alpha
     }
 
