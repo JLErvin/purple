@@ -6,6 +6,7 @@ use crate::common::square::*;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
+    println!("FEN: {}", fen);
 
     let position = parse_ranks(s.next().unwrap());
     let active_color = parse_active_color(s.next().unwrap());

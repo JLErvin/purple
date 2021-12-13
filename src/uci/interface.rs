@@ -1,7 +1,7 @@
 use crate::board_state::board::BoardState;
 use crate::board_state::fen::parse_fen;
 use crate::common::chess_move::Move;
-use crate::move_gen::generator::MoveGenerator;
+use crate::move_gen::generator::{debug_print, MoveGenerator};
 use crate::search::search::Searcher;
 use crate::AlphaBeta;
 use itertools::Itertools;
@@ -38,7 +38,7 @@ fn update_position(fen: &String) -> BoardState {
     let keyword = v.get(0).unwrap();
     let mut pos = match &keyword[..] {
         "startpos" => BoardState::default(),
-        "fen" => parse_fen(&fen[2..]).unwrap(),
+        "fen" => return parse_fen(&fen[4..]).unwrap(),
         _ => panic!("Unknown parameter to position!"),
     };
 

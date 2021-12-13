@@ -104,7 +104,7 @@ impl AlphaBeta {
             self.stats.count_node();
             let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 6));
             let bound = leaf_bound(eval, alpha, beta);
-            self.save(pos, eval, bound, depth);
+            //self.save(pos, eval, bound, depth);
             return eval;
         }
 
@@ -115,7 +115,7 @@ impl AlphaBeta {
             return self.no_move_eval(pos, depth as usize);
         }
 
-        let mut prev_alpha = alpha;
+        let prev_alpha = alpha;
         let mut best_move = EvaledMove::null(alpha);
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
@@ -173,12 +173,8 @@ impl AlphaBeta {
                 .collect()
         };
 
-        if moves.is_empty() {
-            if is_attacked {
-                return self.no_move_eval(pos, depth).eval;
-            } else {
-                return eval;
-            }
+        if moves.is_empty() && is_attacked {
+            return self.no_move_eval(pos, depth).eval;
         }
 
         for mv in moves.iter_mut() {
@@ -325,6 +321,27 @@ mod test {
         let mv = searcher.best_move_depth(&mut pos, 3);
         debug_print(&pos);
         println!("{}", mv.eval);
+        assert_ne!(mv.mv.to, 8)
+    }
+
+    #[test]
+    fn doesnt_blunder() {
+        let mut pos = parse_fen(&"2Q5/1K6/5k2/8/3bB3/8/8/8 b - - 0 72".to_string()).unwrap();
+        let mut searcher: AlphaBeta = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 5);
+        debug_print(&pos);
+        println!("{}", mv.eval);
+        assert_ne!(mv.mv.to, 8)
+    }
+
+    #[test]
+    fn doesnt_blunder_2() {
+        let mut pos = parse_fen(&"rnbqkbnr/3p1ppp/2p1p3/8/Pp1PP3/8/PBPQ1PPP/1NKR1BNR b kq - 0 9".to_string()).unwrap();
+        let mut searcher: AlphaBeta = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 5);
+        debug_print(&pos);
+        println!("{}", mv.eval);
+        println!("{}", mv.mv.to);
         assert_ne!(mv.mv.to, 8)
     }
 }

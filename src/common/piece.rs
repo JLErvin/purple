@@ -1,5 +1,6 @@
 use crate::common::bitboard::Bitboard;
 use std::ops::{Index, IndexMut, Not};
+use std::slice::Iter;
 
 pub const PIECE_COUNT: usize = 6;
 pub const COLOR_COUNT: usize = 2;
@@ -92,6 +93,20 @@ impl Piece {
             true => Color::Black,
             false => Color::White,
         }
+    }
+}
+
+impl PieceType {
+    pub fn iterator() -> Iter<'static, PieceType> {
+        static PIECES: [PieceType; 6] = [PieceType::Pawn, PieceType::Rook, PieceType::Knight, PieceType::Bishop, PieceType::King, PieceType::Queen];
+        PIECES.iter()
+    }
+}
+
+impl Color {
+    pub fn iterator() -> Iter<'static, Color> {
+        static COLORS: [Color; 2] = [Color::White, Color::Black];
+        COLORS.iter()
     }
 }
 

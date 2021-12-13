@@ -1,3 +1,4 @@
+use itertools::{Itertools, zip};
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType, PIECE_COUNT};
@@ -40,18 +41,6 @@ impl ZobristTable {
         }
     }
 
-    fn gen_pieces(rng: &mut ThreadRng) -> [ZobristBoard; PIECE_COUNT] {
-        let mut table = [[0u64; 64]; PIECE_COUNT];
-        for i in 0..PIECE_COUNT {
-            let mut piece = table[i];
-            for j in 0..64 {
-                piece[j] = rng.next_u64();
-            }
-        }
-
-        table
-    }
-
     fn gen_castling(rng: &mut ThreadRng) -> [ZobristHash; 4] {
         let mut table = [0u64; 4];
         for i in 0..4 {
@@ -70,26 +59,22 @@ impl ZobristTable {
 
     pub fn hash(&self, pos: &mut BoardState) -> ZobristHash {
         let mut hash: ZobristHash = 0;
-        for (i, piece) in vec![
-            PieceType::Pawn,
-            PieceType::Rook,
-            PieceType::Bishop,
-            PieceType::Knight,
-            PieceType::Queen,
-            PieceType::King,
-        ]
-        .iter()
-        .enumerate()
-        {
-            for (_, color) in vec![Color::White, Color::Black].iter().enumerate() {
-                let bb: Bitboard = pos.bb(*color, *piece);
-                for (j, _) in bb.iter() {
-                    let z = match color {
-                        Color::White => self.table[i * j as usize * 1],
-                        Color::Black => self.table[i * j as usize * 2],
-                    };
-                    hash ^= z;
-                }
+        for (piece, color) in PieceType::iterator().cartesian_product(Color::iterator()) {
+            let bb: Bitboard = pos.bb(*color, *piece);
+            let i = match *piece {
+                PieceType::Pawn => 0,
+                PieceType::Rook => 1,
+                PieceType::Knight => 2,
+                PieceType::Bishop => 3,
+                PieceType::Queen => 4,
+                PieceType::King => 5,
+            };
+            for (j, _) in bb.iter() {
+                let index = match color {
+                    Color::White => (i*64) + j as usize,
+                    Color::Black => (i*64) + j as usize + 384 as usize,
+                };
+                hash ^= self.table[index];
             }
         }
 
@@ -162,6 +147,32 @@ mod test {
 
         let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
         let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 b - - 0 1".to_string()).unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn different_positions_should_be_different() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
+        let mut pos2 = parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string()).unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn different_positions_should_be_different_2() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
+        let mut pos2 = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
