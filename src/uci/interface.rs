@@ -8,6 +8,7 @@ use itertools::Itertools;
 use rand::Rng;
 use std::io::{self, stdin, BufRead, Read};
 use std::process;
+use crate::search::eval::eval;
 
 pub fn uci_loop() {
     let mut pos = BoardState::default();
@@ -29,8 +30,10 @@ pub fn uci_loop() {
 }
 
 fn go(pos: &mut BoardState, searcher: &mut AlphaBeta) {
-    let mv = searcher.best_move_depth(pos, 7).mv;
-    println!("bestmove {}", mv.to_algebraic());
+    let mv = searcher.best_move_depth(pos, 7);
+    println!("eval: {}", mv.eval);
+    println!("static eval: {}", eval(pos));
+    println!("bestmove {}", mv.mv.to_algebraic());
 }
 
 fn update_position(fen: &String) -> BoardState {

@@ -127,4 +127,20 @@ mod tests {
         let index = algebraic_to_square("a8");
         assert_eq!(index, 56);
     }
+
+    #[test]
+    fn converts_a4_to_file() {
+        let square = algebraic_to_square("a4");
+        println!("{}", square);
+        let file = square_to_file(square);
+        assert_eq!(file, 0);
+    }
+
+    #[test]
+    fn converts_b4_to_file() {
+        let square = algebraic_to_square("b4");
+        println!("{}", square);
+        let file = square_to_file(square);
+        assert_eq!(file, 1);
+    }
 }

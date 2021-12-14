@@ -23,13 +23,14 @@ use crate::{
 };
 use itertools::Itertools;
 use std::cmp::{max, min};
+use crate::common::chess_move::MoveType;
 
 pub struct Settings {
     use_table: bool,
 }
 
 pub struct AlphaBeta {
-    gen: MoveGenerator,
+    pub gen: MoveGenerator,
     stats: Stats,
     zobrist: ZobristTable,
     table: TranspositionTable,
@@ -73,6 +74,12 @@ fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     match entry.bound {
         Bound::Lower => entry.best_move.eval >= beta,
         Bound::Upper => entry.best_move.eval <= alpha,
+
+        /*
+        Bound::Lower => false,
+        Bound::Upper => false,
+
+         */
         Bound::Exact => true,
     }
 }
@@ -93,18 +100,19 @@ impl AlphaBeta {
         &mut self,
         pos: &mut BoardState,
         mut alpha: isize,
-        beta: isize,
+        mut beta: isize,
         depth: u8,
     ) -> EvaledMove {
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
             return e;
         }
 
+        let prev_alpha = alpha;
+        let mut best_move = EvaledMove::null(alpha);
+
         if depth == 0 {
             self.stats.count_node();
             let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 6));
-            let bound = leaf_bound(eval, alpha, beta);
-            //self.save(pos, eval, bound, depth);
             return eval;
         }
 
@@ -115,8 +123,6 @@ impl AlphaBeta {
             return self.no_move_eval(pos, depth as usize);
         }
 
-        let prev_alpha = alpha;
-        let mut best_move = EvaledMove::null(alpha);
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
             mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
@@ -135,7 +141,9 @@ impl AlphaBeta {
         } else {
             Bound::Upper
         };
-        self.save(pos, best_move, bound, depth);
+        if !(best_move.mv.kind == MoveType::Null) {
+            self.save(pos, best_move, bound, depth);
+        }
 
         best_move
     }
@@ -207,7 +215,7 @@ impl AlphaBeta {
     /// Given a position, alpha/beta, and a depth from the bottom of the tree, attempts to fetch the
     /// evaluated move from the transposition table. Only entries with valid bounds and depths will
     /// be returned.
-    fn table_fetch(
+    pub fn table_fetch(
         &self,
         pos: &mut BoardState,
         alpha: isize,
@@ -231,6 +239,26 @@ impl AlphaBeta {
         };
     }
 
+    pub fn table_fetch_debug(
+        &self,
+        pos: &mut BoardState,
+        alpha: isize,
+        beta: isize,
+        depth: u8,
+    ) -> Option<Entry> {
+        if !self.settings.use_table {
+            return None;
+        }
+
+        let hash = self.zobrist.hash(pos);
+        let entry = self.table.get(hash);
+        if entry.is_none() {
+            return None;
+        };
+        let entry = entry.unwrap();
+        return Some(entry);
+    }
+
     /// Saves the given entry in the transposition table.
     fn save(&mut self, pos: &mut BoardState, best_move: EvaledMove, bound: Bound, depth: u8) {
         if !self.settings.use_table {
@@ -248,7 +276,7 @@ impl AlphaBeta {
     }
 
     /// Set whether or not the searcher should use a transposition table to lookup previous evaluations.
-    fn use_table(&mut self, setting: bool) {
+    pub fn use_table(&mut self, setting: bool) {
         self.settings.use_table = setting;
     }
 }
@@ -330,18 +358,32 @@ mod test {
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
         debug_print(&pos);
+        let mv = searcher.best_move_depth(&mut pos, 5);
         println!("{}", mv.eval);
+        println!("{}", mv.mv.to);
         assert_ne!(mv.mv.to, 8)
     }
 
     #[test]
     fn doesnt_blunder_2() {
-        let mut pos = parse_fen(&"rnbqkbnr/3p1ppp/2p1p3/8/Pp1PP3/8/PBPQ1PPP/1NKR1BNR b kq - 0 9".to_string()).unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
-        let mv = searcher.best_move_depth(&mut pos, 5);
+        let mut pos = parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string()).unwrap();
+        let mv = searcher.best_move_depth(&mut pos, 7);
+        let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string()).unwrap();
+        let mv = searcher.best_move_depth(&mut pos, 7);
+        let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
+        let mv = searcher.best_move_depth(&mut pos, 7);
+
+
+
+
+        //
+        let mut pos = parse_fen(&"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
+        let mv = searcher.best_move_depth(&mut pos, 7);
+
         debug_print(&pos);
         println!("{}", mv.eval);
         println!("{}", mv.mv.to);
-        assert_ne!(mv.mv.to, 8)
+        assert_ne!(mv.mv.to, 24)
     }
 }

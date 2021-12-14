@@ -17,6 +17,7 @@ use itertools::Itertools;
 use rand::rngs::ThreadRng;
 use std::env;
 use std::time::Instant;
+use crate::search::eval::INF;
 
 mod board_state;
 mod common;
@@ -76,7 +77,33 @@ fn main() {
 
     uci_loop();
 
-    println!();
+    /*
+    let mut searcher: AlphaBeta = Searcher::new();
+    let mut pos = parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string()).unwrap();
+    let mv = searcher.best_move_depth(&mut pos, 7);
+    let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string()).unwrap();
+    let mv = searcher.best_move_depth(&mut pos, 7);
+    let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
+    let mv = searcher.best_move_depth(&mut pos, 8);
+
+    let mut pos = parse_fen(&"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
+    for mv in searcher.gen.all_moves(&mut pos) {
+        let mut new_pos = pos.clone_with_move(mv);
+        let s = searcher.table_fetch_debug(&mut new_pos, -INF, INF, 0);
+        println!("{:?}", s);
+    }
+
+    // Bad stuff starts here
+    let mv = searcher.best_move_depth(&mut pos, 7);
+    println!("{}", mv.eval);
+    println!("{}", mv.mv.to);
+    let mut pos = parse_fen(&"rnbqkbnr/2pppppp/1p6/8/p2P4/1PN5/PBP1PPPP/R2QKBNR w KQkq - 0 5".to_string()).unwrap();
+    searcher.use_table(false);
+    let mv = searcher.best_move_depth(&mut pos, 6);
+    println!("{}", mv.eval);
+    println!("{}", mv.mv.to);
+
+     */
 }
 
 fn execute_perft(args: Vec<&str>) {
