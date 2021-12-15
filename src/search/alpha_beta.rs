@@ -59,7 +59,7 @@ impl Searcher for AlphaBeta {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.best_move_depth(pos, 5)
+        self.best_move_depth(pos, 8)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
@@ -72,14 +72,8 @@ impl Searcher for AlphaBeta {
 /// or not the given entry can be used for those values of alpha and beta in a TT lookup
 fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     match entry.bound {
-        Bound::Lower => entry.best_move.eval >= beta,
-        Bound::Upper => entry.best_move.eval <= alpha,
-
-        /*
         Bound::Lower => false,
         Bound::Upper => false,
-
-         */
         Bound::Exact => true,
     }
 }
@@ -112,7 +106,7 @@ impl AlphaBeta {
 
         if depth == 0 {
             self.stats.count_node();
-            let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 6));
+            let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             return eval;
         }
 
@@ -385,5 +379,15 @@ mod test {
         println!("{}", mv.eval);
         println!("{}", mv.mv.to);
         assert_ne!(mv.mv.to, 24)
+    }
+
+    #[test]
+    fn doesnt_blunder_3() {
+        let mut pos = parse_fen(&"rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14".to_string()).unwrap();
+        let mut searcher: AlphaBeta = Searcher::new();
+        let mv = searcher.best_move_depth(&mut pos, 5);
+        println!("{}", mv.eval);
+        println!("{}", mv.mv.to);
+        assert_ne!(mv.mv.to, 17)
     }
 }
