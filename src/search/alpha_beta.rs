@@ -43,7 +43,7 @@ impl Searcher for AlphaBeta {
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
-        let settings = Settings { use_table: true };
+        let settings = Settings { use_table: false };
         AlphaBeta {
             gen,
             stats,
@@ -64,7 +64,9 @@ impl Searcher for AlphaBeta {
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.stats.reset();
-        self.alpha_beta(pos, NEG_INF, INF, depth as u8)
+        let hash = self.zobrist.hash(pos);
+        self.alpha_beta(pos, NEG_INF, INF, depth as u8);
+        self.table.get(hash).unwrap().best_move
     }
 }
 
@@ -72,20 +74,9 @@ impl Searcher for AlphaBeta {
 /// or not the given entry can be used for those values of alpha and beta in a TT lookup
 fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     match entry.bound {
-        Bound::Lower => false,
-        Bound::Upper => false,
+        Bound::Lower => entry.best_move.eval >= beta,
+        Bound::Upper => entry.best_move.eval <= alpha,
         Bound::Exact => true,
-    }
-}
-
-/// Returns the proper Bound when evaluating a leaf node in alpha beta
-fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
-    if best_move.eval >= beta {
-        Bound::Lower
-    } else if best_move.eval > alpha {
-        Bound::Exact
-    } else {
-        Bound::Upper
     }
 }
 
@@ -94,11 +85,11 @@ impl AlphaBeta {
         &mut self,
         pos: &mut BoardState,
         mut alpha: isize,
-        mut beta: isize,
+        beta: isize,
         depth: u8,
-    ) -> EvaledMove {
+    ) -> isize {
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
-            return e;
+            return e.eval;
         }
 
         let prev_alpha = alpha;
@@ -106,40 +97,40 @@ impl AlphaBeta {
 
         if depth == 0 {
             self.stats.count_node();
-            let eval = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
-            return eval;
+            return self.q_search(pos, alpha, beta, 5);
         }
 
         let mut moves = evaled_moves(self.gen.all_moves(pos));
 
         if moves.is_empty() {
             self.stats.count_node();
-            return self.no_move_eval(pos, depth as usize);
+            return self.no_move_eval(pos, depth as usize).eval;
         }
 
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
+            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1);
             if mv.eval > alpha {
                 alpha = mv.eval;
+                best_move = *mv;
                 if alpha >= beta {
                     self.save(pos, *mv, Bound::Lower, depth);
-                    return *mv;
+                    return alpha;
                 }
-                best_move = *mv;
             }
         }
 
+        /*
         let bound = if best_move.eval > prev_alpha {
             Bound::Exact
         } else {
             Bound::Upper
         };
-        if !(best_move.mv.kind == MoveType::Null) {
-            self.save(pos, best_move, bound, depth);
-        }
 
-        best_move
+         */
+        self.save(pos, best_move, Bound::Upper, depth);
+
+        alpha
     }
 
     /// Perform a Quiescence search, which evaluates up to a certain provided maximum depth
