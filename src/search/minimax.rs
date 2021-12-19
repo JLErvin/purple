@@ -48,11 +48,15 @@ impl MinimaxSearcher {
             return self.no_move_eval(pos, depth);
         }
 
-        moves.into_iter().map(|mut mv: EvaledMove| {
-            let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.minimax(&mut new_pos, depth - 1).eval;
-            mv
-        }).max().unwrap()
+        moves
+            .into_iter()
+            .map(|mut mv: EvaledMove| {
+                let mut new_pos = pos.clone_with_move(mv.mv);
+                mv.eval = -self.minimax(&mut new_pos, depth - 1).eval;
+                mv
+            })
+            .max()
+            .unwrap()
     }
 
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {

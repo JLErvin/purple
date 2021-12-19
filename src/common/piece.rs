@@ -98,7 +98,14 @@ impl Piece {
 
 impl PieceType {
     pub fn iterator() -> Iter<'static, PieceType> {
-        static PIECES: [PieceType; 6] = [PieceType::Pawn, PieceType::Rook, PieceType::Knight, PieceType::Bishop, PieceType::King, PieceType::Queen];
+        static PIECES: [PieceType; 6] = [
+            PieceType::Pawn,
+            PieceType::Rook,
+            PieceType::Knight,
+            PieceType::Bishop,
+            PieceType::King,
+            PieceType::Queen,
+        ];
         PIECES.iter()
     }
 }

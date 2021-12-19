@@ -1,4 +1,5 @@
 use super::{eval::MATE_VALUE, search::Searcher};
+use crate::common::chess_move::MoveType;
 use crate::move_gen::generator::debug_print;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
@@ -23,7 +24,6 @@ use crate::{
 };
 use itertools::Itertools;
 use std::cmp::{max, min};
-use crate::common::chess_move::MoveType;
 
 pub struct Settings {
     use_table: bool,
@@ -64,7 +64,7 @@ impl Searcher for AlphaBeta {
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.stats.reset();
-        self.alpha_beta(pos, NEG_INF, INF, depth as u8, Move {from: 0, to: 0, kind: MoveType::Null})
+        self.alpha_beta(pos, NEG_INF, INF, depth as u8)
     }
 }
 
@@ -78,6 +78,7 @@ fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     }
 }
 
+///
 fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
     if best_move.eval >= beta {
         Bound::Lower
@@ -88,7 +89,6 @@ fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
     }
 }
 
-
 impl AlphaBeta {
     fn alpha_beta(
         &mut self,
@@ -96,9 +96,7 @@ impl AlphaBeta {
         mut alpha: isize,
         beta: isize,
         depth: u8,
-        prev_move: Move,
     ) -> EvaledMove {
-
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
             return e;
         }
@@ -123,7 +121,7 @@ impl AlphaBeta {
 
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, mv.mv).eval;
+            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
             if mv.eval > alpha {
                 alpha = mv.eval;
                 best_move = *mv;
@@ -235,26 +233,6 @@ impl AlphaBeta {
         };
     }
 
-    pub fn table_fetch_debug(
-        &self,
-        pos: &mut BoardState,
-        alpha: isize,
-        beta: isize,
-        depth: u8,
-    ) -> Option<Entry> {
-        if !self.settings.use_table {
-            return None;
-        }
-
-        let hash = self.zobrist.hash(pos);
-        let entry = self.table.get(hash);
-        if entry.is_none() {
-            return None;
-        };
-        let entry = entry.unwrap();
-        return Some(entry);
-    }
-
     /// Saves the given entry in the transposition table.
     fn save(&mut self, pos: &mut BoardState, best_move: EvaledMove, bound: Bound, depth: u8) {
         if !self.settings.use_table {
@@ -269,7 +247,6 @@ impl AlphaBeta {
             bound,
             hash,
             //fen
-
         };
         self.table.save(hash, entry);
     }
@@ -366,14 +343,24 @@ mod test {
     #[test]
     fn doesnt_blunder_2() {
         let mut searcher: AlphaBeta = Searcher::new();
-        let mut pos = parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string()).unwrap();
+        let mut pos =
+            parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string())
+                .unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
-        let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string()).unwrap();
+        let mut pos =
+            parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
+                .unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
-        let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
+        let mut pos = parse_fen(
+            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+        )
+        .unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
 
-        let mut pos = parse_fen(&"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
+        let mut pos = parse_fen(
+            &"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string(),
+        )
+        .unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
 
         debug_print(&pos);
@@ -384,7 +371,10 @@ mod test {
 
     #[test]
     fn doesnt_blunder_3() {
-        let mut pos = parse_fen(&"rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14".to_string()).unwrap();
+        let mut pos = parse_fen(
+            &"rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14".to_string(),
+        )
+        .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
         println!("{}", mv.eval);

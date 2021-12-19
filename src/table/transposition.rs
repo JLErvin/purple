@@ -7,7 +7,6 @@ pub struct Entry {
     pub hash: u64,
     pub depth: u8,
     pub bound: Bound,
-    //pub fen: String,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -38,24 +37,101 @@ impl TranspositionTable {
 
     /// Saves the given entry into the table, returns whether
     /// or not the entry could be successfully added to the transposition table.
-    /// Uses an always-replace strategy to resolve collisions.
+    /// Replace entries if the currently saved entry has a depth less than or equal to
+    /// the current depth.
     pub fn save(&mut self, hash: u64, entry: Entry) -> bool {
         let index = hash as usize % self.table.len();
         let curr_entry = self.table[index];
         if curr_entry.is_none() {
             self.table[index] = Some(entry);
+            return true;
         }
         if let Some(curr_entry) = self.table[index] {
             if curr_entry.depth <= entry.depth {
                 self.table[index] = Some(entry);
+                return true;
             }
         }
-        true
+        false
     }
 
     /// Using the given hash, return the Entry which is associated with it in the table.
     pub fn get(&self, hash: u64) -> Option<Entry> {
         let index = hash as usize % self.table.len();
         self.table[index]
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::common::eval_move::EvaledMove;
+    use crate::table::transposition::{Bound, Entry, TranspositionTable};
+
+    #[test]
+    fn should_save_and_get_new_entry() {
+        let mut table = TranspositionTable::new(10);
+        let entry = Entry {
+            best_move: EvaledMove::null(0),
+            hash: 1,
+            depth: 0,
+            bound: Bound::Upper,
+        };
+        let was_saved = table.save(1, entry);
+        assert_eq!(was_saved, true);
+        let fetched_entry = table.get(1);
+        assert_eq!(fetched_entry.is_some(), true);
+        assert_eq!(fetched_entry.unwrap(), entry);
+    }
+
+    #[test]
+    fn should_replace_entry_with_greater_depth() {
+        let mut table = TranspositionTable::new(10);
+        let entry_one = Entry {
+            best_move: EvaledMove::null(0),
+            hash: 1,
+            depth: 0,
+            bound: Bound::Upper,
+        };
+        let was_saved = table.save(1, entry_one);
+        assert_eq!(was_saved, true);
+
+        let entry_two = Entry {
+            best_move: EvaledMove::null(0),
+            hash: 1,
+            depth: 10,
+            bound: Bound::Upper,
+        };
+        let was_saved = table.save(1, entry_two);
+        assert_eq!(was_saved, true);
+
+        let fetched_entry = table.get(1);
+        assert_eq!(fetched_entry.is_some(), true);
+        assert_eq!(fetched_entry.unwrap(), entry_two);
+    }
+
+    #[test]
+    fn should__not_replace_entry_with_shallower_depth() {
+        let mut table = TranspositionTable::new(10);
+        let entry_one = Entry {
+            best_move: EvaledMove::null(0),
+            hash: 1,
+            depth: 10,
+            bound: Bound::Upper,
+        };
+        let was_saved = table.save(1, entry_one);
+        assert_eq!(was_saved, true);
+
+        let entry_two = Entry {
+            best_move: EvaledMove::null(0),
+            hash: 1,
+            depth: 1,
+            bound: Bound::Upper,
+        };
+        let was_saved = table.save(1, entry_two);
+        assert_eq!(was_saved, false);
+
+        let fetched_entry = table.get(1);
+        assert_eq!(fetched_entry.is_some(), true);
+        assert_eq!(fetched_entry.unwrap(), entry_one);
     }
 }

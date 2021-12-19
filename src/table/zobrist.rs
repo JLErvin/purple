@@ -1,8 +1,8 @@
-use itertools::{Itertools, zip};
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType, PIECE_COUNT};
 use crate::common::square::square_to_file;
+use itertools::{zip, Itertools};
 use rand::prelude::ThreadRng;
 use rand::RngCore;
 
@@ -71,8 +71,8 @@ impl ZobristTable {
             };
             for (j, _) in bb.iter() {
                 let index = match color {
-                    Color::White => (i*64) + j as usize,
-                    Color::Black => (i*64) + j as usize + 384 as usize,
+                    Color::White => (i * 64) + j as usize,
+                    Color::Black => (i * 64) + j as usize + 384 as usize,
                 };
                 hash ^= self.table[index];
             }
@@ -158,8 +158,13 @@ mod test {
     fn different_positions_should_be_different() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
-        let mut pos2 = parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string()).unwrap();
+        let mut pos1 = parse_fen(
+            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+        )
+        .unwrap();
+        let mut pos2 =
+            parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
+                .unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -171,8 +176,13 @@ mod test {
     fn different_positions_should_be_different_2() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(&"rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
-        let mut pos2 = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
+        let mut pos1 =
+            parse_fen(&"rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string())
+                .unwrap();
+        let mut pos2 = parse_fen(
+            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+        )
+        .unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
