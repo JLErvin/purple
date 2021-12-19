@@ -52,7 +52,8 @@ impl MoveGenerator {
     }
 }
 
-pub fn debug_print(pos: &BoardState) {
+pub fn debug_print(pos: &BoardState) -> String {
+    let mut s = String::with_capacity(64);
     for i in 0..8 {
         for j in 0..8 {
             let file = j;
@@ -71,11 +72,17 @@ pub fn debug_print(pos: &BoardState) {
                     PieceType::King => 'k',
                     PieceType::Queen => 'q',
                 };
+                if pos.color_on(square).unwrap() == Color::White {
+                    c = c.to_ascii_uppercase();
+                }
             }
             print!("{}", c);
+            s.push(c);
         }
         println!();
     }
+    println!("{}", s);
+    s
 }
 
 #[cfg(test)]

@@ -112,6 +112,16 @@ impl Position {
         None
     }
 
+    pub fn color_on(&self, square: Square) -> Option<Color> {
+        if self.colors_bb[Color::White].get_bit_lsb(square as i8) {
+            return Some(Color::White);
+        }
+        if self.colors_bb[Color::Black].get_bit_lsb(square as i8) {
+            return Some(Color::Black);
+        }
+        None
+    }
+
     pub fn default() -> Position {
         let mut pieces_bb: [Bitboard; PIECE_COUNT] = [0; PIECE_COUNT];
         pieces_bb[PieceType::Pawn] = RANK2 | RANK7;

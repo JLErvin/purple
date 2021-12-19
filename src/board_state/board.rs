@@ -89,6 +89,11 @@ impl BoardState {
         self.position.type_on(square)
     }
 
+    #[inline]
+    pub fn color_on(&self, square: Square) -> Option<Color> {
+        self.position.color_on(square)
+    }
+
     pub fn clone_with_move(&self, mv: Move) -> BoardState {
         let mut new_pos = self.clone();
         new_pos.make_move(mv);

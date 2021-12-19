@@ -7,6 +7,7 @@ pub struct Entry {
     pub hash: u64,
     pub depth: u8,
     pub bound: Bound,
+    //pub fen: String,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -40,7 +41,15 @@ impl TranspositionTable {
     /// Uses an always-replace strategy to resolve collisions.
     pub fn save(&mut self, hash: u64, entry: Entry) -> bool {
         let index = hash as usize % self.table.len();
-        self.table[index] = Some(entry);
+        let curr_entry = self.table[index];
+        if curr_entry.is_none() {
+            self.table[index] = Some(entry);
+        }
+        if let Some(curr_entry) = self.table[index] {
+            if curr_entry.depth <= entry.depth {
+                self.table[index] = Some(entry);
+            }
+        }
         true
     }
 

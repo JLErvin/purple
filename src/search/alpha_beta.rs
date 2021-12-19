@@ -43,7 +43,7 @@ impl Searcher for AlphaBeta {
         let stats = Stats::new();
         let zobrist = crate::table::zobrist::ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
-        let settings = Settings { use_table: false };
+        let settings = Settings { use_table: true };
         AlphaBeta {
             gen,
             stats,
@@ -59,14 +59,12 @@ impl Searcher for AlphaBeta {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.best_move_depth(pos, 8)
+        self.best_move_depth(pos, 6)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.stats.reset();
-        let hash = self.zobrist.hash(pos);
-        self.alpha_beta(pos, NEG_INF, INF, depth as u8);
-        self.table.get(hash).unwrap().best_move
+        self.alpha_beta(pos, NEG_INF, INF, depth as u8, Move {from: 0, to: 0, kind: MoveType::Null})
     }
 }
 
@@ -80,6 +78,17 @@ fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     }
 }
 
+fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
+    if best_move.eval >= beta {
+        Bound::Lower
+    } else if best_move.eval > alpha {
+        Bound::Exact
+    } else {
+        Bound::Upper
+    }
+}
+
+
 impl AlphaBeta {
     fn alpha_beta(
         &mut self,
@@ -87,9 +96,11 @@ impl AlphaBeta {
         mut alpha: isize,
         beta: isize,
         depth: u8,
-    ) -> isize {
+        prev_move: Move,
+    ) -> EvaledMove {
+
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
-            return e.eval;
+            return e;
         }
 
         let prev_alpha = alpha;
@@ -97,40 +108,40 @@ impl AlphaBeta {
 
         if depth == 0 {
             self.stats.count_node();
-            return self.q_search(pos, alpha, beta, 5);
+            let s = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
+            let bound = leaf_bound(s, alpha, beta);
+            self.save(pos, s, bound, depth);
+            return s;
         }
 
         let mut moves = evaled_moves(self.gen.all_moves(pos));
 
         if moves.is_empty() {
             self.stats.count_node();
-            return self.no_move_eval(pos, depth as usize).eval;
+            return self.no_move_eval(pos, depth as usize);
         }
 
         for mv in moves.iter_mut() {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1);
+            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, mv.mv).eval;
             if mv.eval > alpha {
                 alpha = mv.eval;
                 best_move = *mv;
                 if alpha >= beta {
                     self.save(pos, *mv, Bound::Lower, depth);
-                    return alpha;
+                    return best_move;
                 }
             }
         }
 
-        /*
         let bound = if best_move.eval > prev_alpha {
             Bound::Exact
         } else {
             Bound::Upper
         };
+        self.save(pos, best_move, bound, depth);
 
-         */
-        self.save(pos, best_move, Bound::Upper, depth);
-
-        alpha
+        best_move
     }
 
     /// Perform a Quiescence search, which evaluates up to a certain provided maximum depth
@@ -217,7 +228,7 @@ impl AlphaBeta {
             return None;
         };
         let entry = entry.unwrap();
-        return if entry.depth >= depth && is_bound_ok(&entry, alpha, beta) {
+        return if entry.hash == hash && entry.depth >= depth && is_bound_ok(&entry, alpha, beta) {
             Some(entry.best_move)
         } else {
             None
@@ -251,11 +262,14 @@ impl AlphaBeta {
         }
 
         let hash = self.zobrist.hash(pos);
+        //let fen = debug_print(pos);
         let entry = Entry {
             best_move,
             depth,
             bound,
             hash,
+            //fen
+
         };
         self.table.save(hash, entry);
     }
@@ -359,10 +373,6 @@ mod test {
         let mut pos = parse_fen(&"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string()).unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
 
-
-
-
-        //
         let mut pos = parse_fen(&"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string()).unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
 
