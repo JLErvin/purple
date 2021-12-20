@@ -125,7 +125,7 @@ impl Iterator for BitboardIterator {
         }
 
         let square = self.bb.trailing_zeros() as u8;
-        self.bb &= (self.bb - 1);
+        self.bb &= self.bb - 1;
         Some((square, self.bb))
     }
 }
@@ -136,8 +136,7 @@ pub trait PieceItr {
 
 impl PieceItr for Bitboard {
     fn iter(&self) -> BitboardIterator {
-        let bb_itr = BitboardIterator { bb: *self };
-        bb_itr
+        BitboardIterator { bb: *self }
     }
 }
 

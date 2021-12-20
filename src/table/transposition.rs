@@ -35,10 +35,9 @@ impl TranspositionTable {
         Self::new(size)
     }
 
-    /// Saves the given entry into the table, returns whether
-    /// or not the entry could be successfully added to the transposition table.
+    /// Saves the given entry into the table, returns whether or not the entry could be successfully saved.
     /// Replace entries if the currently saved entry has a depth less than or equal to
-    /// the current depth.
+    /// the depth of the incoming entry.
     pub fn save(&mut self, hash: u64, entry: Entry) -> bool {
         let index = hash as usize % self.table.len();
         let curr_entry = self.table[index];

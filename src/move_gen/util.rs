@@ -41,7 +41,7 @@ pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
 }
 
 pub fn extract_moves(from: u8, bb: Bitboard, list: &mut Vec<Move>, kind: MoveType) {
-    for (square, bb) in bb.iter() {
+    for (square, _) in bb.iter() {
         let m = Move {
             to: square,
             from,

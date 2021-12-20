@@ -79,7 +79,7 @@ pub fn rook_ray(square: Square) -> Bitboard {
     let file_bb = file_to_bb(file);
 
     b = rank_bb | file_bb;
-    b = b & !square_bb;
+    b &= !square_bb;
     if file != 0 {
         b &= !FILEA;
     }

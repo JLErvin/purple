@@ -26,7 +26,7 @@ impl Searcher for MinimaxSearcher {
 
     fn best_move(&mut self, pos: &mut BoardState) -> EvaledMove {
         self.stats.reset();
-        self.minimax(pos, 5)
+        self.minimax(pos, 6)
     }
 
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
@@ -138,8 +138,5 @@ mod test {
         .unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos);
-        println!("{}", mv.eval);
-        println!("to: {}", mv.mv.to);
-        println!("from: {}", mv.mv.from);
     }
 }

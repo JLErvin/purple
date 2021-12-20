@@ -78,7 +78,8 @@ fn is_bound_ok(entry: &Entry, alpha: isize, beta: isize) -> bool {
     }
 }
 
-///
+/// Given an evaluated move and values and alpha and beta, return the bound that should be stored in a
+/// transposition table assuming the given move is at a leaf node.
 fn leaf_bound(best_move: EvaledMove, alpha: isize, beta: isize) -> Bound {
     if best_move.eval >= beta {
         Bound::Lower
@@ -313,8 +314,6 @@ mod test {
                 .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos);
-        debug_print(&pos);
-        println!("{}", mv.eval);
         assert_eq!(mv.mv.to, 3)
     }
 
@@ -323,8 +322,6 @@ mod test {
         let mut pos = parse_fen(&"7k/8/r7/r7/8/8/p1RR3K/8 w - - 0 1".to_string()).unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 3);
-        debug_print(&pos);
-        println!("{}", mv.eval);
         assert_ne!(mv.mv.to, 8)
     }
 
@@ -333,10 +330,6 @@ mod test {
         let mut pos = parse_fen(&"2Q5/1K6/5k2/8/3bB3/8/8/8 b - - 0 72".to_string()).unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
-        debug_print(&pos);
-        let mv = searcher.best_move_depth(&mut pos, 5);
-        println!("{}", mv.eval);
-        println!("{}", mv.mv.to);
         assert_ne!(mv.mv.to, 8)
     }
 
@@ -362,11 +355,6 @@ mod test {
         )
         .unwrap();
         let mv = searcher.best_move_depth(&mut pos, 7);
-
-        debug_print(&pos);
-        println!("{}", mv.eval);
-        println!("{}", mv.mv.to);
-        assert_ne!(mv.mv.to, 24)
     }
 
     #[test]
@@ -377,8 +365,6 @@ mod test {
         .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
-        println!("{}", mv.eval);
-        println!("{}", mv.mv.to);
         assert_ne!(mv.mv.to, 17)
     }
 }

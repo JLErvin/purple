@@ -260,10 +260,10 @@ mod tests {
         assert_eq!(p.active_player(), Color::White);
         assert_eq!(p.half_move(), 0);
         assert_eq!(p.full_move(), 1);
-        assert_eq!(p.castling_rights().black_king, true);
-        assert_eq!(p.castling_rights().black_queen, true);
-        assert_eq!(p.castling_rights().white_king, true);
-        assert_eq!(p.castling_rights().white_queen, true);
+        assert!(p.castling_rights().black_king);
+        assert!(p.castling_rights().black_queen);
+        assert!(p.castling_rights().white_king);
+        assert!(p.castling_rights().white_queen);
     }
 
     #[test]
@@ -284,10 +284,10 @@ mod tests {
         assert_eq!(p.active_player(), Color::White);
         assert_eq!(p.half_move(), 0);
         assert_eq!(p.full_move(), 0);
-        assert_eq!(p.castling_rights().black_king, true);
-        assert_eq!(p.castling_rights().black_queen, true);
-        assert_eq!(p.castling_rights().white_king, true);
-        assert_eq!(p.castling_rights().white_queen, true);
+        assert!(p.castling_rights().black_king);
+        assert!(p.castling_rights().black_queen);
+        assert!(p.castling_rights().white_king);
+        assert!(p.castling_rights().white_queen);
     }
 
     #[test]

@@ -66,7 +66,7 @@ fn search_magic(
     searcher: MagicSearcher,
     table: &mut [u64],
 ) -> Option<u64> {
-    for k in 0..MAXIMUM_ITERATIONS {
+    for _ in 0..MAXIMUM_ITERATIONS {
         let magic = random.gen_random_number();
         table.iter_mut().for_each(|m| *m = 0);
         let passed = validate_magic(magic, &searcher, table);

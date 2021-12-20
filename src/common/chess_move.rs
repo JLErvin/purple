@@ -70,7 +70,7 @@ impl Move {
         }
     }
 
-    pub fn to_algebraic(&self) -> String {
+    pub fn to_algebraic(self) -> String {
         let to_rank = self.to / 8;
         let to_file = self.to % 8;
 

@@ -119,7 +119,7 @@ pub fn extract_pawn_moves(bitboard: Bitboard, offset: i8, kind: MoveType, moves:
 
 /// Returns a bitboard representing all pawn attacks from the given square for the given color
 pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
-    let mut b: Bitboard = 0;
+    let b: Bitboard = 0;
     let b = b.add_at_square(square);
     match color {
         Color::White => b.shift(NORTH + WEST) | b.shift(NORTH + EAST),
@@ -129,7 +129,7 @@ pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
 
 /// Given a resulting bitboard, find and enumerate all possible promotions using the provided offset.
 fn extract_promotions(
-    mut bitboard: Bitboard,
+    bitboard: Bitboard,
     offset: i8,
     moves: &mut Vec<Move>,
     kind: PromotionType,
