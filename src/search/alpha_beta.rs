@@ -1,18 +1,12 @@
 use super::{eval::MATE_VALUE, search::Searcher};
-use crate::common::chess_move::MoveType;
-use crate::move_gen::generator::debug_print;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
     board_state::board::BoardState,
     common::{
-        bitboard::PieceItr,
         chess_move::Move,
         eval_move::EvaledMove,
-        lookup::Lookup,
-        piece::{Color, PieceType},
         stats::Stats,
     },
-    magic::random::{GenerationScheme, MagicRandomizer},
     move_gen::{
         generator::MoveGenerator,
         util::{is_attacked, king_square},
@@ -23,7 +17,7 @@ use crate::{
     },
 };
 use itertools::Itertools;
-use std::cmp::{max, min};
+
 
 pub struct Settings {
     use_table: bool,
@@ -223,15 +217,13 @@ impl AlphaBeta {
 
         let hash = self.zobrist.hash(pos);
         let entry = self.table.get(hash);
-        if entry.is_none() {
-            return None;
-        };
+        entry?;
         let entry = entry.unwrap();
-        return if entry.hash == hash && entry.depth >= depth && is_bound_ok(&entry, alpha, beta) {
+        if entry.hash == hash && entry.depth >= depth && is_bound_ok(&entry, alpha, beta) {
             Some(entry.best_move)
         } else {
             None
-        };
+        }
     }
 
     /// Saves the given entry in the transposition table.

@@ -1,4 +1,5 @@
-/// Purple is a simple chess engine and move generator.
+//! A simple chess engine.
+//!
 
 /// A comment
 pub fn test() {

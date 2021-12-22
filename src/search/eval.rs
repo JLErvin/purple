@@ -1,7 +1,5 @@
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::PieceItr;
-use crate::common::eval_move::EvaledMove;
-use crate::common::lookup::Lookup;
 use crate::common::piece::{Color, PieceType};
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
 use crate::move_gen::util::{is_attacked, king_square};
