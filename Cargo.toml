@@ -3,6 +3,13 @@ name = "purple"
 version = "0.1.0"
 authors = ["Joshua Ervin <ervin.josh17@gmail.com>"]
 edition = "2018"
+license = "MIT"
+keywords = ["chess", "engine", "move-generator"]
+categories = ["game-engines"]
+description = "A UCI chess engine"
+homepage = "https://github.com/jlervin/purple"
+repository = "https://github.com/jlervin/purple/"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

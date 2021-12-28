@@ -7,7 +7,8 @@ use std::slice::Iter;
 
 #[derive(PartialEq)]
 pub enum GenerationScheme {
-    PseudoRandom,
+    #[allow(dead_code)]
+    PseudoRandom, // Used if magic numbers should be calculated on startup
     PreComputed,
 }
 

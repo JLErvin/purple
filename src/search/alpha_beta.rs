@@ -253,6 +253,7 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
         .collect_vec()
 }
 
+#[cfg(test)]
 mod test {
     use crate::{
         board_state::fen::parse_fen,

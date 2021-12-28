@@ -1,8 +1,7 @@
-use purple;
+use purple::{self, Game};
 
 use clap::*;
 use itertools::Itertools;
-use purple::game::Game;
 
 use purple::uci::interface::uci_loop;
 
@@ -32,7 +31,7 @@ fn main() {
             Arg::with_name("mini-perft")
                 .short("m")
                 .long("mini-perft")
-                .help("run a performance test on the alpha-beta searcher")
+                .help("run a performance test on the minimax searcher")
                 .number_of_values(2)
                 .value_names(&*vec!["depth", "fen"])
                 .takes_value(true),
@@ -74,8 +73,8 @@ fn execute_mini_perft(args: Vec<&str>) {
     let mut game = Game::from_fen(fen).unwrap();
     let mv = game.best_move_depth(depth);
 
-    //let stats = searcher.stats();
-    //println!("Explored {} nodes", stats.nodes);
+    let stats = game.stats();
+    println!("Explored {} nodes", stats.nodes);
     println!("Best Move {}", mv.mv.to_algebraic());
     println!("Move Evaluation {}", mv.eval);
 }
@@ -87,8 +86,8 @@ fn execute_alpha_perft(args: Vec<&str>) {
     let mut game = Game::from_fen(fen).unwrap();
     let mv = game.best_move_depth(depth);
 
-    //let stats = searcher.stats();
-    //println!("Explored {} nodes", stats.nodes);
+    let stats = game.stats();
+    println!("Explored {} nodes", stats.nodes);
     println!("Best Move {}", mv.mv.to_algebraic());
     println!("Move Evaluation {}", mv.eval);
 }
