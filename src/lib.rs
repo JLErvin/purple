@@ -1,4 +1,4 @@
-//! A simple chess engine.
+//! A simple, high-level chess engine and move generator.
 //!
 //!
 //!
