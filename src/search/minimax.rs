@@ -4,9 +4,11 @@ use crate::common::stats::Stats;
 use crate::move_gen::generator::MoveGenerator;
 use crate::move_gen::util::{is_attacked, king_square};
 use crate::search::eval::{eval, INF, MATE_VALUE};
-use crate::{BoardState, Move, Searcher};
 use itertools::Itertools;
 use std::cmp::{max, min};
+use crate::board_state::board::BoardState;
+use crate::common::chess_move::Move;
+use crate::search::search::Searcher;
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,

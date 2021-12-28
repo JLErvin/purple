@@ -22,3 +22,7 @@ panic = "abort"
 [lib]
 name = "purple"
 path = "src/lib.rs"
+
+[[bin]]
+name = "purple"
+path = "src/main.rs"

@@ -50,6 +50,25 @@ impl MoveGenerator {
 
         list
     }
+
+    pub fn perft(&self, pos: &BoardState, depth: usize) -> usize {
+        self.perft_inner(pos, depth)
+    }
+
+fn perft_inner(&self, pos: &BoardState, depth: usize) -> usize {
+    let moves = self.all_moves(pos);
+    if depth == 1 {
+        moves.len()
+    } else {
+        let mut sum = 0;
+        for mv in moves.into_iter() {
+            let new_pos = pos.clone_with_move(mv);
+            sum += self.perft_inner(&new_pos, depth - 1);
+        }
+        sum
+    }
+}
+
 }
 
 pub fn debug_print(pos: &BoardState) -> String {

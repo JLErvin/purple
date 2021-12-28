@@ -1,7 +1,14 @@
 //! A simple chess engine.
 //!
+//! 
+//! 
 
-/// A comment
-pub fn test() {
-    println!("test");
-}
+
+pub mod game;
+pub mod board_state;
+pub mod common;
+pub mod uci;
+mod magic;
+mod move_gen;
+mod search;
+mod table;

@@ -1,32 +1,13 @@
-use crate::board_state::board::BoardState;
-use crate::common::chess_move::Move;
-use crate::common::piece::PieceType;
-use crate::common::square::SquareIndex::{A1, D4};
-use crate::magic::magic::MagicTable;
-use crate::magic::random::MagicRandomizer;
-use crate::magic::util::MagicPiece;
-use crate::move_gen::generator::debug_print;
-use crate::move_gen::perft::perft;
-use crate::search::alpha_beta::AlphaBeta;
-use crate::search::eval::INF;
-use crate::search::minimax::MinimaxSearcher;
-use crate::search::search::Searcher;
-use crate::uci::interface::uci_loop;
-use board_state::fen::*;
+use purple;
+
 use clap::*;
-use common::lookup::Lookup;
 use itertools::Itertools;
+use purple::game::Game;
 use rand::rngs::ThreadRng;
 use std::env;
 use std::time::Instant;
-
-mod board_state;
-mod common;
-mod magic;
-mod move_gen;
-mod search;
-mod table;
-mod uci;
+use purple::board_state::fen::parse_fen;
+use purple::uci::interface::uci_loop;
 
 fn main() {
     let matches = App::new("purple")
@@ -83,9 +64,9 @@ fn execute_perft(args: Vec<&str>) {
     let depth = args.get(0).unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
-    let pos = parse_fen(fen).unwrap();
+    let game = Game::from_fen(fen).unwrap();
+    let nodes = game.perft(depth);
 
-    let nodes = perft(&pos, depth);
     println!("Nodes: {}", nodes);
 }
 
@@ -93,13 +74,11 @@ fn execute_mini_perft(args: Vec<&str>) {
     let depth = args.get(0).unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
-    let mut pos = parse_fen(fen).unwrap();
+    let mut game = Game::from_fen(fen).unwrap();
+    let mv = game.best_move_depth(depth);
 
-    let mut searcher = MinimaxSearcher::new();
-    let mv = searcher.best_move_depth(&mut pos, depth);
-
-    let stats = searcher.stats();
-    println!("Explored {} nodes", stats.nodes);
+    //let stats = searcher.stats();
+    //println!("Explored {} nodes", stats.nodes);
     println!("Best Move {}", mv.mv.to_algebraic());
     println!("Move Evaluation {}", mv.eval);
 }
@@ -108,13 +87,11 @@ fn execute_alpha_perft(args: Vec<&str>) {
     let depth = args.get(0).unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
-    let mut pos = parse_fen(fen).unwrap();
+    let mut game = Game::from_fen(fen).unwrap();
+    let mv = game.best_move_depth(depth);
 
-    let mut searcher = AlphaBeta::new();
-    let mv = searcher.best_move_depth(&mut pos, depth);
-
-    let stats = searcher.stats();
-    println!("Explored {} nodes", stats.nodes);
+    //let stats = searcher.stats();
+    //println!("Explored {} nodes", stats.nodes);
     println!("Best Move {}", mv.mv.to_algebraic());
     println!("Move Evaluation {}", mv.eval);
 }
