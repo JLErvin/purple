@@ -1,4 +1,5 @@
-use purple::{self, game::Game};
+use purple::Game;
+
 
 #[test]
 fn should_init_default_game() {
