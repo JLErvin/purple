@@ -1,17 +1,15 @@
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::{
-    AddPiece, Bitboard, ClearBit, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
+    AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
 };
 use crate::common::chess_move::MoveType::{
-    BishopPromotion, BishopPromotionCapture, Capture, EnPassantCapture, KnightPromotion,
-    KnightPromotionCapture, QueenPromotion, QueenPromotionCapture, Quiet, RookPromotion,
-    RookPromotionCapture,
+    Capture, EnPassantCapture, Quiet,
 };
 use crate::common::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
-use crate::common::piece::PieceType::{Knight, Queen};
+
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::Square;
-use crate::move_gen::util::extract_moves;
+
 
 #[derive(Copy, Clone)]
 struct PawnDirections {

@@ -1,8 +1,8 @@
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
-use crate::common::piece::{Color, PieceType, PIECE_COUNT};
+use crate::common::piece::{Color, PieceType};
 use crate::common::square::square_to_file;
-use itertools::{zip, Itertools};
+use itertools::{Itertools};
 use rand::prelude::ThreadRng;
 use rand::RngCore;
 

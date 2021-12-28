@@ -1,13 +1,13 @@
 use crate::common::bitboard::Bitboard;
 
 use crate::common::square::Square;
-use crate::magic::random::{MagicRandomizer, Random};
+use crate::magic::random::{MagicRandomizer};
 
 use crate::magic::search::{compute_magic, key};
 use crate::magic::util::{
-    bishop_attacks, bishop_ray, occupancy, rook_attacks, rook_ray, MagicPiece,
+    bishop_ray, rook_ray, MagicPiece,
 };
-use crate::move_gen::generator::debug_print;
+
 
 pub static ROOK_RELEVANT_BITS: [usize; 64] = [
     12, 11, 11, 11, 11, 11, 11, 12, 11, 10, 10, 10, 10, 10, 10, 11, 11, 10, 10, 10, 10, 10, 10, 11,
@@ -122,8 +122,8 @@ impl MagicTable {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::common::square::SquareIndex::{A1, A8, B2, C7, D4, H1, H8};
+    
+    
 
     #[test]
     fn correct_combinations() {}

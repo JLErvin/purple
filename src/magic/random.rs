@@ -1,8 +1,8 @@
 use crate::magic::constants::MAGIC_NUMBERS;
-use crate::magic::util::MagicPiece;
+
 use rand::prelude::ThreadRng;
 use rand::RngCore;
-use std::iter;
+
 use std::slice::Iter;
 
 #[derive(PartialEq)]

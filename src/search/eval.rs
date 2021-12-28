@@ -1,8 +1,8 @@
 use crate::board_state::board::BoardState;
 use crate::common::bitboard::PieceItr;
 use crate::common::piece::{Color, PieceType};
-use crate::magic::random::{GenerationScheme, MagicRandomizer};
-use crate::move_gen::util::{is_attacked, king_square};
+
+
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -47,12 +47,12 @@ fn num_pieces(pos: &BoardState, color: Color, piece: PieceType) -> isize {
 }
 
 #[inline]
-fn mobility_eval(pos: &BoardState) -> isize {
+fn mobility_eval(_pos: &BoardState) -> isize {
     0
 }
 
 #[inline]
-fn pawn_eval(pos: &BoardState) -> isize {
+fn pawn_eval(_pos: &BoardState) -> isize {
     0
 }
 

@@ -1,14 +1,14 @@
 use crate::board_state::board::BoardState;
-use crate::common::bitboard::{AddPiece, Bitboard, New, PieceItr};
+use crate::common::bitboard::{Bitboard, New, PieceItr};
 use crate::common::chess_move::MoveType::Capture;
-use crate::common::chess_move::{Move, MoveType, SOUTH};
+use crate::common::chess_move::{Move, MoveType};
 use crate::common::lookup::Lookup;
-use crate::common::piece::PieceType::Queen;
+
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::Square;
-use crate::move_gen::generator::debug_print;
+
 use crate::move_gen::pawns::pawn_attacks;
-use crate::move_gen::util::{is_attacked, knight_destinations};
+use crate::move_gen::util::{is_attacked};
 
 /// Determines whether or not the given move is legal given the provided state of the game.
 /// A move is determined to be legal if it does not leave the king in check after the move is made.
@@ -239,8 +239,8 @@ mod test {
     use crate::common::chess_move::MoveType::Quiet;
     use crate::common::square::SquareIndex;
     use crate::common::square::SquareIndex::{
-        A1, A2, A3, A4, B1, B2, B4, B5, B8, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E4, E6,
-        E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H3, H4,
+        A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6,
+        E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
     use crate::move_gen::util::king_square;
@@ -448,7 +448,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(&"8/8/8/8/8/3b4/8/R3K2R w KQ - 0 1".to_string()).unwrap();
-        let mv = make_move(C2, D3);
+        let _mv = make_move(C2, D3);
         let mv = Move {
             to: 0,
             from: 0,
@@ -482,7 +482,7 @@ mod test {
         };
 
         let king_square = king_square(&pos);
-        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let _blockers = calculate_blockers(&pos, &lookup, king_square);
 
         assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, king_square), false);
     }
@@ -499,7 +499,7 @@ mod test {
         };
 
         let king_square = king_square(&pos);
-        let blockers = calculate_blockers(&pos, &lookup, king_square);
+        let _blockers = calculate_blockers(&pos, &lookup, king_square);
 
         assert_eq!(is_legal_en_passant(&pos, &mv, &lookup, king_square), true);
     }

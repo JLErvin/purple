@@ -1,20 +1,20 @@
 use crate::board_state::board::BoardState;
-use crate::common::bitboard::{Bitboard, ClearBit, GetBit, Shift, RANK3, RANK7};
-use crate::common::chess_move::{Move, MoveType, NORTH};
+
+use crate::common::chess_move::{Move};
 use crate::common::piece::{Color, PieceType};
 
 use super::pawns::gen_pseudo_legal_pawn_moves;
-use crate::common::chess_move::MoveType::{Capture, CastleKing, CastleQueen, EnPassantCapture};
+
 use crate::common::lookup::Lookup;
-use crate::common::piece::PieceType::{King, Knight, Queen};
+
 use crate::common::square::rank_file_to_index;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
 use crate::move_gen::legal::{attacks_to, calculate_blockers, is_legal};
 use crate::move_gen::moves::{gen_pseudo_legal_castles, gen_pseudo_legal_moves};
 use crate::move_gen::util::king_square;
-use itertools::Itertools;
-use rayon::prelude::IntoParallelIterator;
-use std::time::Instant;
+
+
+
 
 const MAX_MOVES: usize = 256;
 
@@ -106,7 +106,7 @@ pub fn debug_print(pos: &BoardState) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    
     use crate::board_state::board::BoardState;
     use crate::board_state::fen::parse_fen;
     use crate::move_gen::perft::perft;
@@ -119,7 +119,7 @@ mod test {
         let depth_2 = perft(&mut pos, 2);
         let depth_3 = perft(&mut pos, 3);
         let depth_4 = perft(&mut pos, 4);
-        let depth_5 = perft(&mut pos, 5);
+        let _depth_5 = perft(&mut pos, 5);
 
         assert_eq!(depth_1, 20);
         assert_eq!(depth_2, 400);

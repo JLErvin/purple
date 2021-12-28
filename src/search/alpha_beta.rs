@@ -259,9 +259,9 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 }
 
 mod test {
-    use super::*;
-    use crate::board_state::fen::parse_fen;
-    use crate::move_gen::generator::debug_print;
+    
+    
+    
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -331,22 +331,22 @@ mod test {
         let mut pos =
             parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string())
                 .unwrap();
-        let mv = searcher.best_move_depth(&mut pos, 7);
+        let _mv = searcher.best_move_depth(&mut pos, 7);
         let mut pos =
             parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
                 .unwrap();
-        let mv = searcher.best_move_depth(&mut pos, 7);
+        let _mv = searcher.best_move_depth(&mut pos, 7);
         let mut pos = parse_fen(
             &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
         )
         .unwrap();
-        let mv = searcher.best_move_depth(&mut pos, 7);
+        let _mv = searcher.best_move_depth(&mut pos, 7);
 
         let mut pos = parse_fen(
             &"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string(),
         )
         .unwrap();
-        let mv = searcher.best_move_depth(&mut pos, 7);
+        let _mv = searcher.best_move_depth(&mut pos, 7);
     }
 
     #[test]

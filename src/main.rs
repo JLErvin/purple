@@ -3,10 +3,10 @@ use purple;
 use clap::*;
 use itertools::Itertools;
 use purple::game::Game;
-use rand::rngs::ThreadRng;
-use std::env;
-use std::time::Instant;
-use purple::board_state::fen::parse_fen;
+
+
+
+
 use purple::uci::interface::uci_loop;
 
 fn main() {

@@ -1,13 +1,13 @@
 use crate::board_state::board::BoardState;
-use crate::board_state::position::Position;
-use crate::common::bitboard::{Bitboard, PieceItr};
+
+use crate::common::bitboard::{PieceItr};
 use crate::common::chess_move::MoveType::{Capture, Quiet};
 use crate::common::chess_move::{Move, MoveType};
 use crate::common::lookup::Lookup;
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
 use crate::move_gen::util::extract_moves;
-use std::io::empty;
+
 
 pub fn gen_pseudo_legal_moves(
     pos: &BoardState,
@@ -124,8 +124,8 @@ mod test {
         .unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_castles(&pos, &mut list);
-        let m1 = list.get(0).unwrap();
-        let m2 = list.get(1).unwrap();
+        let _m1 = list.get(0).unwrap();
+        let _m2 = list.get(1).unwrap();
         assert_eq!(list.len(), 2);
     }
 }
