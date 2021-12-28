@@ -2,11 +2,7 @@ use super::{eval::MATE_VALUE, search::Searcher};
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
     board_state::board::BoardState,
-    common::{
-        chess_move::Move,
-        eval_move::EvaledMove,
-        stats::Stats,
-    },
+    common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
     move_gen::{
         generator::MoveGenerator,
         util::{is_attacked, king_square},
@@ -17,7 +13,6 @@ use crate::{
     },
 };
 use itertools::Itertools;
-
 
 pub struct Settings {
     use_table: bool,
@@ -259,9 +254,10 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 }
 
 mod test {
-    
-    
-    
+    use crate::{
+        board_state::fen::parse_fen,
+        search::{alpha_beta::AlphaBeta, search::Searcher},
+    };
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -326,6 +322,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn doesnt_blunder_2() {
         let mut searcher: AlphaBeta = Searcher::new();
         let mut pos =

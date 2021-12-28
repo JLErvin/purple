@@ -93,8 +93,7 @@ pub fn knight_destinations(square: u8) -> Bitboard {
 }
 #[cfg(test)]
 mod tests {
-    
-    
+
     use crate::common::square::SquareIndex::{A1, A8, D4, H1, H8};
     use crate::move_gen::util::knight_destinations;
 

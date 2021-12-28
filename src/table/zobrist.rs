@@ -2,12 +2,11 @@ use crate::board_state::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::square_to_file;
-use itertools::{Itertools};
+use itertools::Itertools;
 use rand::prelude::ThreadRng;
 use rand::RngCore;
 
 type ZobristHash = u64;
-type ZobristBoard = [ZobristHash; 64];
 
 /// A ZobristTable maintains the random values needed to create Zobrist hashes
 /// for use in a transposition table.

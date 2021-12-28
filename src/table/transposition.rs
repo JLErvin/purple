@@ -1,6 +1,6 @@
 use std::mem;
 
-use crate::common::{eval_move::EvaledMove};
+use crate::common::eval_move::EvaledMove;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Entry {
     pub best_move: EvaledMove,

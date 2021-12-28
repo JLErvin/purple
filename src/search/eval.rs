@@ -2,8 +2,6 @@ use crate::board_state::board::BoardState;
 use crate::common::bitboard::PieceItr;
 use crate::common::piece::{Color, PieceType};
 
-
-
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
 const KNIGHT_VALUE: isize = 300;
@@ -15,7 +13,7 @@ pub const MATE_VALUE: isize = 31_000;
 pub const INF: isize = 32_001;
 pub const NEG_INF: isize = -32_001;
 
-const MOBILITY_VALUE: f32 = 0.1;
+const MOBILITY_VALUE: isize = 10;
 
 /// Given a given position, returns an estimated evaluation of the position based on a number of
 /// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
@@ -48,7 +46,7 @@ fn num_pieces(pos: &BoardState, color: Color, piece: PieceType) -> isize {
 
 #[inline]
 fn mobility_eval(_pos: &BoardState) -> isize {
-    0
+    0 * MOBILITY_VALUE
 }
 
 #[inline]

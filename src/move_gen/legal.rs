@@ -8,7 +8,7 @@ use crate::common::piece::{Color, PieceType};
 use crate::common::square::Square;
 
 use crate::move_gen::pawns::pawn_attacks;
-use crate::move_gen::util::{is_attacked};
+use crate::move_gen::util::is_attacked;
 
 /// Determines whether or not the given move is legal given the provided state of the game.
 /// A move is determined to be legal if it does not leave the king in check after the move is made.
@@ -239,8 +239,8 @@ mod test {
     use crate::common::chess_move::MoveType::Quiet;
     use crate::common::square::SquareIndex;
     use crate::common::square::SquareIndex::{
-        A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6,
-        E7, E8, F1, F2, F3, G1, G2, G5, G8, H1, H2, H4,
+        A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
+        F2, F3, G1, G2, G5, G8, H1, H2, H4,
     };
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
     use crate::move_gen::util::king_square;

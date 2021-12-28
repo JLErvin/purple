@@ -4,10 +4,6 @@ use crate::common::eval_move::EvaledMove;
 
 use crate::common::stats::Stats;
 
-
-
-
-
 pub trait Searcher {
     fn new() -> Self;
     fn stats(&self) -> &Stats;

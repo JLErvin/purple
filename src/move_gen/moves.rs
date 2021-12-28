@@ -1,13 +1,12 @@
 use crate::board_state::board::BoardState;
 
-use crate::common::bitboard::{PieceItr};
+use crate::common::bitboard::PieceItr;
 use crate::common::chess_move::MoveType::{Capture, Quiet};
 use crate::common::chess_move::{Move, MoveType};
 use crate::common::lookup::Lookup;
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
 use crate::move_gen::util::extract_moves;
-
 
 pub fn gen_pseudo_legal_moves(
     pos: &BoardState,

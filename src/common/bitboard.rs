@@ -1,9 +1,6 @@
 use crate::common::chess_move::{EAST, NORTH, SOUTH, WEST};
 use crate::common::square::*;
 
-
-
-
 pub type Bitboard = u64;
 
 pub const RANK1: Bitboard = 0xFF;

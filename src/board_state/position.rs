@@ -1,4 +1,3 @@
-
 use crate::common::bitboard::*;
 use crate::common::chess_move::{Move, MoveType};
 use crate::common::piece::{Color, Piece, PieceType, COLOR_COUNT, PIECE_COUNT};

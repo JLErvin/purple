@@ -2,21 +2,17 @@ use crate::board_state::board::BoardState;
 use crate::common::bitboard::{
     AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
 };
-use crate::common::chess_move::MoveType::{
-    Capture, EnPassantCapture, Quiet,
-};
+use crate::common::chess_move::MoveType::{Capture, EnPassantCapture, Quiet};
 use crate::common::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
 
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::Square;
-
 
 #[derive(Copy, Clone)]
 struct PawnDirections {
     rank7: Bitboard,
     rank3: Bitboard,
     north: i8,
-    south: i8,
 }
 
 /// Generate all pseudo-legal moves for the given position and add them
@@ -126,12 +122,7 @@ pub fn pawn_attacks(square: Square, color: Color) -> Bitboard {
 }
 
 /// Given a resulting bitboard, find and enumerate all possible promotions using the provided offset.
-fn extract_promotions(
-    bitboard: Bitboard,
-    offset: i8,
-    moves: &mut Vec<Move>,
-    kind: PromotionType,
-) {
+fn extract_promotions(bitboard: Bitboard, offset: i8, moves: &mut Vec<Move>, kind: PromotionType) {
     for (square, _) in bitboard.iter() {
         let itr = match kind {
             PromotionType::Push => MoveType::promotion_itr(),
@@ -176,7 +167,6 @@ impl PawnDirections {
             rank7,
             rank3,
             north,
-            south: -north,
         }
     }
 }

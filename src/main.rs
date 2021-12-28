@@ -4,9 +4,6 @@ use clap::*;
 use itertools::Itertools;
 use purple::game::Game;
 
-
-
-
 use purple::uci::interface::uci_loop;
 
 fn main() {

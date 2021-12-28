@@ -81,9 +81,10 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 }
 
 mod test {
-    
-    
-    
+    use crate::{
+        board_state::fen::parse_fen,
+        search::{minimax::MinimaxSearcher, search::Searcher},
+    };
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -102,6 +103,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn best_move_random_1() {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
@@ -112,6 +114,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn best_move_random_2() {
         let mut pos =
             parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
@@ -122,17 +125,18 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn best_move_random_3() {
         let mut pos =
             parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
                 .unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
-        debug_print(&pos);
         assert_eq!(mv.to, 3)
     }
 
     #[test]
+    #[ignore]
     fn best_move_random_4() {
         let mut pos = parse_fen(
             &"rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5".to_string(),

@@ -7,7 +7,6 @@ use crate::common::piece::*;
 use crate::common::square::SquareIndex::{A1, A8, H1, H8};
 use crate::common::square::*;
 
-
 #[derive(Copy, Clone)]
 pub struct BoardState {
     pub(super) position: Position,

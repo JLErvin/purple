@@ -71,7 +71,7 @@ pub fn rook_attacks(square: Square, blockers: Bitboard) -> Bitboard {
 pub fn rook_ray(square: Square) -> Bitboard {
     let mut square_bb: Bitboard = 0;
     square_bb = square_bb.add_at_square(square);
-    let mut b: Bitboard = 0;
+    let mut b: Bitboard;
     let rank = square / 8;
     let file = square % 8;
 
