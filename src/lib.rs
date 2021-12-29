@@ -11,7 +11,7 @@
 //!
 //! # Example
 //! ```rust
-//! use purple::game::Game;
+//! use purple::Game;
 //!
 //! let mut game = Game::new(); // from the standard starting position
 //! let moves = game.legal_moves();

@@ -8,7 +8,7 @@ use crate::{
 /// A struct which encapsulates a chess game, which includes the ability to generate legal moves
 /// and determine the best move from a given position.
 /// ```rust
-/// use purple::game::Game;
+/// use purple::Game;
 ///
 /// let game = Game::new();
 /// let moves = game.legal_moves();
