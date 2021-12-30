@@ -1,6 +1,5 @@
 use purple::Game;
 
-
 #[test]
 fn should_init_default_game() {
     let game = Game::new();
