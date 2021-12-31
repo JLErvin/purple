@@ -31,5 +31,6 @@ mod game;
 mod move_gen;
 mod search;
 mod table;
+mod magic;
 /// Tools for UCI interfacing
 pub mod uci;
