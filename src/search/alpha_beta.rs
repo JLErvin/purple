@@ -51,9 +51,13 @@ impl Searcher for AlphaBeta {
         self.best_move_depth(pos, 6)
     }
 
+    /// Performs an iterative deepening search until the specified depth and returns the best move
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
-        self.stats.reset();
-        self.alpha_beta(pos, NEG_INF, INF, depth as u8)
+        let mut best_move: EvaledMove = EvaledMove::null(0);
+        for i in 0..depth+1 {
+            best_move = self.alpha_beta(pos, NEG_INF, INF, i as u8);
+        }
+        best_move
     }
 }
 
