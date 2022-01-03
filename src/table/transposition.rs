@@ -1,6 +1,11 @@
-use std::mem;
+use std::{collections::HashSet, mem};
 
-use crate::common::eval_move::EvaledMove;
+use crate::{
+    board_state::board::BoardState,
+    common::{chess_move::MoveType, eval_move::EvaledMove},
+};
+
+use super::zobrist::ZobristTable;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Entry {
     pub best_move: EvaledMove,
@@ -58,6 +63,39 @@ impl TranspositionTable {
     pub fn get(&self, hash: u64) -> Option<Entry> {
         let index = hash as usize % self.table.len();
         self.table[index]
+    }
+
+    /// Return the principal variation, starting with the given position
+    pub fn pv(&self, pos: &mut BoardState, zobrist: &ZobristTable) -> Vec<EvaledMove> {
+        let mut pv = Vec::new();
+        // Maintain a list of visited moves to avoid circular references in case of the PV being
+        // a force-repetition
+        let mut visited = HashSet::new();
+        self.pv_inner(pos, &mut pv, &mut visited, zobrist);
+        pv
+    }
+
+    pub fn pv_inner(
+        &self,
+        pos: &mut BoardState,
+        pv: &mut Vec<EvaledMove>,
+        visited: &mut HashSet<u64>,
+        zobrist: &ZobristTable,
+    ) {
+        let hash = zobrist.hash(pos);
+        let mv = self.get(hash);
+
+        if let Some(m) = mv {
+            if m.best_move.mv.kind == MoveType::Null {
+                return;
+            }
+            pv.push(m.best_move);
+            let mut new_pos = pos.clone_with_move(m.best_move.mv);
+
+            if visited.insert(hash) {
+                self.pv_inner(&mut new_pos, pv, visited, zobrist);
+            }
+        }
     }
 }
 
@@ -134,3 +172,28 @@ mod test {
         assert_eq!(fetched_entry.unwrap(), entry_one);
     }
 }
+
+/*
+            if !is_pv && t.depth() >= depth {
+                match t.bound() {
+                    Bound::Exact => {
+                        return t.score();
+                    },
+                    Bound::Lower => {
+                        if t.score() > alpha {
+                            alpha = t.score();
+                        }
+                    },
+                    Bound::Upper => {
+                        if t.score() < beta {
+                            beta = t.score();
+                        }
+                    }
+                }
+                if alpha >= beta {
+                    return t.score();
+                }
+            }
+
+            best_move = t.best_move();
+*/

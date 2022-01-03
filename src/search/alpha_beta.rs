@@ -1,4 +1,5 @@
 use super::{eval::MATE_VALUE, search::Searcher};
+use crate::common::chess_move::MoveType;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
     board_state::board::BoardState,
@@ -54,7 +55,12 @@ impl Searcher for AlphaBeta {
     /// Performs an iterative deepening search until the specified depth and returns the best move
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         let mut best_move: EvaledMove = EvaledMove::null(0);
-        for i in 0..depth+1 {
+        for i in 0..depth + 1 {
+            //let mut pv = Vec::new();
+            if i != 0 {
+                //pv = self.table.pv(pos, &self.zobrist);
+            }
+            //println!("{:?}", pv);
             best_move = self.alpha_beta(pos, NEG_INF, INF, i as u8);
         }
         best_move
@@ -94,9 +100,23 @@ impl AlphaBeta {
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
             return e;
         }
-
         let prev_alpha = alpha;
         let mut best_move = EvaledMove::null(alpha);
+        let mut moves = Vec::<EvaledMove>::new();
+
+        // TT ATTEMPT
+        /*
+        let hash = self.zobrist.hash(pos);
+        let entry = self.table.get(hash);
+        if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().depth >= depth && is_bound_ok(&entry.unwrap(), alpha, beta) {
+            return entry.unwrap().best_move;
+        } else if entry.is_some() && entry.unwrap().hash == hash {
+            if entry.unwrap().best_move.mv.kind != MoveType::Null {
+                moves.push(entry.unwrap().best_move);
+            }
+        }
+        */
+        // TT ATTEMPT END
 
         if depth == 0 {
             self.stats.count_node();
@@ -106,7 +126,7 @@ impl AlphaBeta {
             return s;
         }
 
-        let mut moves = evaled_moves(self.gen.all_moves(pos));
+        moves.append(&mut evaled_moves(self.gen.all_moves(pos)));
 
         if moves.is_empty() {
             self.stats.count_node();
