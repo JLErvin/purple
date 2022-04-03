@@ -105,7 +105,6 @@ impl AlphaBeta {
         let mut moves = Vec::<EvaledMove>::new();
 
         // TT ATTEMPT
-        /*
         let hash = self.zobrist.hash(pos);
         let entry = self.table.get(hash);
         if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().depth >= depth && is_bound_ok(&entry.unwrap(), alpha, beta) {
@@ -115,7 +114,6 @@ impl AlphaBeta {
                 moves.push(entry.unwrap().best_move);
             }
         }
-        */
         // TT ATTEMPT END
 
         if depth == 0 {
