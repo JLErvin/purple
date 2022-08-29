@@ -4,6 +4,7 @@ use clap::*;
 use itertools::Itertools;
 
 use purple::uci::interface::uci_loop;
+use std::time::{Duration, Instant};
 
 fn main() {
     let matches = App::new("purple")
@@ -61,9 +62,12 @@ fn execute_perft(args: Vec<&str>) {
     let fen = args.get(1).unwrap();
 
     let game = Game::from_fen(fen).unwrap();
+    let start = Instant::now();
     let nodes = game.perft(depth);
+    let duration = start.elapsed();
 
     println!("Nodes: {}", nodes);
+    println!("Duration: {:?}", duration);
 }
 
 fn execute_mini_perft(args: Vec<&str>) {

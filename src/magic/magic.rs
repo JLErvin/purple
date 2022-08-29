@@ -117,10 +117,6 @@ impl MagicTable {
         let magic_key = key(occupancy, magic, bits);
         let key = blockers.pext(mask) as usize;
 
-        if magic_key != key {
-            println!("Magic: {:#b} PEXT: {:#b}", magic_key, key);
-        }
-
         self.table[offset + key]
     }
 }
