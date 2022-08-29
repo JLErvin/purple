@@ -106,15 +106,7 @@ impl MagicTable {
     /// valid captures). Note that the provided square is not included in the returned bitboard.
     pub fn moves(&self, square: Square, blockers: Bitboard) -> Bitboard {
         let mask = self.rays[square as usize];
-        let occupancy = mask & blockers;
-        let bits = match self.piece {
-            MagicPiece::Rook => ROOK_RELEVANT_BITS[square as usize],
-            MagicPiece::Bishop => BISHOP_RELEVANT_BITS[square as usize],
-        };
-        let magic = self.magics[square as usize];
         let offset = self.offset[square as usize];
-
-        let magic_key = key(occupancy, magic, bits);
         let key = blockers.pext(mask) as usize;
 
         self.table[offset + key]
