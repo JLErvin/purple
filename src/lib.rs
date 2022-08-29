@@ -25,12 +25,10 @@ pub use crate::game::Game;
 
 /// A struct representing the  state of the board.
 pub mod board_state;
-/// Common types and utilities such as pieces, moves, squares, etc.
 pub mod common;
 mod game;
 mod magic;
 mod move_gen;
 mod search;
 mod table;
-/// Tools for UCI interfacing
 pub mod uci;

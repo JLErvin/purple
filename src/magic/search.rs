@@ -1,3 +1,5 @@
+use bitintr::Pext;
+
 use crate::common::bitboard::Bitboard;
 use crate::common::square::Square;
 use crate::magic::magic::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
@@ -12,6 +14,7 @@ struct MagicSearcher {
     occupancies: [Bitboard; 4096],
     attack_map: [Bitboard; 4096],
     bits: usize,
+    ray: u64,
 }
 
 impl MagicSearcher {
@@ -42,6 +45,7 @@ impl MagicSearcher {
             occupancies,
             attack_map,
             bits,
+            ray,
         }
     }
 }
@@ -67,11 +71,10 @@ fn search_magic(
     table: &mut [u64],
 ) -> Option<u64> {
     for _ in 0..MAXIMUM_ITERATIONS {
-        let magic = random.gen_random_number();
         table.iter_mut().for_each(|m| *m = 0);
-        let passed = validate_magic(magic, &searcher, table);
+        let passed = validate_magic(0, &searcher, table);
         if passed {
-            return Some(magic);
+            return Some(0);
         }
     }
     None
@@ -81,7 +84,7 @@ fn search_magic(
 fn validate_magic(magic: u64, searcher: &MagicSearcher, table: &mut [u64]) -> bool {
     for i in 0..table.len() {
         let occupied = searcher.occupancies[i];
-        let key = key(occupied, magic, searcher.bits);
+        let key = searcher.occupancies[i].pext(searcher.ray) as usize;
         if table[key] == 0 {
             table[key] = searcher.attack_map[i];
         } else if table[key] != searcher.attack_map[i] {

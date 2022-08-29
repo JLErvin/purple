@@ -1,6 +1,9 @@
+use bitintr::Pext;
+
 use crate::common::bitboard::Bitboard;
 
 use crate::common::square::Square;
+use crate::magic;
 use crate::magic::random::MagicRandomizer;
 
 use crate::magic::search::{compute_magic, key};
@@ -111,7 +114,12 @@ impl MagicTable {
         let magic = self.magics[square as usize];
         let offset = self.offset[square as usize];
 
-        let key = key(occupancy, magic, bits);
+        let magic_key = key(occupancy, magic, bits);
+        let key = blockers.pext(mask) as usize;
+
+        if magic_key != key {
+            println!("Magic: {:#b} PEXT: {:#b}", magic_key, key);
+        }
 
         self.table[offset + key]
     }
