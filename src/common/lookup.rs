@@ -5,7 +5,7 @@ use crate::common::square::Square;
 use crate::magic::magic::MagicTable;
 use crate::magic::random::MagicRandomizer;
 use crate::magic::util::MagicPiece;
-use crate::move_gen::util::knight_destinations;
+use crate::move_gen::knight_destinations;
 use itertools::Itertools;
 
 pub struct Lookup {

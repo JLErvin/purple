@@ -2,7 +2,7 @@ use crate::{
     board::BoardState,
     common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
     fen::parse_fen,
-    move_gen::generator::{debug_print, MoveGenerator},
+    move_gen::{debug_print, MoveGenerator},
     search::{alpha_beta::AlphaBeta, search::Searcher},
 };
 

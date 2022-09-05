@@ -208,7 +208,85 @@ impl TranspositionTable {
 #[cfg(test)]
 mod test {
     use crate::common::eval_move::EvaledMove;
-    use crate::table::{Bound, Entry, TranspositionTable};
+    use crate::fen::parse_fen;
+    use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
+
+    #[test]
+    fn same_position_should_have_same_hash() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_eq!(hash1, hash2);
+    }
+
+    #[test]
+    fn different_positions_should_have_different_hashes() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos2 =
+            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+                .unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn should_differentiate_between_players() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 b - - 0 1".to_string()).unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn different_positions_should_be_different() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 = parse_fen(
+            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+        )
+        .unwrap();
+        let mut pos2 =
+            parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
+                .unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
+
+    #[test]
+    fn different_positions_should_be_different_2() {
+        let zobrist = ZobristTable::init();
+
+        let mut pos1 =
+            parse_fen(&"rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string())
+                .unwrap();
+        let mut pos2 = parse_fen(
+            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+        )
+        .unwrap();
+
+        let hash1 = zobrist.hash(&mut pos1);
+        let hash2 = zobrist.hash(&mut pos2);
+
+        assert_ne!(hash1, hash2);
+    }
 
     #[test]
     fn should_save_and_get_new_entry() {
@@ -278,28 +356,3 @@ mod test {
         assert_eq!(fetched_entry.unwrap(), entry_one);
     }
 }
-
-/*
-            if !is_pv && t.depth() >= depth {
-                match t.bound() {
-                    Bound::Exact => {
-                        return t.score();
-                    },
-                    Bound::Lower => {
-                        if t.score() > alpha {
-                            alpha = t.score();
-                        }
-                    },
-                    Bound::Upper => {
-                        if t.score() < beta {
-                            beta = t.score();
-                        }
-                    }
-                }
-                if alpha >= beta {
-                    return t.score();
-                }
-            }
-
-            best_move = t.best_move();
-*/

@@ -1,7 +1,7 @@
 use crate::board::BoardState;
 use crate::fen::parse_fen;
 
-use crate::move_gen::generator::MoveGenerator;
+use crate::move_gen::MoveGenerator;
 use crate::search::eval::eval;
 use crate::search::search::Searcher;
 use itertools::Itertools;

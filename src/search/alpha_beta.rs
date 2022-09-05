@@ -5,12 +5,10 @@ use crate::{
     board::BoardState,
     common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
     move_gen::{
-        generator::MoveGenerator,
-        util::{is_attacked, king_square},
+        MoveGenerator, {is_attacked, king_square},
     },
     table::{
-        {Bound, Entry, TranspositionTable},
-        ZobristTable,
+        ZobristTable, {Bound, Entry, TranspositionTable},
     },
 };
 use itertools::Itertools;

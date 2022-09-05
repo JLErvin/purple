@@ -1,8 +1,8 @@
 use crate::common::eval_move::EvaledMove;
 
 use crate::common::stats::Stats;
-use crate::move_gen::generator::MoveGenerator;
-use crate::move_gen::util::{is_attacked, king_square};
+use crate::move_gen::MoveGenerator;
+use crate::move_gen::{is_attacked, king_square};
 use crate::search::eval::{eval, MATE_VALUE};
 use itertools::Itertools;
 
