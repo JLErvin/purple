@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 use crate::common::bitboard::{
     AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
 };
@@ -19,8 +19,8 @@ struct PawnDirections {
 /// to the provided vector. Pseudo-legal moves are defined as a subset of
 /// all legal moves for a given position which might also leave the king in check.
 pub fn gen_pseudo_legal_pawn_moves(pos: &BoardState, list: &mut Vec<Move>) {
-    let dirs = PawnDirections::new(pos.active_player());
-    let pawns = pos.bb(pos.active_player(), PieceType::Pawn);
+    let dirs = PawnDirections::new(pos.active_player);
+    let pawns = pos.bb(pos.active_player, PieceType::Pawn);
     gen_quiet_pushes(pos, list, dirs, pawns);
     gen_captures(pos, list, dirs, pawns);
     gen_en_passant(pos, list, dirs, pawns);
@@ -45,7 +45,7 @@ fn gen_quiet_pushes(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections
 /// Generate all captures, excluding en passant captures and those which
 /// result in promotions and under-promotions.
 fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let pawns = pawns & !dirs.rank7;
     let their_king = pos.bb(!us, PieceType::King);
     let valid_pieces = pos.bb_for_color(!us) & !their_king;
@@ -59,7 +59,7 @@ fn gen_captures(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pa
 
 /// Generate all en passant captures for the given position.
 fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
-    if pos.en_passant().is_none() {
+    if pos.en_passant.is_none() {
         return;
     }
 
@@ -74,7 +74,7 @@ fn gen_en_passant(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, 
 
 /// Generate all promotions and under promotions, including pushes and captures on the eighth rank.
 fn gen_promotions(pos: &BoardState, list: &mut Vec<Move>, dirs: PawnDirections, pawns: Bitboard) {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let pawns = pawns & dirs.rank7;
     let empty_squares = !pos.bb_all();
     let their_king = pos.bb(!us, PieceType::King);
@@ -141,7 +141,7 @@ fn extract_promotions(bitboard: Bitboard, offset: i8, moves: &mut Vec<Move>, kin
 
 /// Given a game position, return a Bitboard that includes a non-zero bit only on the target en passant square.
 fn en_passant_bb(pos: &BoardState) -> Bitboard {
-    let square = pos.en_passant().unwrap_or(0);
+    let square = pos.en_passant.unwrap_or(0);
     if square == 0 {
         0
     } else {
@@ -174,9 +174,9 @@ impl PawnDirections {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::board_state::fen::parse_fen;
     use crate::common::bitboard::RANK2;
     use crate::common::square::SquareIndex::*;
+    use crate::fen::parse_fen;
 
     #[test]
     fn gen_random_pawn_moves1() {

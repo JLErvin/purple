@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 
 use crate::common::chess_move::Move;
 use crate::common::piece::{Color, PieceType};
@@ -102,9 +102,8 @@ pub fn debug_print(pos: &BoardState) -> String {
 
 #[cfg(test)]
 mod test {
-
-    use crate::board_state::board::BoardState;
-    use crate::board_state::fen::parse_fen;
+    use crate::board::BoardState;
+    use crate::fen::parse_fen;
     use crate::move_gen::generator::MoveGenerator;
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 use crate::common::bitboard::{Bitboard, New, PieceItr};
 use crate::common::chess_move::MoveType::Capture;
 use crate::common::chess_move::{Move, MoveType};
@@ -96,7 +96,7 @@ fn is_legal_non_king_move(
 /// move represents a castling move. En Passant requires special checking since it is the only move in
 /// which the piece moves to a square but does not capture on that square.
 fn is_legal_en_passant(pos: &BoardState, mv: &Move, lookup: &Lookup, king_square: Square) -> bool {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let mut pos = pos.clone();
 
     let offset: i8 = match us {
@@ -125,11 +125,11 @@ fn is_legal_castle(pos: &BoardState, mv: &Move, lookup: &Lookup, num_checkers: u
     }
 
     let squares: Vec<Square> = match mv.kind {
-        MoveType::CastleKing => match pos.active_player() {
+        MoveType::CastleKing => match pos.active_player {
             Color::White => vec![5, 6],
             Color::Black => vec![61, 62],
         },
-        MoveType::CastleQueen => match pos.active_player() {
+        MoveType::CastleQueen => match pos.active_player {
             Color::White => vec![2, 3],
             Color::Black => vec![58, 59],
         },
@@ -150,7 +150,7 @@ fn is_legal_castle(pos: &BoardState, mv: &Move, lookup: &Lookup, num_checkers: u
 /// the attacking piece
 fn is_legal_pin_move(pos: &BoardState, mv: &Move, lookup: &Lookup) -> bool {
     let ray = lookup.between(mv.to, mv.from);
-    let overlap = ray & pos.bb(pos.active_player(), PieceType::King);
+    let overlap = ray & pos.bb(pos.active_player, PieceType::King);
 
     overlap != 0
 }
@@ -167,7 +167,7 @@ fn is_absolutely_pinned(mv: &Move, lookup: &Lookup, blockers: Bitboard) -> bool 
 
 /// Returns a bitboard representing all pieces which are attacking the provided square.
 pub fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let occupancies = pos.bb_all() & !pos.bb(us, PieceType::King);
 
     let pawn_attacks = pawn_attacks(square, us);
@@ -197,16 +197,14 @@ fn ray_between(s1: Square, s2: Square, lookup: &Lookup) -> Bitboard {
 
 fn king_on_square(pos: &BoardState, lookup: &Lookup, square: Square) -> bool {
     let b = lookup.square_bb(square);
-
-    let king = pos.bb(pos.active_player(), PieceType::King);
-
+    let king = pos.bb(pos.active_player, PieceType::King);
     b & king != 0
 }
 
 /// Given the state of a game, calculates and returns a bitboard which represents all blockers
 /// (i.e. pinned pieces) for the king.
 pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square) -> Bitboard {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let king_bb = pos.bb(us, PieceType::King);
 
     let attacks_rooks = lookup.pseudo_attacks(PieceType::Rook, king_square)
@@ -235,13 +233,13 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::board_state::fen::parse_fen;
     use crate::common::chess_move::MoveType::Quiet;
     use crate::common::square::SquareIndex;
     use crate::common::square::SquareIndex::{
         A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
         F2, F3, G1, G2, G5, G8, H1, H2, H4,
     };
+    use crate::fen::parse_fen;
     use crate::magic::random::{GenerationScheme, MagicRandomizer};
     use crate::move_gen::util::king_square;
 

@@ -1,6 +1,7 @@
 use crate::{
-    board_state::{board::BoardState, fen::parse_fen},
+    board::BoardState,
     common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
+    fen::parse_fen,
     move_gen::generator::{debug_print, MoveGenerator},
     search::{alpha_beta::AlphaBeta, search::Searcher},
 };

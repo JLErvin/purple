@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 
 use crate::common::eval_move::EvaledMove;
 

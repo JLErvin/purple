@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 use crate::common::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::square_to_file;
@@ -77,28 +77,28 @@ impl ZobristTable {
             }
         }
 
-        if pos.castling_rights().black_king {
+        if pos.castling_rights.black_king {
             hash ^= self.castling_rights[0];
         }
 
-        if pos.castling_rights().black_queen {
+        if pos.castling_rights.black_queen {
             hash ^= self.castling_rights[1];
         }
 
-        if pos.castling_rights().white_king {
+        if pos.castling_rights.white_king {
             hash ^= self.castling_rights[2];
         }
 
-        if pos.castling_rights().white_queen {
+        if pos.castling_rights.white_queen {
             hash ^= self.castling_rights[3];
         }
 
-        match pos.en_passant() {
+        match pos.en_passant {
             None => (),
             Some(e) => hash ^= self.en_passant_file[square_to_file(e) as usize],
         };
 
-        if pos.active_player() == Color::White {
+        if pos.active_player == Color::White {
             hash ^= self.whites_turn;
         }
 
@@ -108,7 +108,7 @@ impl ZobristTable {
 
 #[cfg(test)]
 mod test {
-    use crate::board_state::fen::parse_fen;
+    use crate::fen::parse_fen;
 
     use super::ZobristTable;
 

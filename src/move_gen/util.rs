@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 use crate::common::bitboard::{AddPiece, PieceItr, FILEA, FILEB, FILEG, FILEH};
 use crate::common::chess_move::{Move, EAST, NORTH, SOUTH, WEST};
 use crate::common::lookup::Lookup;
@@ -8,12 +8,12 @@ use crate::common::{bitboard::Bitboard, chess_move::MoveType};
 use crate::move_gen::pawns::pawn_attacks;
 
 pub fn king_square(pos: &BoardState) -> Square {
-    let us = pos.active_player();
+    let us = pos.active_player;
     pos.bb(us, PieceType::King).trailing_zeros() as Square
 }
 
 pub fn is_attacked(pos: &BoardState, square: Square, lookup: &Lookup) -> bool {
-    let us = pos.active_player();
+    let us = pos.active_player;
 
     if pawn_attacks(square, us) & pos.bb(!us, PieceType::Pawn) != 0 {
         return true;

@@ -6,7 +6,7 @@ use crate::move_gen::util::{is_attacked, king_square};
 use crate::search::eval::{eval, MATE_VALUE};
 use itertools::Itertools;
 
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 use crate::common::chess_move::Move;
 use crate::search::search::Searcher;
 
@@ -83,7 +83,7 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 #[cfg(test)]
 mod test {
     use crate::{
-        board_state::fen::parse_fen,
+        fen::parse_fen,
         search::{minimax::MinimaxSearcher, search::Searcher},
     };
 

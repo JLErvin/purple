@@ -23,10 +23,10 @@
 
 pub use crate::game::Game;
 
-/// A struct representing the  state of the board.
-pub mod board_state;
+mod board;
 /// Common types and utilities such as pieces, moves, squares, etc.
 pub mod common;
+mod fen;
 mod game;
 mod magic;
 mod move_gen;

@@ -2,15 +2,15 @@ use super::{eval::MATE_VALUE, search::Searcher};
 use crate::common::chess_move::MoveType;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::{
-    board_state::board::BoardState,
+    board::BoardState,
     common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
     move_gen::{
         generator::MoveGenerator,
         util::{is_attacked, king_square},
     },
     table::{
-        transposition::{Bound, Entry, TranspositionTable},
-        zobrist::ZobristTable,
+        {Bound, Entry, TranspositionTable},
+        ZobristTable,
     },
 };
 use itertools::Itertools;
@@ -31,7 +31,7 @@ impl Searcher for AlphaBeta {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        let zobrist = crate::table::zobrist::ZobristTable::init();
+        let zobrist = ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
         let settings = Settings { use_table: true };
         AlphaBeta {
@@ -107,7 +107,11 @@ impl AlphaBeta {
         // TT ATTEMPT
         let hash = self.zobrist.hash(pos);
         let entry = self.table.get(hash);
-        if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().depth >= depth && is_bound_ok(&entry.unwrap(), alpha, beta) {
+        if entry.is_some()
+            && entry.unwrap().hash == hash
+            && entry.unwrap().depth >= depth
+            && is_bound_ok(&entry.unwrap(), alpha, beta)
+        {
             return entry.unwrap().best_move;
         } else if entry.is_some() && entry.unwrap().hash == hash {
             if entry.unwrap().best_move.mv.kind != MoveType::Null {
@@ -278,7 +282,7 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 #[cfg(test)]
 mod test {
     use crate::{
-        board_state::fen::parse_fen,
+        fen::parse_fen,
         search::{alpha_beta::AlphaBeta, search::Searcher},
     };
 

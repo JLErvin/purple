@@ -1,9 +1,17 @@
 use purple::{self, Game};
 
+use crate::uci::uci_loop;
 use clap::*;
 use itertools::Itertools;
 
-use purple::uci::interface::uci_loop;
+mod board;
+mod common;
+mod fen;
+mod magic;
+mod move_gen;
+mod search;
+mod table;
+mod uci;
 
 fn main() {
     let matches = App::new("purple")

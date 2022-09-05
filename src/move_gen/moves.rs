@@ -1,4 +1,4 @@
-use crate::board_state::board::BoardState;
+use crate::board::BoardState;
 
 use crate::common::bitboard::PieceItr;
 use crate::common::chess_move::MoveType::{Capture, Quiet};
@@ -14,7 +14,7 @@ pub fn gen_pseudo_legal_moves(
     lookup: &Lookup,
     piece: PieceType,
 ) {
-    let us = pos.active_player();
+    let us = pos.active_player;
     let pieces = pos.bb(us, piece);
     let valid_pieces = pos.bb_for_color(!us);
     let empty_squares = !pos.bb_all();
@@ -33,7 +33,7 @@ pub fn gen_pseudo_legal_moves(
 }
 
 pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
-    let us = pos.active_player();
+    let us = pos.active_player;
 
     let (king_mask, queen_mask) = match us {
         Color::White => (96, 14),
@@ -44,12 +44,12 @@ pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
 
     let (king_rights, queen_rights) = match us {
         Color::White => (
-            pos.castling_rights().white_king,
-            pos.castling_rights().white_queen,
+            pos.castling_rights.white_king,
+            pos.castling_rights.white_queen,
         ),
         Color::Black => (
-            pos.castling_rights().black_king,
-            pos.castling_rights().black_queen,
+            pos.castling_rights.black_king,
+            pos.castling_rights.black_queen,
         ),
     };
 
@@ -82,8 +82,8 @@ pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
 
 #[cfg(test)]
 mod test {
-    use crate::board_state::fen::parse_fen;
     use crate::common::chess_move::Move;
+    use crate::fen::parse_fen;
     use crate::move_gen::moves::gen_pseudo_legal_castles;
 
     #[test]
