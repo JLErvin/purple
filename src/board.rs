@@ -1,10 +1,9 @@
-use crate::common::bitboard::*;
+use crate::bitboard::*;
 use crate::common::piece::PieceType::Rook;
 use crate::common::piece::*;
 use crate::common::square::SquareIndex::{A1, A8, H1, H8};
 use crate::common::square::SquareIndex::{C1, C8, D1, D8, E1, E8, F1, F8, G1, G8};
 use crate::common::{
-    bitboard::Bitboard,
     chess_move::{Move, MoveType},
     piece::{Color, PieceType},
     square::Square,

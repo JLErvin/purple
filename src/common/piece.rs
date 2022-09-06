@@ -1,4 +1,4 @@
-use crate::common::bitboard::Bitboard;
+use crate::bitboard::Bitboard;
 use std::ops::{Index, IndexMut, Not};
 use std::slice::Iter;
 

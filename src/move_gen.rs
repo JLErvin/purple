@@ -8,14 +8,14 @@ use crate::common::lookup::Lookup;
 use crate::common::square::rank_file_to_index;
 use crate::magic::random::{GenerationScheme, MagicRandomizer};
 
-use crate::common::bitboard::{
+use crate::bitboard::{
     AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
 };
 use crate::common::chess_move::MoveType::{Capture, EnPassantCapture, Quiet};
 use crate::common::chess_move::{MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
 use crate::common::square::Square;
 
-use crate::common::bitboard::{FILEA, FILEB, FILEG, FILEH};
+use crate::bitboard::{FILEA, FILEB, FILEG, FILEH};
 use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
 
 const MAX_MOVES: usize = 256;
@@ -649,6 +649,19 @@ mod test {
     use crate::board::BoardState;
     use crate::fen::parse_fen;
     use crate::move_gen::MoveGenerator;
+    use super::*;
+    use crate::common::chess_move::MoveType::Quiet;
+    use crate::common::square::SquareIndex;
+    use crate::common::square::SquareIndex::{
+        A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
+        F2, F3, G1, G2, G5, G8, H1, H2, H4,
+    };
+    use crate::magic::random::{GenerationScheme, MagicRandomizer};
+    use crate::move_gen::king_square;
+    use crate::common::chess_move::Move;
+    use crate::move_gen::gen_pseudo_legal_castles;
+    use crate::bitboard::RANK2;
+    use crate::common::square::SquareIndex::*;
 
     #[test]
     #[ignore]
@@ -777,16 +790,6 @@ mod test {
         assert_eq!(depth_2, 2778);
         assert_eq!(depth_3, 111425);
     }
-
-    use super::*;
-    use crate::common::chess_move::MoveType::Quiet;
-    use crate::common::square::SquareIndex;
-    use crate::common::square::SquareIndex::{
-        A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
-        F2, F3, G1, G2, G5, G8, H1, H2, H4,
-    };
-    use crate::magic::random::{GenerationScheme, MagicRandomizer};
-    use crate::move_gen::king_square;
 
     #[test]
     fn calculates_blockers() {
@@ -1325,9 +1328,6 @@ mod test {
         );
     }
 
-    use crate::common::chess_move::Move;
-    use crate::move_gen::gen_pseudo_legal_castles;
-
     #[test]
     fn castles_no_obstruction() {
         let pos = parse_fen(&"8/8/8/8/8/8/8/R3K2R w KQ - 0 1".to_string()).unwrap();
@@ -1369,10 +1369,6 @@ mod test {
         let _m2 = list.get(1).unwrap();
         assert_eq!(list.len(), 2);
     }
-
-    use crate::common::bitboard::RANK2;
-    use crate::common::square::SquareIndex::*;
-
     #[test]
     fn gen_random_pawn_moves1() {
         let pos =

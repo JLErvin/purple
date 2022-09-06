@@ -1,4 +1,4 @@
-use crate::common::bitboard::{AddPiece, Bitboard, New, Shift};
+use crate::bitboard::{AddPiece, Bitboard, New, Shift};
 use crate::common::chess_move::MoveType;
 use crate::common::piece::PieceType;
 use crate::common::square::Square;

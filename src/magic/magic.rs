@@ -1,4 +1,4 @@
-use crate::common::bitboard::Bitboard;
+use crate::bitboard::Bitboard;
 
 use crate::common::square::Square;
 use crate::magic::random::MagicRandomizer;

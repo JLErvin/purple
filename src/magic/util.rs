@@ -1,4 +1,4 @@
-use crate::common::bitboard::{
+use crate::bitboard::{
     AddPiece, Bitboard, ClearBit, GetBit, FILEA, FILEB, FILEC, FILED, FILEE, FILEF, FILEG, FILEH,
     RANK1, RANK2, RANK3, RANK4, RANK5, RANK6, RANK7, RANK8,
 };
@@ -246,7 +246,7 @@ pub fn occupancy(occupancy_index: usize, bits: usize, mut attack_mask: Bitboard)
 
 #[cfg(test)]
 mod tests {
-    use crate::common::bitboard::Bitboard;
+    use crate::bitboard::Bitboard;
     use crate::common::square::SquareIndex::{A1, A7, A8, B2, C7, D4, H1, H8};
     use crate::magic::util::{bishop_attacks, bishop_ray, rook_attacks, rook_ray};
 

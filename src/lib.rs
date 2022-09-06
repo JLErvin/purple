@@ -23,6 +23,7 @@
 
 pub use crate::game::Game;
 
+mod bitboard;
 mod board;
 /// Common types and utilities such as pieces, moves, squares, etc.
 pub mod common;

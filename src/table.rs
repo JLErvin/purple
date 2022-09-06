@@ -5,7 +5,7 @@ use crate::{
     common::{chess_move::MoveType, eval_move::EvaledMove},
 };
 
-use crate::common::bitboard::{Bitboard, PieceItr};
+use crate::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType};
 use crate::common::square::square_to_file;
 use itertools::Itertools;

@@ -4,6 +4,7 @@ use crate::uci::uci_loop;
 use clap::*;
 use itertools::Itertools;
 
+mod bitboard;
 mod board;
 mod common;
 mod fen;
