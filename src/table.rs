@@ -8,8 +8,8 @@ use rand::RngCore;
 use crate::bitboard::{Bitboard, PieceItr};
 use crate::board::BoardState;
 use crate::chess_move::{EvaledMove, MoveType};
-use crate::common::square::square_to_file;
 use crate::piece::{Color, PieceType};
+use crate::square::square_to_file;
 
 type ZobristHash = u64;
 

@@ -7,12 +7,12 @@ use crate::uci::uci_loop;
 mod bitboard;
 mod board;
 mod chess_move;
-mod common;
 mod fen;
 mod magic;
 mod move_gen;
 mod piece;
 mod search;
+mod square;
 mod table;
 mod uci;
 

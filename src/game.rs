@@ -1,10 +1,10 @@
 use crate::board::BoardState;
 use crate::chess_move::{EvaledMove, Move};
-use crate::common::stats::Stats;
 use crate::fen::parse_fen;
 use crate::move_gen::{debug_print, MoveGenerator};
 use crate::search::alpha_beta::AlphaBeta;
 use crate::search::search::Searcher;
+use crate::search::stats::Stats;
 
 /// A struct which encapsulates a chess game, which includes the ability to generate legal moves
 /// and determine the best move from a given position.

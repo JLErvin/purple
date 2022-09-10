@@ -214,7 +214,7 @@ impl Neg for EvaledMove {
 mod test {
     use crate::chess_move::Move;
     use crate::chess_move::MoveType::Quiet;
-    use crate::common::square::SquareIndex::{A2, A3};
+    use crate::square::SquareIndex::{A2, A3};
 
     #[test]
     fn basic_move_to_long_algebra() {

@@ -26,14 +26,13 @@ pub use crate::game::Game;
 mod bitboard;
 mod board;
 mod chess_move;
-/// Common types and utilities such as pieces, moves, squares, etc.
-pub mod common;
 mod fen;
 mod game;
 mod magic;
 mod move_gen;
 mod piece;
 mod search;
+mod square;
 mod table;
 /// Tools for UCI interfacing
 pub mod uci;

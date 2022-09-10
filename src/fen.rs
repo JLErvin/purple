@@ -1,6 +1,6 @@
 use crate::board::{BoardState, Castle, Position};
-use crate::common::square::{algebraic_to_square, Square};
 use crate::piece::Color;
+use crate::square::{algebraic_to_square, Square};
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();

@@ -1,5 +1,5 @@
 use crate::chess_move::{EAST, NORTH, SOUTH, WEST};
-use crate::common::square::*;
+use crate::square::*;
 
 pub type Bitboard = u64;
 

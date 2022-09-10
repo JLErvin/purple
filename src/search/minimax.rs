@@ -2,10 +2,10 @@ use itertools::Itertools;
 
 use crate::board::BoardState;
 use crate::chess_move::{EvaledMove, Move};
-use crate::common::stats::Stats;
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, MATE_VALUE};
 use crate::search::search::Searcher;
+use crate::search::stats::Stats;
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
