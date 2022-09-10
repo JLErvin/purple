@@ -211,6 +211,7 @@ impl MoveGenerator {
         list
     }
 
+    #[allow(dead_code)]
     pub fn perft(&self, pos: &BoardState, depth: usize) -> usize {
         self.perft_inner(pos, depth)
     }
@@ -769,6 +770,7 @@ impl PawnDirections {
     }
 }
 
+#[allow(dead_code)]
 pub fn debug_print(pos: &BoardState) -> String {
     let mut s = String::with_capacity(64);
     for i in 0..8 {
@@ -822,7 +824,7 @@ mod test {
     #[ignore]
     fn perft_starting_position() {
         let mut pos = BoardState::default();
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -841,7 +843,7 @@ mod test {
             &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
         )
         .unwrap();
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -858,7 +860,7 @@ mod test {
     fn perft_fen_3() {
         let mut pos = parse_fen(&"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1".to_string()).unwrap();
 
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -880,7 +882,7 @@ mod test {
         )
         .unwrap();
 
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -899,7 +901,7 @@ mod test {
             parse_fen(&"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8".to_string())
                 .unwrap();
 
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -919,7 +921,7 @@ mod test {
         )
         .unwrap();
 
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);
@@ -936,7 +938,7 @@ mod test {
             parse_fen(&"r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b KQ c3 0 1".to_string())
                 .unwrap();
 
-        let mut gen = MoveGenerator::new();
+        let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
         let depth_2 = gen.perft(&mut pos, 2);
         let depth_3 = gen.perft(&mut pos, 3);

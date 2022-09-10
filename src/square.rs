@@ -1,5 +1,6 @@
 pub type Square = u8;
 
+#[allow(dead_code)]
 pub enum SquareIndex {
     A1 = 0,
     B1,
@@ -75,6 +76,7 @@ pub fn square_to_file(s: Square) -> u8 {
     s % 8
 }
 
+#[allow(dead_code)]
 pub fn square_to_rank(s: Square) -> u8 {
     s % 8
 }

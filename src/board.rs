@@ -37,6 +37,7 @@ impl BoardState {
     }
 
     #[inline]
+    #[allow(dead_code)]
     pub fn add_piece(&mut self, piece: char, rank: u8, file: u8) {
         self.position.add_piece(piece, rank, file);
     }
@@ -62,6 +63,7 @@ impl BoardState {
     }
 
     #[inline]
+    #[allow(dead_code)]
     pub fn color_on(&self, square: Square) -> Option<Color> {
         self.position.color_on(square)
     }
@@ -186,6 +188,7 @@ impl BoardState {
         }
     }
 
+    #[allow(dead_code)]
     pub fn empty() -> BoardState {
         let position = Position::empty();
         BoardState {
@@ -208,11 +211,6 @@ impl BoardState {
             full_move: 1,
         }
     }
-}
-
-pub enum CastleSide {
-    KingSide,
-    QueenSide,
 }
 
 #[derive(Copy, Clone)]

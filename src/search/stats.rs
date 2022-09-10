@@ -19,8 +19,4 @@ impl Stats {
     pub fn count_node(&mut self) {
         self.nodes += 1;
     }
-
-    pub fn count_leaf_node(&mut self) {
-        self.leaf_nodes += 1;
-    }
 }

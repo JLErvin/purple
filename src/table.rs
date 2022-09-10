@@ -171,6 +171,7 @@ impl TranspositionTable {
     }
 
     /// Return the principal variation, starting with the given position
+    #[allow(dead_code)]
     pub fn pv(&self, pos: &mut BoardState, zobrist: &ZobristTable) -> Vec<EvaledMove> {
         let mut pv = Vec::new();
         // Maintain a list of visited moves to avoid circular references in case of the PV being
@@ -330,7 +331,7 @@ mod test {
     }
 
     #[test]
-    fn should__not_replace_entry_with_shallower_depth() {
+    fn should_not_replace_entry_with_shallower_depth() {
         let mut table = TranspositionTable::new(10);
         let entry_one = Entry {
             best_move: EvaledMove::null(0),

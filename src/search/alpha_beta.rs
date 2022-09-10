@@ -260,6 +260,7 @@ impl AlphaBeta {
     }
 
     /// Set whether or not the searcher should use a transposition table to lookup previous evaluations.
+    #[allow(dead_code)]
     pub fn use_table(&mut self, setting: bool) {
         self.settings.use_table = setting;
     }
