@@ -1,6 +1,6 @@
 use crate::bitboard::PieceItr;
 use crate::board::BoardState;
-use crate::common::piece::{Color, PieceType};
+use crate::piece::{Color, PieceType};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;

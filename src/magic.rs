@@ -1,16 +1,17 @@
 mod constants;
 
+use std::slice::Iter;
+
+use rand::prelude::ThreadRng;
+use rand::RngCore;
+
+use self::constants::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 use crate::bitboard::{
     AddPiece, Bitboard, ClearBit, GetBit, FILEA, FILEB, FILEC, FILED, FILEE, FILEF, FILEG, FILEH,
     RANK1, RANK2, RANK3, RANK4, RANK5, RANK6, RANK7, RANK8,
 };
 use crate::common::square::{rank_file_to_index, Square};
 use crate::magic::constants::MAGIC_NUMBERS;
-use rand::prelude::ThreadRng;
-use rand::RngCore;
-use std::slice::Iter;
-
-use self::constants::{ROOK_RELEVANT_BITS, BISHOP_RELEVANT_BITS};
 
 pub struct MagicTable {
     pub table: Vec<u64>,

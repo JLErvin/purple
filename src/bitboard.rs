@@ -1,4 +1,4 @@
-use crate::common::chess_move::{EAST, NORTH, SOUTH, WEST};
+use crate::chess_move::{EAST, NORTH, SOUTH, WEST};
 use crate::common::square::*;
 
 pub type Bitboard = u64;
@@ -157,7 +157,7 @@ impl New for Bitboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::chess_move::{NORTH, WEST};
+    use crate::chess_move::{NORTH, WEST};
 
     #[test]
     fn adds_piece_eight_rank() {

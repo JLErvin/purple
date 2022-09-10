@@ -1,6 +1,5 @@
 use crate::board::BoardState;
-use crate::common::chess_move::Move;
-use crate::common::eval_move::EvaledMove;
+use crate::chess_move::{EvaledMove, Move};
 use crate::common::stats::Stats;
 use crate::fen::parse_fen;
 use crate::move_gen::{debug_print, MoveGenerator};

@@ -1,6 +1,6 @@
 use crate::board::{BoardState, Castle, Position};
-use crate::common::piece::Color;
 use crate::common::square::{algebraic_to_square, Square};
+use crate::piece::Color;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
@@ -97,7 +97,7 @@ fn parse_move(fen: &str) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::piece::PieceType;
+    use crate::piece::PieceType;
 
     #[test]
     fn parses_default_board() {

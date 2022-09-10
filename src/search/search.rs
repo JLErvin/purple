@@ -1,7 +1,5 @@
 use crate::board::BoardState;
-
-use crate::common::eval_move::EvaledMove;
-
+use crate::chess_move::EvaledMove;
 use crate::common::stats::Stats;
 
 pub trait Searcher {

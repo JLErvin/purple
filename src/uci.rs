@@ -1,14 +1,13 @@
-use crate::board::BoardState;
-use crate::fen::parse_fen;
-
-use crate::move_gen::MoveGenerator;
-use crate::search::eval::eval;
-use crate::search::search::Searcher;
-use itertools::Itertools;
-
 use std::io::{stdin, BufRead};
 
+use itertools::Itertools;
+
+use crate::board::BoardState;
+use crate::fen::parse_fen;
+use crate::move_gen::MoveGenerator;
 use crate::search::alpha_beta::AlphaBeta;
+use crate::search::eval::eval;
+use crate::search::search::Searcher;
 
 pub fn uci_loop() {
     let mut pos = BoardState::default();

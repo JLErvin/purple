@@ -1,20 +1,16 @@
-use crate::board::BoardState;
 use itertools::Itertools;
 
-use crate::common::chess_move::Move;
-use crate::common::piece::{Color, PieceType};
-
-use crate::common::square::rank_file_to_index;
-use crate::magic::{GenerationScheme, MagicRandomizer};
-
-use crate::bitboard::{AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7};
-use crate::common::chess_move::MoveType::{Capture, EnPassantCapture, Quiet};
-use crate::common::chess_move::{MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
-use crate::common::square::Square;
-
-use crate::bitboard::{FILEA, FILEB, FILEG, FILEH};
+use crate::bitboard::{
+    AddPiece, Bitboard, New, PieceItr, Shift, FILEA, FILEB, FILEG, FILEH, RANK2, RANK3, RANK6,
+    RANK7,
+};
+use crate::board::BoardState;
+use crate::chess_move::MoveType::{Capture, EnPassantCapture, Quiet};
+use crate::chess_move::{Move, MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
 use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
-use crate::magic::{MagicPiece, MagicTable};
+use crate::common::square::{rank_file_to_index, Square};
+use crate::magic::{GenerationScheme, MagicPiece, MagicRandomizer, MagicTable};
+use crate::piece::{Color, PieceType};
 
 const MAX_MOVES: usize = 256;
 
@@ -811,8 +807,8 @@ mod test {
     use super::*;
     use crate::bitboard::RANK2;
     use crate::board::BoardState;
-    use crate::common::chess_move::Move;
-    use crate::common::chess_move::MoveType::Quiet;
+    use crate::chess_move::Move;
+    use crate::chess_move::MoveType::Quiet;
     use crate::common::square::SquareIndex;
     use crate::common::square::SquareIndex::{
         A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,

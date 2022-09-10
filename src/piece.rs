@@ -1,6 +1,7 @@
-use crate::bitboard::Bitboard;
 use std::ops::{Index, IndexMut, Not};
 use std::slice::Iter;
+
+use crate::bitboard::Bitboard;
 
 pub const PIECE_COUNT: usize = 6;
 pub const COLOR_COUNT: usize = 2;

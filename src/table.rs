@@ -1,16 +1,15 @@
 use std::collections::HashSet;
 use std::mem;
 
-use crate::board::BoardState;
-use crate::common::chess_move::MoveType;
-use crate::common::eval_move::EvaledMove;
-
-use crate::bitboard::{Bitboard, PieceItr};
-use crate::common::piece::{Color, PieceType};
-use crate::common::square::square_to_file;
 use itertools::Itertools;
 use rand::prelude::ThreadRng;
 use rand::RngCore;
+
+use crate::bitboard::{Bitboard, PieceItr};
+use crate::board::BoardState;
+use crate::chess_move::{EvaledMove, MoveType};
+use crate::common::square::square_to_file;
+use crate::piece::{Color, PieceType};
 
 type ZobristHash = u64;
 
@@ -207,7 +206,7 @@ impl TranspositionTable {
 
 #[cfg(test)]
 mod test {
-    use crate::common::eval_move::EvaledMove;
+    use crate::chess_move::EvaledMove;
     use crate::fen::parse_fen;
     use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 

@@ -1,13 +1,13 @@
+use itertools::Itertools;
+
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
-use crate::common::chess_move::{Move, MoveType};
-use crate::common::eval_move::EvaledMove;
+use crate::chess_move::{EvaledMove, Move, MoveType};
 use crate::common::stats::Stats;
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
-use itertools::Itertools;
 
 pub struct Settings {
     use_table: bool,

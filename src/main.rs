@@ -1,15 +1,17 @@
+use clap::*;
+use itertools::Itertools;
 use purple::{self, Game};
 
 use crate::uci::uci_loop;
-use clap::*;
-use itertools::Itertools;
 
 mod bitboard;
 mod board;
+mod chess_move;
 mod common;
 mod fen;
 mod magic;
 mod move_gen;
+mod piece;
 mod search;
 mod table;
 mod uci;
