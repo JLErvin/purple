@@ -1,8 +1,7 @@
 use crate::common::eval_move::EvaledMove;
 
 use crate::common::stats::Stats;
-use crate::move_gen::MoveGenerator;
-use crate::move_gen::{is_attacked, king_square};
+use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, MATE_VALUE};
 use itertools::Itertools;
 
@@ -82,10 +81,9 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        fen::parse_fen,
-        search::{minimax::MinimaxSearcher, search::Searcher},
-    };
+    use crate::fen::parse_fen;
+    use crate::search::minimax::MinimaxSearcher;
+    use crate::search::search::Searcher;
 
     #[test]
     fn finds_mate_in_one_as_white() {

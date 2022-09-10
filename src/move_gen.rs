@@ -1,23 +1,20 @@
-use itertools::Itertools;
 use crate::board::BoardState;
+use itertools::Itertools;
 
 use crate::common::chess_move::Move;
 use crate::common::piece::{Color, PieceType};
 
 use crate::common::square::rank_file_to_index;
-use crate::magic::random::{GenerationScheme, MagicRandomizer};
+use crate::magic::{GenerationScheme, MagicRandomizer};
 
-use crate::bitboard::{
-    AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7,
-};
+use crate::bitboard::{AddPiece, Bitboard, New, PieceItr, Shift, RANK2, RANK3, RANK6, RANK7};
 use crate::common::chess_move::MoveType::{Capture, EnPassantCapture, Quiet};
 use crate::common::chess_move::{MoveType, PromotionType, EAST, NORTH, SOUTH, WEST};
 use crate::common::square::Square;
 
 use crate::bitboard::{FILEA, FILEB, FILEG, FILEH};
 use crate::common::square::SquareIndex::{C1, C8, E1, E8, G1, G8};
-use crate::magic::magic::MagicTable;
-use crate::magic::util::MagicPiece;
+use crate::magic::{MagicPiece, MagicTable};
 
 const MAX_MOVES: usize = 256;
 
@@ -811,22 +808,19 @@ pub fn debug_print(pos: &BoardState) -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::board::BoardState;
-    use crate::fen::parse_fen;
-    use crate::move_gen::MoveGenerator;
     use super::*;
+    use crate::bitboard::RANK2;
+    use crate::board::BoardState;
+    use crate::common::chess_move::Move;
     use crate::common::chess_move::MoveType::Quiet;
     use crate::common::square::SquareIndex;
     use crate::common::square::SquareIndex::{
         A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
-        F2, F3, G1, G2, G5, G8, H1, H2, H4,
+        F2, F3, G1, G2, G5, G8, H1, H2, H4, *,
     };
-    use crate::magic::random::{GenerationScheme, MagicRandomizer};
-    use crate::move_gen::king_square;
-    use crate::common::chess_move::Move;
-    use crate::move_gen::gen_pseudo_legal_castles;
-    use crate::bitboard::RANK2;
-    use crate::common::square::SquareIndex::*;
+    use crate::fen::parse_fen;
+    use crate::magic::{GenerationScheme, MagicRandomizer};
+    use crate::move_gen::{gen_pseudo_legal_castles, king_square, MoveGenerator};
 
     #[test]
     #[ignore]

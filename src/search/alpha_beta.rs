@@ -1,16 +1,12 @@
-use super::{eval::MATE_VALUE, search::Searcher};
-use crate::common::chess_move::MoveType;
+use super::eval::MATE_VALUE;
+use super::search::Searcher;
+use crate::board::BoardState;
+use crate::common::chess_move::{Move, MoveType};
+use crate::common::eval_move::EvaledMove;
+use crate::common::stats::Stats;
+use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, INF, NEG_INF};
-use crate::{
-    board::BoardState,
-    common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
-    move_gen::{
-        MoveGenerator, {is_attacked, king_square},
-    },
-    table::{
-        ZobristTable, {Bound, Entry, TranspositionTable},
-    },
-};
+use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 use itertools::Itertools;
 
 pub struct Settings {
@@ -279,10 +275,9 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        fen::parse_fen,
-        search::{alpha_beta::AlphaBeta, search::Searcher},
-    };
+    use crate::fen::parse_fen;
+    use crate::search::alpha_beta::AlphaBeta;
+    use crate::search::search::Searcher;
 
     #[test]
     fn finds_mate_in_one_as_white() {

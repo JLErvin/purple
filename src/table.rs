@@ -1,9 +1,9 @@
-use std::{collections::HashSet, mem};
+use std::collections::HashSet;
+use std::mem;
 
-use crate::{
-    board::BoardState,
-    common::{chess_move::MoveType, eval_move::EvaledMove},
-};
+use crate::board::BoardState;
+use crate::common::chess_move::MoveType;
+use crate::common::eval_move::EvaledMove;
 
 use crate::bitboard::{Bitboard, PieceItr};
 use crate::common::piece::{Color, PieceType};
