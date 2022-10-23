@@ -15,6 +15,17 @@ pub const NEG_INF: isize = -32_001;
 
 const MOBILITY_VALUE: isize = 10;
 
+const PAWN_ARRAY_WHITE: [isize; 64] = [
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, -5, -5, 0, 0, 0,
+    0, 2, 3, 4, 4, 3, 2, 0,
+    0, 4, 6, 10, 10, 6, 4, 0,
+    0, 6, 9, 10, 10, 9, 6, 0,
+    4, 8, 12, 16, 16, 12, 8, 4,
+    5, 10, 15, 20, 20, 15, 10, 5,
+    0, 0, 0, 0, 0, 0, 0, 0,
+];
+
 /// Given a given position, returns an estimated evaluation of the position based on a number of
 /// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
 /// Evaluations are determined to be relative to the active player.
@@ -50,8 +61,22 @@ fn mobility_eval(_pos: &BoardState) -> isize {
 }
 
 #[inline]
-fn pawn_eval(_pos: &BoardState) -> isize {
-    0
+fn pawn_eval(pos: &BoardState) -> isize {
+    let mut our_score: isize = 0;
+    let our_pawns = pos.bb(pos.active_player, PieceType::Pawn);
+
+    for (square, _) in our_pawns.iter() {
+        our_score += PAWN_ARRAY_WHITE[square as usize];
+    }
+
+    let mut their_score: isize = 0;
+    let their_pawns = pos.bb(!pos.active_player, PieceType::Pawn);
+
+    for (square, _) in their_pawns.iter() {
+        their_score += PAWN_ARRAY_WHITE[64 - square as usize];
+    }
+
+    our_score - their_score
 }
 
 #[cfg(test)]
