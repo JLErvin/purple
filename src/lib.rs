@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 //! A simple chess engine and move generator.
 //!
 //! Purple is a high-level API, meaning that many of the finer details are hidden from clients.
@@ -21,7 +23,7 @@
 //! ```
 //!
 
-pub use crate::game::Game;
+pub use crate::game::Game as Game;
 
 mod bitboard;
 mod board;
@@ -34,5 +36,4 @@ mod piece;
 mod search;
 mod square;
 mod table;
-/// Tools for UCI interfacing
 pub mod uci;

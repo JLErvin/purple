@@ -47,7 +47,7 @@ fn update_position(fen: &String) -> BoardState {
     let keyword = v.get(1);
 
     if keyword.is_some() {
-        apply_moves(&mut pos, &v[2..])
+        apply_moves(&mut pos, &v[2..]);
     }
 
     pos
@@ -65,5 +65,5 @@ fn apply_moves(pos: &mut BoardState, moves: &[&str]) {
 fn init_uci() {
     println!("id name Purple");
     println!("id author Joshua L Ervin");
-    println!("uciok")
+    println!("uciok");
 }

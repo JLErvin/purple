@@ -198,7 +198,7 @@ fn validate_magic(magic: u64, searcher: &MagicSearcher, table: &mut [u64]) -> bo
     true
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum GenerationScheme {
     #[allow(dead_code)]
     PseudoRandom, // Used if magic numbers should be calculated on startup

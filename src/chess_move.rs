@@ -54,7 +54,7 @@ fn rank_file_to_algebra(rank: u8, file: u8) -> String {
         _ => "",
     };
     s.push_str(file);
-    s.push_str(&*(rank + 1).to_string());
+    s.push_str(&(rank + 1).to_string());
     s
 }
 

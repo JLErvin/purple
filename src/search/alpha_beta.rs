@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
-use crate::chess_move::{EvaledMove, Move, MoveType};
+use crate::chess_move::{EvaledMove, Move, MoveType, self};
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
@@ -49,7 +49,7 @@ impl Searcher for AlphaBeta {
     /// Performs an iterative deepening search until the specified depth and returns the best move
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         let mut best_move: EvaledMove = EvaledMove::null(0);
-        for i in 0..depth + 1 {
+        for i in 0..=depth {
             //let mut pv = Vec::new();
             if i != 0 {
                 //pv = self.table.pv(pos, &self.zobrist);
@@ -107,10 +107,8 @@ impl AlphaBeta {
             && is_bound_ok(&entry.unwrap(), alpha, beta)
         {
             return entry.unwrap().best_move;
-        } else if entry.is_some() && entry.unwrap().hash == hash {
-            if entry.unwrap().best_move.mv.kind != MoveType::Null {
-                moves.push(entry.unwrap().best_move);
-            }
+        } else if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().best_move.mv.kind != MoveType::Null {
+            moves.push(entry.unwrap().best_move);
         }
         // TT ATTEMPT END
 
@@ -129,7 +127,7 @@ impl AlphaBeta {
             return self.no_move_eval(pos, depth as usize);
         }
 
-        for mv in moves.iter_mut() {
+        for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
             mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
             if mv.eval > alpha {
@@ -181,7 +179,7 @@ impl AlphaBeta {
             self.gen
                 .all_moves(pos)
                 .into_iter()
-                .filter(|mv| mv.is_capture())
+                .filter(chess_move::Move::is_capture)
                 .collect()
         };
 

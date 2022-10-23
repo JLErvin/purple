@@ -69,7 +69,7 @@ impl BoardState {
     }
 
     pub fn clone_with_move(&self, mv: Move) -> BoardState {
-        let mut new_pos = self.clone();
+        let mut new_pos = *self;
         new_pos.make_move(mv);
         new_pos
     }

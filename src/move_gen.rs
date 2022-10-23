@@ -154,11 +154,11 @@ impl Lookup {
     fn init_between(rook_table: &MagicTable, bishop_table: &MagicTable) -> [[Bitboard; 64]; 64] {
         let mut b: [[Bitboard; 64]; 64] = [[0; 64]; 64];
 
-        for piece in vec![MagicPiece::Rook, MagicPiece::Bishop] {
+        for piece in &[MagicPiece::Rook, MagicPiece::Bishop] {
             for (i, j) in (0..64).cartesian_product(0..64) {
                 let bitboard_i = Bitboard::for_square(i);
                 let bitboard_j = Bitboard::for_square(j);
-                let attacks_i = Lookup::attacks(rook_table, bishop_table, i, piece);
+                let attacks_i = Lookup::attacks(rook_table, bishop_table, i, *piece);
 
                 if attacks_i & bitboard_j != 0 {
                     match piece {
@@ -318,7 +318,7 @@ fn is_legal_non_king_move(
 /// which the piece moves to a square but does not capture on that square.
 fn is_legal_en_passant(pos: &BoardState, mv: &Move, lookup: &Lookup, king_square: Square) -> bool {
     let us = pos.active_player;
-    let mut pos = pos.clone();
+    let mut pos = *pos;
 
     let offset: i8 = match us {
         Color::White => 8,
@@ -441,7 +441,7 @@ pub fn calculate_blockers(pos: &BoardState, lookup: &Lookup, king_square: Square
     for (i, _) in snipers.iter() {
         let ignore = lookup.square_bb(i);
         let potential_blockers =
-            ray_between(king_square, i, &lookup) & occupancy & !king_bb & !ignore;
+            ray_between(king_square, i, lookup) & occupancy & !king_bb & !ignore;
 
         if potential_blockers.count_ones() == 1 {
             blockers |= potential_blockers;
@@ -780,7 +780,7 @@ pub fn debug_print(pos: &BoardState) -> String {
             let square = rank_file_to_index(rank, file);
             let piece = pos.type_on(square);
             let mut c;
-            if piece == None {
+            if piece.is_none() {
                 c = '.';
             } else {
                 c = match piece.unwrap() {
