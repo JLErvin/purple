@@ -1,11 +1,12 @@
-use crate::common::bitboard::Bitboard;
 use std::ops::{Index, IndexMut, Not};
 use std::slice::Iter;
+
+use crate::bitboard::Bitboard;
 
 pub const PIECE_COUNT: usize = 6;
 pub const COLOR_COUNT: usize = 2;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum PieceType {
     Pawn,
     Rook,
@@ -15,7 +16,7 @@ pub enum PieceType {
     Queen,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Color {
     Black,
     White,
@@ -76,7 +77,7 @@ impl IndexMut<Color> for [Bitboard; COLOR_COUNT] {
 
 impl Piece {
     pub fn convert_char_to_piece(c: char) -> PieceType {
-        let piece_type = match c.to_ascii_lowercase() {
+        match c.to_ascii_lowercase() {
             'p' => PieceType::Pawn,
             'r' => PieceType::Rook,
             'n' => PieceType::Knight,
@@ -84,15 +85,11 @@ impl Piece {
             'k' => PieceType::King,
             'q' => PieceType::Queen,
             _ => panic!("Cannot convert char to piece, unknown char: {}", c),
-        };
-        piece_type
+        }
     }
 
     pub fn convert_char_to_color(c: char) -> Color {
-        match c.is_lowercase() {
-            true => Color::Black,
-            false => Color::White,
-        }
+        if c.is_lowercase() { Color::Black } else { Color::White }
     }
 }
 

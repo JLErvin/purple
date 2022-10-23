@@ -1,8 +1,6 @@
-use crate::board_state::board::BoardState;
-use crate::board_state::castle::*;
-use crate::board_state::position::*;
-use crate::common::piece::Color;
-use crate::common::square::*;
+use crate::board::{BoardState, Castle, Position};
+use crate::piece::Color;
+use crate::square::{algebraic_to_square, Square};
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
@@ -99,7 +97,7 @@ fn parse_move(fen: &str) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::piece::PieceType;
+    use crate::piece::PieceType;
 
     #[test]
     fn parses_default_board() {
@@ -144,7 +142,7 @@ mod tests {
         );
         assert_eq!(position.bb(Color::Black, PieceType::Queen), 0);
         assert_eq!(position.bb_all(), 775397865320096578);
-        assert_eq!(position.active_player(), Color::White);
+        assert_eq!(position.active_player, Color::White);
     }
 
     #[test]
@@ -158,22 +156,22 @@ mod tests {
     fn parses_active_black() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 b - - 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
-        assert_eq!(position.active_player(), Color::Black);
+        assert_eq!(position.active_player, Color::Black);
     }
 
     #[test]
     fn parses_en_passant() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
-        assert_eq!(position.en_passant().unwrap(), 20);
+        assert_eq!(position.en_passant.unwrap(), 20);
     }
 
     #[test]
     fn parses_move_count() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
         let position = parse_fen(&fen.to_string()).unwrap();
-        assert_eq!(position.half_move(), 0);
-        assert_eq!(position.full_move(), 1);
+        assert_eq!(position.half_move, 0);
+        assert_eq!(position.full_move, 1);
     }
 
     #[test]

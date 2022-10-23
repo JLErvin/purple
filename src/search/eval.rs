@@ -1,6 +1,6 @@
-use crate::board_state::board::BoardState;
-use crate::common::bitboard::PieceItr;
-use crate::common::piece::{Color, PieceType};
+use crate::bitboard::PieceItr;
+use crate::board::BoardState;
+use crate::piece::{Color, PieceType};
 
 const PAWN_VALUE: isize = 100;
 const ROOK_VALUE: isize = 500;
@@ -36,7 +36,7 @@ fn material_eval(pos: &BoardState) -> isize {
 
 #[inline]
 fn piece_difference(pos: &BoardState, piece: PieceType) -> isize {
-    num_pieces(pos, pos.active_player(), piece) - num_pieces(pos, !pos.active_player(), piece)
+    num_pieces(pos, pos.active_player, piece) - num_pieces(pos, !pos.active_player, piece)
 }
 
 #[inline]
@@ -57,7 +57,7 @@ fn pawn_eval(_pos: &BoardState) -> isize {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::board_state::fen::parse_fen;
+    use crate::fen::parse_fen;
 
     #[test]
     fn starting_position_equal_evaluation() {

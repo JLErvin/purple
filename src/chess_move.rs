@@ -1,11 +1,8 @@
-use crate::common::chess_move::MoveType::{
-    BishopPromotion, BishopPromotionCapture, KnightPromotion, KnightPromotionCapture, Null,
-    QueenPromotion, QueenPromotionCapture, RookPromotion, RookPromotionCapture,
-};
-
-use crate::common::piece::PieceType;
-
+use std::cmp::Ordering;
+use std::ops::Neg;
 use std::slice::Iter;
+
+use crate::piece::PieceType;
 
 pub const NORTH: i8 = 8;
 pub const EAST: i8 = 1;
@@ -57,7 +54,7 @@ fn rank_file_to_algebra(rank: u8, file: u8) -> String {
         _ => "",
     };
     s.push_str(file);
-    s.push_str(&*(rank + 1).to_string());
+    s.push_str(&(rank + 1).to_string());
     s
 }
 
@@ -66,7 +63,7 @@ impl Move {
         Move {
             to: 0,
             from: 0,
-            kind: Null,
+            kind: MoveType::Null,
         }
     }
 
@@ -99,17 +96,17 @@ impl Move {
     }
 
     pub fn is_promotion_capture(&self) -> bool {
-        self.kind == KnightPromotionCapture
-            || self.kind == BishopPromotionCapture
-            || self.kind == RookPromotionCapture
-            || self.kind == QueenPromotionCapture
+        self.kind == MoveType::KnightPromotionCapture
+            || self.kind == MoveType::BishopPromotionCapture
+            || self.kind == MoveType::RookPromotionCapture
+            || self.kind == MoveType::QueenPromotionCapture
     }
 
     pub fn is_promotion(&self) -> bool {
-        self.kind == KnightPromotion
-            || self.kind == BishopPromotion
-            || self.kind == RookPromotion
-            || self.kind == QueenPromotion
+        self.kind == MoveType::KnightPromotion
+            || self.kind == MoveType::BishopPromotion
+            || self.kind == MoveType::RookPromotion
+            || self.kind == MoveType::QueenPromotion
     }
 
     pub fn is_castle(&self) -> bool {
@@ -150,30 +147,74 @@ impl MoveType {
 
     pub fn promotion_itr() -> Iter<'static, MoveType> {
         static PROMOTIONS: [MoveType; 4] = [
-            KnightPromotion,
-            BishopPromotion,
-            RookPromotion,
-            QueenPromotion,
+            MoveType::KnightPromotion,
+            MoveType::BishopPromotion,
+            MoveType::RookPromotion,
+            MoveType::QueenPromotion,
         ];
         PROMOTIONS.iter()
     }
 
     pub fn promotion_capture_itr() -> Iter<'static, MoveType> {
         static PROMOTIONS: [MoveType; 4] = [
-            KnightPromotionCapture,
-            BishopPromotionCapture,
-            RookPromotionCapture,
-            QueenPromotionCapture,
+            MoveType::KnightPromotionCapture,
+            MoveType::BishopPromotionCapture,
+            MoveType::RookPromotionCapture,
+            MoveType::QueenPromotionCapture,
         ];
         PROMOTIONS.iter()
     }
 }
 
+#[derive(Eq, Copy, Clone, Debug)]
+pub struct EvaledMove {
+    pub mv: Move,
+    pub eval: isize,
+}
+
+impl EvaledMove {
+    pub fn null(eval: isize) -> EvaledMove {
+        EvaledMove {
+            mv: Move::null(),
+            eval,
+        }
+    }
+}
+
+impl Ord for EvaledMove {
+    fn cmp(&self, other: &EvaledMove) -> Ordering {
+        self.eval.cmp(&other.eval)
+    }
+}
+
+impl PartialOrd for EvaledMove {
+    fn partial_cmp(&self, other: &EvaledMove) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for EvaledMove {
+    fn eq(&self, other: &EvaledMove) -> bool {
+        self.eval == other.eval
+    }
+}
+
+impl Neg for EvaledMove {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let mut new = self;
+        new.mv = self.mv;
+        new.eval = self.eval.wrapping_neg();
+        new
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use crate::common::chess_move::Move;
-    use crate::common::chess_move::MoveType::Quiet;
-    use crate::common::square::SquareIndex::{A2, A3};
+    use crate::chess_move::Move;
+    use crate::chess_move::MoveType::Quiet;
+    use crate::square::SquareIndex::{A2, A3};
 
     #[test]
     fn basic_move_to_long_algebra() {
@@ -184,5 +225,49 @@ mod test {
         };
         let s = m.to_algebraic();
         assert_eq!(s, "a2a3");
+    }
+
+    use std::cmp::{max, min};
+
+    use crate::chess_move::EvaledMove;
+
+    #[test]
+    fn equal_for_same_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(1);
+        assert_eq!(mv1, mv2);
+    }
+
+    #[test]
+    fn not_equal_for_different_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(2);
+        assert_ne!(mv1, mv2);
+    }
+
+    #[test]
+    fn cmp_for_different_eval() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(2);
+        assert!(mv1 < mv2);
+    }
+
+    #[test]
+    fn cmp_for_different_eval_neg() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(-2);
+        assert!(mv1 > mv2);
+    }
+
+    #[test]
+    fn min_max_work() {
+        let mv1 = EvaledMove::null(1);
+        let mv2 = EvaledMove::null(-2);
+
+        let max = max(mv1, mv2);
+        assert_eq!(max.eval, 1);
+
+        let min = min(mv1, mv2);
+        assert_eq!(min.eval, -2);
     }
 }

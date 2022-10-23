@@ -1,5 +1,5 @@
-use crate::common::chess_move::{EAST, NORTH, SOUTH, WEST};
-use crate::common::square::*;
+use crate::chess_move::{EAST, NORTH, SOUTH, WEST};
+use crate::square::{Square, rank_file_to_index};
 
 pub type Bitboard = u64;
 
@@ -12,7 +12,7 @@ pub const RANK6: Bitboard = RANK1 << (8 * 5);
 pub const RANK7: Bitboard = RANK1 << (8 * 6);
 pub const RANK8: Bitboard = RANK1 << (8 * 7);
 
-pub const FILEA: Bitboard = 0b_100000001000000010000000100000001000000010000000100000001_u64;
+pub const FILEA: Bitboard = 0b1_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_u64;
 pub const FILEB: Bitboard = FILEA << 1;
 pub const FILEC: Bitboard = FILEA << 2;
 pub const FILED: Bitboard = FILEA << 3;
@@ -157,7 +157,7 @@ impl New for Bitboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::chess_move::{NORTH, WEST};
+    use crate::chess_move::{NORTH, WEST};
 
     #[test]
     fn adds_piece_eight_rank() {

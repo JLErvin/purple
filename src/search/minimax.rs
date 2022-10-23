@@ -1,14 +1,11 @@
-use crate::common::eval_move::EvaledMove;
-
-use crate::common::stats::Stats;
-use crate::move_gen::generator::MoveGenerator;
-use crate::move_gen::util::{is_attacked, king_square};
-use crate::search::eval::{eval, MATE_VALUE};
 use itertools::Itertools;
 
-use crate::board_state::board::BoardState;
-use crate::common::chess_move::Move;
+use crate::board::BoardState;
+use crate::chess_move::{EvaledMove, Move};
+use crate::move_gen::{is_attacked, king_square, MoveGenerator};
+use crate::search::eval::{eval, MATE_VALUE};
 use crate::search::search::Searcher;
+use crate::search::stats::Stats;
 
 pub struct MinimaxSearcher {
     gen: MoveGenerator,
@@ -82,10 +79,9 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        board_state::fen::parse_fen,
-        search::{minimax::MinimaxSearcher, search::Searcher},
-    };
+    use crate::fen::parse_fen;
+    use crate::search::minimax::MinimaxSearcher;
+    use crate::search::search::Searcher;
 
     #[test]
     fn finds_mate_in_one_as_white() {

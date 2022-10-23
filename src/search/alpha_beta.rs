@@ -1,19 +1,13 @@
-use super::{eval::MATE_VALUE, search::Searcher};
-use crate::common::chess_move::MoveType;
-use crate::search::eval::{eval, INF, NEG_INF};
-use crate::{
-    board_state::board::BoardState,
-    common::{chess_move::Move, eval_move::EvaledMove, stats::Stats},
-    move_gen::{
-        generator::MoveGenerator,
-        util::{is_attacked, king_square},
-    },
-    table::{
-        transposition::{Bound, Entry, TranspositionTable},
-        zobrist::ZobristTable,
-    },
-};
 use itertools::Itertools;
+
+use super::eval::MATE_VALUE;
+use super::search::Searcher;
+use crate::board::BoardState;
+use crate::chess_move::{EvaledMove, Move, MoveType, self};
+use crate::move_gen::{is_attacked, king_square, MoveGenerator};
+use crate::search::eval::{eval, INF, NEG_INF};
+use crate::search::stats::Stats;
+use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 
 pub struct Settings {
     use_table: bool,
@@ -31,7 +25,7 @@ impl Searcher for AlphaBeta {
     fn new() -> Self {
         let gen = MoveGenerator::new();
         let stats = Stats::new();
-        let zobrist = crate::table::zobrist::ZobristTable::init();
+        let zobrist = ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
         let settings = Settings { use_table: true };
         AlphaBeta {
@@ -55,7 +49,7 @@ impl Searcher for AlphaBeta {
     /// Performs an iterative deepening search until the specified depth and returns the best move
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         let mut best_move: EvaledMove = EvaledMove::null(0);
-        for i in 0..depth + 1 {
+        for i in 0..=depth {
             //let mut pv = Vec::new();
             if i != 0 {
                 //pv = self.table.pv(pos, &self.zobrist);
@@ -107,12 +101,14 @@ impl AlphaBeta {
         // TT ATTEMPT
         let hash = self.zobrist.hash(pos);
         let entry = self.table.get(hash);
-        if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().depth >= depth && is_bound_ok(&entry.unwrap(), alpha, beta) {
+        if entry.is_some()
+            && entry.unwrap().hash == hash
+            && entry.unwrap().depth >= depth
+            && is_bound_ok(&entry.unwrap(), alpha, beta)
+        {
             return entry.unwrap().best_move;
-        } else if entry.is_some() && entry.unwrap().hash == hash {
-            if entry.unwrap().best_move.mv.kind != MoveType::Null {
-                moves.push(entry.unwrap().best_move);
-            }
+        } else if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().best_move.mv.kind != MoveType::Null {
+            moves.push(entry.unwrap().best_move);
         }
         // TT ATTEMPT END
 
@@ -131,7 +127,7 @@ impl AlphaBeta {
             return self.no_move_eval(pos, depth as usize);
         }
 
-        for mv in moves.iter_mut() {
+        for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
             mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
             if mv.eval > alpha {
@@ -183,7 +179,7 @@ impl AlphaBeta {
             self.gen
                 .all_moves(pos)
                 .into_iter()
-                .filter(|mv| mv.is_capture())
+                .filter(chess_move::Move::is_capture)
                 .collect()
         };
 
@@ -262,6 +258,7 @@ impl AlphaBeta {
     }
 
     /// Set whether or not the searcher should use a transposition table to lookup previous evaluations.
+    #[allow(dead_code)]
     pub fn use_table(&mut self, setting: bool) {
         self.settings.use_table = setting;
     }
@@ -277,10 +274,9 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        board_state::fen::parse_fen,
-        search::{alpha_beta::AlphaBeta, search::Searcher},
-    };
+    use crate::fen::parse_fen;
+    use crate::search::alpha_beta::AlphaBeta;
+    use crate::search::search::Searcher;
 
     #[test]
     fn finds_mate_in_one_as_white() {

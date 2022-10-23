@@ -1,8 +1,6 @@
-use crate::board_state::board::BoardState;
-
-use crate::common::eval_move::EvaledMove;
-
-use crate::common::stats::Stats;
+use crate::board::BoardState;
+use crate::chess_move::EvaledMove;
+use crate::search::stats::Stats;
 
 pub trait Searcher {
     fn new() -> Self;

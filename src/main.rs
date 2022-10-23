@@ -1,9 +1,22 @@
-use purple::{self, Game};
+#![warn(clippy::pedantic)]
 
 use clap::*;
 use itertools::Itertools;
+use purple::{self, Game};
 
-use purple::uci::interface::uci_loop;
+use crate::uci::uci_loop;
+
+mod bitboard;
+mod board;
+mod chess_move;
+mod fen;
+mod magic;
+mod move_gen;
+mod piece;
+mod search;
+mod square;
+mod table;
+mod uci;
 
 fn main() {
     let matches = App::new("purple")
