@@ -3,7 +3,7 @@ use itertools::Itertools;
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
-use crate::chess_move::{EvaledMove, Move, MoveType, self};
+use crate::chess_move::{self, EvaledMove, Move, MoveType};
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
@@ -50,13 +50,12 @@ impl Searcher for AlphaBeta {
     fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         let mut best_move: EvaledMove = EvaledMove::null(0);
         for i in 0..=depth {
-            //let mut pv = Vec::new();
-            if i != 0 {
-                //pv = self.table.pv(pos, &self.zobrist);
-            }
-            //println!("{:?}", pv);
             best_move = self.alpha_beta(pos, NEG_INF, INF, i as u8);
         }
+        //let mut pv = Vec::new();
+        //pv = self.table.pv(pos, &self.zobrist);
+        //println!("PV: {:?}", pv);
+
         best_move
     }
 }
@@ -107,7 +106,10 @@ impl AlphaBeta {
             && is_bound_ok(&entry.unwrap(), alpha, beta)
         {
             return entry.unwrap().best_move;
-        } else if entry.is_some() && entry.unwrap().hash == hash && entry.unwrap().best_move.mv.kind != MoveType::Null {
+        } else if entry.is_some()
+            && entry.unwrap().hash == hash
+            && entry.unwrap().best_move.mv.kind != MoveType::Null
+        {
             moves.push(entry.unwrap().best_move);
         }
         // TT ATTEMPT END

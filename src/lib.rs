@@ -23,7 +23,7 @@
 //! ```
 //!
 
-pub use crate::game::Game as Game;
+pub use crate::game::Game;
 
 mod bitboard;
 mod board;

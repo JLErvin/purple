@@ -89,7 +89,11 @@ impl Piece {
     }
 
     pub fn convert_char_to_color(c: char) -> Color {
-        if c.is_lowercase() { Color::Black } else { Color::White }
+        if c.is_lowercase() {
+            Color::Black
+        } else {
+            Color::White
+        }
     }
 }
 
