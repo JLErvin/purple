@@ -1,16 +1,21 @@
+use std::time::Instant;
+
 use itertools::Itertools;
+use rayon::slice::ParallelSliceMut;
 
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
 use crate::chess_move::{self, EvaledMove, Move, MoveType};
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
+use crate::piece::PieceType;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 
 pub struct Settings {
     use_table: bool,
+    move_time: Option<u64>,
 }
 
 pub struct AlphaBeta {
@@ -19,6 +24,7 @@ pub struct AlphaBeta {
     zobrist: ZobristTable,
     table: TranspositionTable,
     settings: Settings,
+    start_time: Instant,
 }
 
 impl Searcher for AlphaBeta {
@@ -27,13 +33,18 @@ impl Searcher for AlphaBeta {
         let stats = Stats::new();
         let zobrist = ZobristTable::init();
         let table = TranspositionTable::new_mb(50);
-        let settings = Settings { use_table: true };
+        let settings = Settings {
+            use_table: true,
+            move_time: None,
+        };
+        let start_time = Instant::now();
         AlphaBeta {
             gen,
             stats,
             zobrist,
             table,
             settings,
+            start_time,
         }
     }
 
@@ -47,16 +58,37 @@ impl Searcher for AlphaBeta {
     }
 
     /// Performs an iterative deepening search until the specified depth and returns the best move
-    fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
+    fn best_move_depth(&mut self, pos: &mut BoardState, deth: usize) -> EvaledMove {
+        self.start_time = Instant::now();
+
         let mut best_move: EvaledMove = EvaledMove::null(0);
-        for i in 0..=depth {
-            best_move = self.alpha_beta(pos, NEG_INF, INF, i as u8);
+        let mut i = 0;
+        //for i in 0..=depth {
+        loop {
+            let now = Instant::now();
+            let elapsed = now.duration_since(self.start_time).as_secs();
+            if elapsed > self.settings.move_time.unwrap() as u64 {
+                break;
+            }
+
+            let next = self.alpha_beta(pos, NEG_INF, INF, i as u8);
+            if next.is_none() {
+                break;
+            }
+            best_move = next.unwrap();
+            i += 1;
+            println!("depth: {}, nodes: {}", i, self.stats.nodes);
+            self.stats.reset();
         }
         //let mut pv = Vec::new();
         //pv = self.table.pv(pos, &self.zobrist);
         //println!("PV: {:?}", pv);
 
         best_move
+    }
+
+    fn move_time(&mut self, seconds: u64) {
+        self.settings.move_time = Some(seconds);
     }
 }
 
@@ -89,55 +121,70 @@ impl AlphaBeta {
         mut alpha: isize,
         beta: isize,
         depth: u8,
-    ) -> EvaledMove {
-        if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
-            return e;
+    ) -> Option<EvaledMove> {
+        // If time has expired, ignore this search request
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.start_time).as_secs();
+        if elapsed > self.settings.move_time.unwrap() as u64 {
+            return None;
         }
+
+        if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
+            self.stats.count_node();
+            return Some(e);
+        }
+
         let prev_alpha = alpha;
         let mut best_move = EvaledMove::null(alpha);
         let mut moves = Vec::<EvaledMove>::new();
 
-        // TT ATTEMPT
         let hash = self.zobrist.hash(pos);
-        let entry = self.table.get(hash);
-        if entry.is_some()
-            && entry.unwrap().hash == hash
-            && entry.unwrap().depth >= depth
-            && is_bound_ok(&entry.unwrap(), alpha, beta)
-        {
-            return entry.unwrap().best_move;
-        } else if entry.is_some()
-            && entry.unwrap().hash == hash
-            && entry.unwrap().best_move.mv.kind != MoveType::Null
-        {
-            moves.push(entry.unwrap().best_move);
+        if let Some(e) = self.table.get(hash) {
+            if e.hash == hash && e.depth >= depth && is_bound_ok(&e, alpha, beta) {
+                self.stats.count_node();
+                return Some(e.best_move)
+            }
+
+            if e.hash == hash && e.best_move.mv.kind != MoveType::Null {
+                moves.push(e.best_move);
+            }
         }
-        // TT ATTEMPT END
 
         if depth == 0 {
             self.stats.count_node();
             let s = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             let bound = leaf_bound(s, alpha, beta);
             self.save(pos, s, bound, depth);
-            return s;
+            self.stats.count_node();
+            return Some(s);
         }
 
-        moves.append(&mut evaled_moves(self.gen.all_moves(pos)));
+        let mut gen = evaled_moves(self.gen.all_moves(pos));
+        sort_moves(&mut gen, pos);
+        moves.append(&mut gen);
+        //let mut new = sort_moves(&mut gen, pos);
+        //moves.append(&mut new);
 
         if moves.is_empty() {
             self.stats.count_node();
-            return self.no_move_eval(pos, depth as usize);
+            return Some(self.no_move_eval(pos, depth as usize));
         }
 
         for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            mv.eval = -self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1).eval;
+            let next = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1);
+            if next.is_none() {
+                return next;
+            }
+
+            mv.eval = -next.unwrap().eval;
             if mv.eval > alpha {
                 alpha = mv.eval;
                 best_move = *mv;
                 if alpha >= beta {
                     self.save(pos, *mv, Bound::Lower, depth);
-                    return best_move;
+                    self.stats.count_node();
+                    return Some(best_move);
                 }
             }
         }
@@ -149,7 +196,8 @@ impl AlphaBeta {
         };
         self.save(pos, best_move, bound, depth);
 
-        best_move
+        self.stats.count_node();
+        Some(best_move)
     }
 
     /// Perform a Quiescence search, which evaluates up to a certain provided maximum depth
@@ -162,6 +210,11 @@ impl AlphaBeta {
         depth: usize,
     ) -> isize {
         let eval = eval(pos);
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.start_time).as_secs();
+        if elapsed > self.settings.move_time.unwrap() as u64 {
+            return eval;
+        }
 
         if depth == 0 {
             return eval;
@@ -184,6 +237,7 @@ impl AlphaBeta {
                 .filter(chess_move::Move::is_capture)
                 .collect()
         };
+        //sort_moves_2(&mut moves, pos);
 
         if moves.is_empty() && is_attacked {
             return self.no_move_eval(pos, depth).eval;
@@ -274,11 +328,128 @@ fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
         .collect_vec()
 }
 
+pub const MVV_LVA: [[isize; 6]; 6] = [
+    [0, 0, 0, 0, 0, 0],       // victim K, attacker K, Q, R, B, N, P, None
+    [50, 51, 52, 53, 54, 55], // victim Q, attacker K, Q, R, B, N, P, None
+    [40, 41, 42, 43, 44, 45], // victim R, attacker K, Q, R, B, N, P, None
+    [30, 31, 32, 33, 34, 35], // victim B, attacker K, Q, R, B, N, P, None
+    [20, 21, 22, 23, 24, 25], // victim N, attacker K, Q, R, B, N, P, None
+    [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
+];
+
+/* 
+fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
+    moves.par_sort_unstable_by_key(|mv| {
+        let maybe_capturing_piece = pos.type_on(mv.from).unwrap();
+        if mv.is_en_passant_capture() {
+            return 0;
+        }
+
+        if mv.is_capture() {
+            let captured_piece = pos.type_on(mv.to).unwrap();
+            return MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
+        }
+        0
+    });
+}
+*/
+
+fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
+    moves.par_sort_unstable_by_key(|mv| {
+        let maybe_capturing_piece = pos.type_on(mv.from).unwrap();
+        if mv.is_en_passant_capture() {
+            return 0;
+        }
+
+        if mv.is_capture() {
+            let captured_piece = pos.type_on(mv.to).unwrap();
+            return -MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
+        } 
+
+        0
+    });
+}
+
+fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
+    moves.par_sort_unstable_by_key(|mv| {
+        if !mv.mv.is_capture() {
+            return 0;
+        }
+
+        if mv.mv.kind == MoveType::EnPassantCapture {
+            return 1;
+        }
+
+        let capturing_piece = pos.type_on(mv.mv.from).unwrap();
+        let captured_piece = pos.type_on(mv.mv.to).unwrap();
+
+        // If we are capturing a more valuable piece, return a very negative number
+        return if captured_piece.value() > capturing_piece.value() {
+            capturing_piece.value() - captured_piece.value() - 100
+        } else {
+           captured_piece.value() - capturing_piece.value() - 50
+        }
+    });
+    /*
+    moves.par_sort_unstable_by_key(|mv| {
+        let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
+        if mv.mv.is_en_passant_capture() {
+            return 0;
+        }
+
+        if mv.mv.is_capture() {
+            let captured_piece = pos.type_on(mv.mv.to).unwrap();
+            return -MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
+        } 
+
+        0
+    });
+    */
+}
+
+pub struct WeightedMove {
+    pub mv: EvaledMove,
+    pub weight: isize,
+}
+
+#[inline]
+fn weighted_moves(moves: &[EvaledMove], pos: &BoardState) -> Vec<WeightedMove> {
+    moves
+        .iter()
+        .map(|mv: &EvaledMove| {
+            let weight = match mv.mv.kind {
+                MoveType::Capture => {
+                    let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
+                    let captured_piece = pos.type_on(mv.mv.to).unwrap();
+
+                    if mv.mv.is_en_passant_capture() {
+                        0
+                    } else {
+                        MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()]
+                    }
+                },
+                _ => 0
+            };
+
+            WeightedMove {
+                mv: *mv,
+                weight
+            }
+        })
+        .collect_vec()
+}
+
+
 #[cfg(test)]
 mod test {
-    use crate::fen::parse_fen;
+    use crate::square::SquareIndex::{
+        C5,
+    };
+    use crate::{fen::parse_fen, chess_move::MoveType};
     use crate::search::alpha_beta::AlphaBeta;
     use crate::search::search::Searcher;
+
+    use super::{evaled_moves, sort_moves};
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -376,5 +547,44 @@ mod test {
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
         assert_ne!(mv.mv.to, 17)
+    }
+
+    #[test]
+    fn sorts_captures_over_non_captures() {
+        // Any piece can capture the opposing queen
+        let pos = parse_fen(
+            &"7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1".to_string(),
+        )
+        .unwrap();
+
+        let searcher: AlphaBeta = Searcher::new();
+        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        println!("{:?}", moves);
+        println!();
+        sort_moves(&mut moves, &pos);
+        println!("{:?}", moves);
+
+        let top_move = moves[0];
+        assert_eq!(top_move.mv.kind, MoveType::Capture);
+    }
+
+    #[test]
+    fn sorts_better_captures_over_other_captures() {
+        // Rook can take either pawn or queen
+        let pos = parse_fen(
+            &"4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1".to_string(),
+        )
+        .unwrap();
+
+        let searcher: AlphaBeta = Searcher::new();
+        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        println!("{:?}", moves);
+        println!();
+        sort_moves(&mut moves, &pos);
+        println!("{:?}", moves);
+
+        let top_move = moves[0];
+        assert_eq!(top_move.mv.kind, MoveType::Capture);
+        assert_eq!(top_move.mv.to, C5 as u8);
     }
 }

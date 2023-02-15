@@ -20,15 +20,18 @@ pub fn uci_loop() {
             "quit" => break,
             "uci" => init_uci(),
             "position" => pos = update_position(&key[1..].join(" ")),
-            "go" => go(&mut pos, &mut searcher),
+            "go" => go(&mut pos, &mut searcher, &key),
             "isready" => println!("readyok"),
             "ucinewgame" => pos = update_position(&"startpos".to_string()),
+            //"movetime" => searcher.move_time(key[1].parse::<u8>().unwrap()),
             _ => println!("Command not understood"),
         }
     }
 }
 
-fn go(pos: &mut BoardState, searcher: &mut AlphaBeta) {
+fn go(pos: &mut BoardState, searcher: &mut AlphaBeta, data: &[&str]) {
+    let movetime = data[2].parse::<u64>().unwrap();
+    searcher.move_time((movetime / 1000));
     let mv = searcher.best_move_depth(pos, 7);
     println!("eval: {}", mv.eval);
     println!("static eval: {}", eval(pos));
