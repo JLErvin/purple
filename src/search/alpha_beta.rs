@@ -142,7 +142,7 @@ impl AlphaBeta {
         if let Some(e) = self.table.get(hash) {
             if e.hash == hash && e.depth >= depth && is_bound_ok(&e, alpha, beta) {
                 self.stats.count_node();
-                return Some(e.best_move)
+                return Some(e.best_move);
             }
 
             if e.hash == hash && e.best_move.mv.kind != MoveType::Null {
@@ -337,7 +337,7 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
     [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
 ];
 
-/* 
+/*
 fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
     moves.par_sort_unstable_by_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.from).unwrap();
@@ -364,13 +364,14 @@ fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
         if mv.is_capture() {
             let captured_piece = pos.type_on(mv.to).unwrap();
             return -MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
-        } 
+        }
 
         0
     });
 }
 
 fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
+    /*
     moves.par_sort_unstable_by_key(|mv| {
         if !mv.mv.is_capture() {
             return 0;
@@ -390,8 +391,8 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
            captured_piece.value() - capturing_piece.value() - 50
         }
     });
-    /*
-    moves.par_sort_unstable_by_key(|mv| {
+    */
+    moves.sort_by_cached_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
             return 0;
@@ -399,12 +400,11 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
 
         if mv.mv.is_capture() {
             let captured_piece = pos.type_on(mv.mv.to).unwrap();
-            return -MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
-        } 
+            return MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()] - 100;
+        }
 
         0
     });
-    */
 }
 
 pub struct WeightedMove {
@@ -427,29 +427,23 @@ fn weighted_moves(moves: &[EvaledMove], pos: &BoardState) -> Vec<WeightedMove> {
                     } else {
                         MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()]
                     }
-                },
-                _ => 0
+                }
+                _ => 0,
             };
 
-            WeightedMove {
-                mv: *mv,
-                weight
-            }
+            WeightedMove { mv: *mv, weight }
         })
         .collect_vec()
 }
 
-
 #[cfg(test)]
 mod test {
-    use crate::square::SquareIndex::{
-        C5,
-    };
-    use crate::{fen::parse_fen, chess_move::MoveType};
+    use super::{evaled_moves, sort_moves};
+    use crate::chess_move::MoveType;
+    use crate::fen::parse_fen;
     use crate::search::alpha_beta::AlphaBeta;
     use crate::search::search::Searcher;
-
-    use super::{evaled_moves, sort_moves};
+    use crate::square::SquareIndex::C5;
 
     #[test]
     fn finds_mate_in_one_as_white() {
@@ -552,10 +546,7 @@ mod test {
     #[test]
     fn sorts_captures_over_non_captures() {
         // Any piece can capture the opposing queen
-        let pos = parse_fen(
-            &"7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1".to_string(),
-        )
-        .unwrap();
+        let pos = parse_fen(&"7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1".to_string()).unwrap();
 
         let searcher: AlphaBeta = Searcher::new();
         let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
@@ -571,10 +562,7 @@ mod test {
     #[test]
     fn sorts_better_captures_over_other_captures() {
         // Rook can take either pawn or queen
-        let pos = parse_fen(
-            &"4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1".to_string(),
-        )
-        .unwrap();
+        let pos = parse_fen(&"4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1".to_string()).unwrap();
 
         let searcher: AlphaBeta = Searcher::new();
         let mut moves = evaled_moves(searcher.gen.all_moves(&pos));

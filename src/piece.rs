@@ -95,7 +95,6 @@ impl Piece {
             Color::White
         }
     }
-
 }
 
 impl PieceType {
@@ -123,7 +122,7 @@ impl PieceType {
 
     pub fn idx(&self) -> usize {
         match self {
-            PieceType::Pawn =>5,
+            PieceType::Pawn => 5,
             PieceType::Rook => 2,
             PieceType::Knight => 4,
             PieceType::Bishop => 3,
