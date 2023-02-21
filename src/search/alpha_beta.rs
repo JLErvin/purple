@@ -371,7 +371,6 @@ fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
 }
 
 fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
-    /*
     moves.par_sort_unstable_by_key(|mv| {
         if !mv.mv.is_capture() {
             return 0;
@@ -391,7 +390,7 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
            captured_piece.value() - capturing_piece.value() - 50
         }
     });
-    */
+    /*
     moves.sort_by_cached_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
@@ -405,6 +404,7 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
 
         0
     });
+    */
 }
 
 pub struct WeightedMove {
