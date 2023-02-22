@@ -138,7 +138,6 @@ impl AlphaBeta {
         }
 
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
-            self.stats.count_node();
             return Some(e);
         }
 
@@ -149,7 +148,6 @@ impl AlphaBeta {
         let hash = self.zobrist.hash(pos);
         if let Some(e) = self.table.get(hash) {
             if e.hash == hash && e.depth >= depth && is_bound_ok(&e, alpha, beta) {
-                self.stats.count_node();
                 return Some(e.best_move);
             }
 
@@ -159,11 +157,9 @@ impl AlphaBeta {
         }
 
         if depth == 0 {
-            self.stats.count_node();
             let s = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             let bound = leaf_bound(s, alpha, beta);
             self.save(pos, s, bound, depth);
-            self.stats.count_node();
             return Some(s);
         }
 
@@ -172,13 +168,13 @@ impl AlphaBeta {
         moves.append(&mut gen);
 
         if moves.is_empty() {
-            self.stats.count_node();
             return Some(self.no_move_eval(pos, depth as usize));
         }
 
         for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
             let next = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1);
+            self.stats.count_node();
             if next.is_none() {
                 return next;
             }
@@ -189,7 +185,6 @@ impl AlphaBeta {
                 best_move = *mv;
                 if alpha >= beta {
                     self.save(pos, *mv, Bound::Lower, depth);
-                    self.stats.count_node();
                     self.cutoff += 1;
                     return Some(best_move);
                 }
@@ -203,7 +198,6 @@ impl AlphaBeta {
         };
         self.save(pos, best_move, bound, depth);
 
-        self.stats.count_node();
         Some(best_move)
     }
 

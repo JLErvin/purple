@@ -31,8 +31,8 @@ pub fn uci_loop() {
 
 fn go(pos: &mut BoardState, searcher: &mut AlphaBeta, data: &[&str]) {
     let movetime = data[2].parse::<u64>().unwrap();
-    searcher.move_time((movetime / 1000));
-    let mv = searcher.best_move_depth(pos, 7);
+    searcher.move_time(movetime / 1000);
+    let mv = searcher.best_move_depth(pos, 15);
     println!("eval: {}", mv.eval);
     println!("static eval: {}", eval(pos));
     println!("bestmove {}", mv.mv.to_algebraic());
