@@ -1,5 +1,5 @@
 use crate::chess_move::{EAST, NORTH, SOUTH, WEST};
-use crate::square::{Square, rank_file_to_index};
+use crate::square::{rank_file_to_index, Square};
 
 pub type Bitboard = u64;
 
@@ -12,7 +12,8 @@ pub const RANK6: Bitboard = RANK1 << (8 * 5);
 pub const RANK7: Bitboard = RANK1 << (8 * 6);
 pub const RANK8: Bitboard = RANK1 << (8 * 7);
 
-pub const FILEA: Bitboard = 0b1_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_u64;
+pub const FILEA: Bitboard =
+    0b1_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_0000_0001_u64;
 pub const FILEB: Bitboard = FILEA << 1;
 pub const FILEC: Bitboard = FILEA << 2;
 pub const FILED: Bitboard = FILEA << 3;

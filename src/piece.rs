@@ -89,7 +89,11 @@ impl Piece {
     }
 
     pub fn convert_char_to_color(c: char) -> Color {
-        if c.is_lowercase() { Color::Black } else { Color::White }
+        if c.is_lowercase() {
+            Color::Black
+        } else {
+            Color::White
+        }
     }
 }
 
@@ -104,6 +108,27 @@ impl PieceType {
             PieceType::Queen,
         ];
         PIECES.iter()
+    }
+
+    pub fn value(&self) -> i64 {
+        match self {
+            PieceType::Pawn => 1,
+            PieceType::Rook => 5,
+            PieceType::Knight | &PieceType::Bishop => 3,
+            PieceType::King => 0,
+            PieceType::Queen => 8,
+        }
+    }
+
+    pub fn idx(&self) -> usize {
+        match self {
+            PieceType::Pawn => 5,
+            PieceType::Rook => 2,
+            PieceType::Knight => 4,
+            PieceType::Bishop => 3,
+            PieceType::King => 0,
+            PieceType::Queen => 1,
+        }
     }
 }
 

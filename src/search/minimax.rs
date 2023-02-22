@@ -32,6 +32,8 @@ impl Searcher for MinimaxSearcher {
         self.stats.reset();
         self.minimax(pos, depth)
     }
+
+    fn move_time(&mut self, seconds: u64) {}
 }
 
 impl MinimaxSearcher {

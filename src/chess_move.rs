@@ -109,6 +109,10 @@ impl Move {
             || self.kind == MoveType::QueenPromotion
     }
 
+    pub fn is_en_passant_capture(&self) -> bool {
+        self.kind == MoveType::EnPassantCapture
+    }
+
     pub fn is_castle(&self) -> bool {
         self.kind == MoveType::CastleKing || self.kind == MoveType::CastleQueen
     }
