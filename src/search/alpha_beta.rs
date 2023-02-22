@@ -68,10 +68,12 @@ impl Searcher for AlphaBeta {
         let mut best_move: EvaledMove = EvaledMove::null(0);
         let mut j = 0;
         for i in 0..=depth {
-        //loop {
+            //loop {
             let now = Instant::now();
             let elapsed = now.duration_since(self.start_time).as_secs();
-            if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
+            if self.settings.move_time.is_some()
+                && elapsed > self.settings.move_time.unwrap() as u64
+            {
                 break;
             }
 
