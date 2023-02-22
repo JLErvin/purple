@@ -56,12 +56,14 @@ const WHITE_KING_OPENING: [isize; 64] = [
 /// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
 /// Evaluations are determined to be relative to the active player.
 pub fn eval(pos: &BoardState) -> isize {
-    material_eval(pos) + mobility_eval(pos) + pawn_eval(pos)
-    + rook_eval(pos)
-    + knight_eval(pos)
-    + bishop_eval(pos)
-    + queen_eval(pos)
-    + king_eval(pos)
+    material_eval(pos)
+        + mobility_eval(pos)
+        + pawn_eval(pos)
+        + rook_eval(pos)
+        + knight_eval(pos)
+        + bishop_eval(pos)
+        + queen_eval(pos)
+        + king_eval(pos)
 }
 
 #[inline]
@@ -225,10 +227,9 @@ mod test {
 
     #[test]
     fn random_eval_1() {
-        let pos =
-            parse_fen("2b2R2/5pp1/3kPp2/2q5/Qr2PR2/8/Kp3P2/6N1 w - - 0 1").unwrap();
+        let pos = parse_fen("2b2R2/5pp1/3kPp2/2q5/Qr2PR2/8/Kp3P2/6N1 w - - 0 1").unwrap();
         let eval = eval(&pos);
-        //assert_!(eval > 400);
+        assert!(eval < 400);
     }
 
     #[test]
@@ -236,11 +237,9 @@ mod test {
         // Since the evaluation function is relative to the current player, flipping the player to move should give
         // the same evaluation in a symmetrical position
         let white_to_move_pos =
-            parse_fen("2bqkbnr/pppppppp/4r3/3N4/3n4/4R3/PPPPPPPP/2BQKBNR w Kk - 0 1")
-                .unwrap();
+            parse_fen("2bqkbnr/pppppppp/4r3/3N4/3n4/4R3/PPPPPPPP/2BQKBNR w Kk - 0 1").unwrap();
         let black_to_move_pos =
-            parse_fen("2bqkbnr/pppppppp/4r3/3N4/3n4/4R3/PPPPPPPP/2BQKBNR b Kk - 0 1")
-                .unwrap();
+            parse_fen("2bqkbnr/pppppppp/4r3/3N4/3n4/4R3/PPPPPPPP/2BQKBNR b Kk - 0 1").unwrap();
 
         let white_eval = eval(&white_to_move_pos);
         let black_eval = eval(&black_to_move_pos);
