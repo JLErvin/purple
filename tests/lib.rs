@@ -20,7 +20,7 @@ fn should_init_game_from_fen() {
 #[test]
 fn should_find_mate_in_one() {
     let mut game = Game::new();
-    let best_move = game.best_move();
+    let _best_move = game.best_move();
 }
 
 #[test]

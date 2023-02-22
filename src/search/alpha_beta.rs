@@ -1,16 +1,12 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use rand::prelude::SliceRandom;
-use rand::thread_rng;
-use rayon::slice::ParallelSliceMut;
 
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
 use crate::chess_move::{self, EvaledMove, Move, MoveType};
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
-use crate::piece::PieceType;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
