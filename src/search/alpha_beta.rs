@@ -1,6 +1,8 @@
 use std::time::Instant;
 
 use itertools::Itertools;
+use rand::prelude::SliceRandom;
+use rand::thread_rng;
 use rayon::slice::ParallelSliceMut;
 
 use super::eval::MATE_VALUE;
@@ -25,6 +27,7 @@ pub struct AlphaBeta {
     table: TranspositionTable,
     settings: Settings,
     start_time: Instant,
+    cutoff: isize,
 }
 
 impl Searcher for AlphaBeta {
@@ -45,6 +48,7 @@ impl Searcher for AlphaBeta {
             table,
             settings,
             start_time,
+            cutoff: 0,
         }
     }
 
@@ -78,6 +82,8 @@ impl Searcher for AlphaBeta {
             best_move = next.unwrap();
             i += 1;
             println!("depth: {}, nodes: {}", i, self.stats.nodes);
+            println!("  cutoff: {}, nodes: {}", i, self.cutoff);
+            self.cutoff = 0;
             self.stats.reset();
         }
         //let mut pv = Vec::new();
@@ -162,8 +168,6 @@ impl AlphaBeta {
         let mut gen = evaled_moves(self.gen.all_moves(pos));
         sort_moves(&mut gen, pos);
         moves.append(&mut gen);
-        //let mut new = sort_moves(&mut gen, pos);
-        //moves.append(&mut new);
 
         if moves.is_empty() {
             self.stats.count_node();
@@ -184,6 +188,7 @@ impl AlphaBeta {
                 if alpha >= beta {
                     self.save(pos, *mv, Bound::Lower, depth);
                     self.stats.count_node();
+                    self.cutoff += 1;
                     return Some(best_move);
                 }
             }
@@ -384,7 +389,7 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
         let captured_piece = pos.type_on(mv.mv.to).unwrap();
 
         // If we are capturing a more valuable piece, return a very negative number
-        return if captured_piece.value() > capturing_piece.value() {
+        if captured_piece.value() > capturing_piece.value() {
             capturing_piece.value() - captured_piece.value() - 100
         } else {
            captured_piece.value() - capturing_piece.value() - 50
@@ -405,35 +410,6 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
         0
     });
     */
-}
-
-pub struct WeightedMove {
-    pub mv: EvaledMove,
-    pub weight: isize,
-}
-
-#[inline]
-fn weighted_moves(moves: &[EvaledMove], pos: &BoardState) -> Vec<WeightedMove> {
-    moves
-        .iter()
-        .map(|mv: &EvaledMove| {
-            let weight = match mv.mv.kind {
-                MoveType::Capture => {
-                    let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
-                    let captured_piece = pos.type_on(mv.mv.to).unwrap();
-
-                    if mv.mv.is_en_passant_capture() {
-                        0
-                    } else {
-                        MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()]
-                    }
-                }
-                _ => 0,
-            };
-
-            WeightedMove { mv: *mv, weight }
-        })
-        .collect_vec()
 }
 
 #[cfg(test)]
