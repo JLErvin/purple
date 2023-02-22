@@ -62,16 +62,16 @@ impl Searcher for AlphaBeta {
     }
 
     /// Performs an iterative deepening search until the specified depth and returns the best move
-    fn best_move_depth(&mut self, pos: &mut BoardState, deth: usize) -> EvaledMove {
+    fn best_move_depth(&mut self, pos: &mut BoardState, depth: usize) -> EvaledMove {
         self.start_time = Instant::now();
 
         let mut best_move: EvaledMove = EvaledMove::null(0);
-        let mut i = 0;
-        //for i in 0..=depth {
-        loop {
+        let mut j = 0;
+        for i in 0..=depth {
+        //loop {
             let now = Instant::now();
             let elapsed = now.duration_since(self.start_time).as_secs();
-            if elapsed > self.settings.move_time.unwrap() as u64 {
+            if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
                 break;
             }
 
@@ -80,9 +80,9 @@ impl Searcher for AlphaBeta {
                 break;
             }
             best_move = next.unwrap();
-            i += 1;
-            println!("depth: {}, nodes: {}", i, self.stats.nodes);
-            println!("  cutoff: {}, nodes: {}", i, self.cutoff);
+            j += 1;
+            println!("depth: {}, nodes: {}", j, self.stats.nodes);
+            println!("  cutoff: {}, nodes: {}", j, self.cutoff);
             self.cutoff = 0;
             self.stats.reset();
         }
@@ -131,7 +131,7 @@ impl AlphaBeta {
         // If time has expired, ignore this search request
         let now = Instant::now();
         let elapsed = now.duration_since(self.start_time).as_secs();
-        if elapsed > self.settings.move_time.unwrap() as u64 {
+        if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
             return None;
         }
 
@@ -217,7 +217,7 @@ impl AlphaBeta {
         let eval = eval(pos);
         let now = Instant::now();
         let elapsed = now.duration_since(self.start_time).as_secs();
-        if elapsed > self.settings.move_time.unwrap() as u64 {
+        if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
             return eval;
         }
 

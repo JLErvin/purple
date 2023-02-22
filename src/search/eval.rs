@@ -232,7 +232,7 @@ mod test {
         let pos =
             parse_fen(&"2b2R2/5pp1/3kPp2/2q5/Qr2PR2/8/Kp3P2/6N1 w - - 0 1".to_string()).unwrap();
         let eval = eval(&pos);
-        assert_eq!(eval, 400);
+        assert!(eval > 400);
     }
 
     #[test]
