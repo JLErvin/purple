@@ -13,7 +13,7 @@ use crate::square::square_to_file;
 
 type ZobristHash = u64;
 
-/// A ZobristTable maintains the random values needed to create Zobrist hashes
+/// A `ZobristTable` maintains the random values needed to create Zobrist hashes
 /// for use in a transposition table.
 pub struct ZobristTable {
     pub table: [u64; 2 * 6 * 64],
@@ -22,7 +22,7 @@ pub struct ZobristTable {
     pub en_passant_file: [ZobristHash; 8],
 }
 
-/// A ZobristTable manages the randomly generated ZobristHashes for a given session
+/// A `ZobristTable` manages the randomly generated `ZobristHashes` for a given session
 impl ZobristTable {
     pub fn init() -> ZobristTable {
         let mut rng = rand::thread_rng();
@@ -76,7 +76,7 @@ impl ZobristTable {
             for (j, _) in bb.iter() {
                 let index = match color {
                     Color::White => (i * 64) + j as usize,
-                    Color::Black => (i * 64) + j as usize + 384 as usize,
+                    Color::Black => (i * 64) + j as usize + 384_usize,
                 };
                 hash ^= self.table[index];
             }
@@ -132,14 +132,14 @@ pub struct TranspositionTable {
 }
 
 impl TranspositionTable {
-    /// Constructs a new TranspositionTable with the given number of entries
+    /// Constructs a new `TranspositionTable` with the given number of entries
     pub fn new(size: usize) -> TranspositionTable {
         TranspositionTable {
             table: vec![None; size],
         }
     }
 
-    /// Constructs a new TranspositionTable with the given size in megabytes
+    /// Constructs a new `TranspositionTable` with the given size in megabytes
     pub fn new_mb(size: usize) -> TranspositionTable {
         let size = size * 1024 * 1024 / mem::size_of::<Entry>();
         Self::new(size)
@@ -215,8 +215,8 @@ mod test {
     fn same_position_should_have_same_hash() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos1 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
+        let mut pos2 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -228,9 +228,9 @@ mod test {
     fn different_positions_should_have_different_hashes() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos1 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
         let mut pos2 =
-            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8")
                 .unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
@@ -243,8 +243,8 @@ mod test {
     fn should_differentiate_between_players() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
-        let mut pos2 = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 b - - 0 1".to_string()).unwrap();
+        let mut pos1 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
+        let mut pos2 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 b - - 0 1").unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -257,11 +257,11 @@ mod test {
         let zobrist = ZobristTable::init();
 
         let mut pos1 = parse_fen(
-            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
         )
         .unwrap();
         let mut pos2 =
-            parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
+            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2")
                 .unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
@@ -275,10 +275,10 @@ mod test {
         let zobrist = ZobristTable::init();
 
         let mut pos1 =
-            parse_fen(&"rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string())
+            parse_fen("rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4")
                 .unwrap();
         let mut pos2 = parse_fen(
-            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
         )
         .unwrap();
 

@@ -102,74 +102,74 @@ mod tests {
     #[test]
     fn parses_default_board() {
         let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-        let position = parse_fen(&fen.to_string());
-        assert_eq!(position.unwrap().bb_all(), 18446462598732906495);
+        let position = parse_fen(fen);
+        assert_eq!(position.unwrap().bb_all(), 18_446_462_598_732_906_495);
     }
 
     #[test]
     fn parses_random_board_1() {
         let fen = "5K1b/8/2P1q1P1/2p5/p2N2p1/7P/2QRPP2/k6B w - - 0 1";
-        let position = parse_fen(&fen.to_string());
-        assert_eq!(position.unwrap().bb_all(), 11529307423458212993);
+        let position = parse_fen(fen);
+        assert_eq!(position.unwrap().bb_all(), 11_529_307_423_458_212_993);
     }
 
     #[test]
     fn parses_random_board_2() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 w - - 0 1";
-        let position = parse_fen(&fen.to_string()).unwrap();
+        let position = parse_fen(fen).unwrap();
         assert_eq!(
             position.bb(Color::White, PieceType::Pawn),
-            18155410909298688
+            18_155_410_909_298_688
         );
-        assert_eq!(position.bb(Color::White, PieceType::Rook), 268435456);
+        assert_eq!(position.bb(Color::White, PieceType::Rook), 268_435_456);
         assert_eq!(position.bb(Color::White, PieceType::Knight), 0);
         assert_eq!(
             position.bb(Color::White, PieceType::Bishop),
-            36028797018963968
+            36_028_797_018_963_968
         );
         assert_eq!(
             position.bb(Color::White, PieceType::King),
-            576460752303423488
+            576_460_752_303_423_488
         );
         assert_eq!(position.bb(Color::White, PieceType::Queen), 64);
-        assert_eq!(position.bb(Color::Black, PieceType::Pawn), 637716744110592);
+        assert_eq!(position.bb(Color::Black, PieceType::Pawn), 637_716_744_110_592);
         assert_eq!(position.bb(Color::Black, PieceType::Rook), 256);
         assert_eq!(position.bb(Color::Black, PieceType::Knight), 0);
         assert_eq!(position.bb(Color::Black, PieceType::Bishop), 8194);
         assert_eq!(
             position.bb(Color::Black, PieceType::King),
-            144115188075855872
+            144_115_188_075_855_872
         );
         assert_eq!(position.bb(Color::Black, PieceType::Queen), 0);
-        assert_eq!(position.bb_all(), 775397865320096578);
+        assert_eq!(position.bb_all(), 775_397_865_320_096_578);
         assert_eq!(position.active_player, Color::White);
     }
 
     #[test]
     fn parses_random_board_3() {
         let fen = "3r2r1/P6b/q2pKPk1/4P3/1p1P1R2/5n2/1B2N3/8 w - - 0 1";
-        let position = parse_fen(&fen.to_string()).unwrap();
-        assert_eq!(position.bb_all(), 5224590153059668480);
+        let position = parse_fen(fen).unwrap();
+        assert_eq!(position.bb_all(), 5_224_590_153_059_668_480);
     }
 
     #[test]
     fn parses_active_black() {
         let fen = "1k1K4/1p4PB/2p3pP/6P1/1P2R3/8/rp3b2/1b4Q1 b - - 0 1";
-        let position = parse_fen(&fen.to_string()).unwrap();
+        let position = parse_fen(fen).unwrap();
         assert_eq!(position.active_player, Color::Black);
     }
 
     #[test]
     fn parses_en_passant() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
-        let position = parse_fen(&fen.to_string()).unwrap();
+        let position = parse_fen(fen).unwrap();
         assert_eq!(position.en_passant.unwrap(), 20);
     }
 
     #[test]
     fn parses_move_count() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
-        let position = parse_fen(&fen.to_string()).unwrap();
+        let position = parse_fen(fen).unwrap();
         assert_eq!(position.half_move, 0);
         assert_eq!(position.full_move, 1);
     }
@@ -178,20 +178,20 @@ mod tests {
     #[should_panic]
     fn panics_on_incorrect_fen_ranks() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8 b KQkq e3 0 1";
-        let _position = parse_fen(&fen.to_string()).unwrap();
+        let _position = parse_fen(fen).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn panics_on_incorrect_fen_color() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR Q KQkq e3 0 1";
-        let _position = parse_fen(&fen.to_string()).unwrap();
+        let _position = parse_fen(fen).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn panics_on_illegal_character() {
         let fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNX b KQkq e3 0 1";
-        let _position = parse_fen(&fen.to_string()).unwrap();
+        let _position = parse_fen(fen).unwrap();
     }
 }

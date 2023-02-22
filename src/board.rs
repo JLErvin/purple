@@ -1,7 +1,7 @@
-use crate::bitboard::*;
+use crate::bitboard::{AddPiece, Bitboard, ClearBit, GetBit, INIT_W_BISHOPS, INIT_W_KING, INIT_W_KNIGHTS, INIT_W_QUEEN, INIT_W_ROOKS, New, PieceItr, RANK1, RANK2, RANK7, RANK8, Shift};
 use crate::chess_move::{Move, MoveType};
 use crate::piece::PieceType::Rook;
-use crate::piece::{Color, PieceType, *};
+use crate::piece::{Color, PieceType, COLOR_COUNT, PIECE_COUNT, Piece};
 use crate::square::Square;
 use crate::square::SquareIndex::{A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8};
 

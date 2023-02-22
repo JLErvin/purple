@@ -29,11 +29,11 @@ pub const INIT_W_QUEEN: Bitboard = 0b_0000_1000_u64;
 pub const INIT_W_KING: Bitboard = 0b_0001_0000_u64;
 
 fn shift_left(n: u64, i: u8) -> Bitboard {
-    n.checked_shl(i as u32).unwrap_or(0)
+    n.checked_shl(u32::from(i)).unwrap_or(0)
 }
 
 fn shift_right(n: u64, i: u8) -> Bitboard {
-    n.checked_shr(i as u32).unwrap_or(0)
+    n.checked_shr(u32::from(i)).unwrap_or(0)
 }
 
 pub trait Shift {
@@ -186,8 +186,8 @@ mod tests {
         let b: Bitboard = 0b0000_0001u64;
         let b1 = b.get_bit_lsb(0);
         let b2 = b.get_bit_lsb(63);
-        assert_eq!(b1 as u8, 1);
-        assert_eq!(b2 as u8, 0);
+        assert_eq!(u8::from(b1), 1);
+        assert_eq!(u8::from(b2), 0);
     }
 
     #[test]
@@ -195,8 +195,8 @@ mod tests {
         let b: Bitboard = 0b0000_0001u64;
         let b1 = b.get_bit_msb(0);
         let b2 = b.get_bit_msb(63);
-        assert_eq!(b1 as u8, 0);
-        assert_eq!(b2 as u8, 1);
+        assert_eq!(u8::from(b1), 0);
+        assert_eq!(u8::from(b2), 1);
     }
 
     #[test]
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn left_overflow() {
-        let b: Bitboard = 281474976710656;
+        let b: Bitboard = 281_474_976_710_656;
         let s = b.shift(NORTH + WEST);
         assert_eq!(s, 0);
     }

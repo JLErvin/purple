@@ -222,7 +222,7 @@ impl MoveGenerator {
             moves.len()
         } else {
             let mut sum = 0;
-            for mv in moves.into_iter() {
+            for mv in moves {
                 let new_pos = pos.clone_with_move(mv);
                 sum += self.perft_inner(&new_pos, depth - 1);
             }
@@ -244,7 +244,7 @@ pub fn is_legal(
     let from = mv.from;
 
     let is_castle = mv.kind == MoveType::CastleKing || mv.kind == MoveType::CastleQueen;
-    if king_on_square(pos, lookup, from) & !is_castle {
+    if king_on_square(pos, lookup, from) && !is_castle {
         is_legal_king_move(pos, mv, lookup)
     } else {
         is_legal_non_king_move(pos, mv, lookup, blockers, checkers, king_square)
@@ -357,7 +357,7 @@ fn is_legal_castle(pos: &BoardState, mv: &Move, lookup: &Lookup, num_checkers: u
         _ => vec![],
     };
 
-    for square in squares.into_iter() {
+    for square in squares {
         if is_attacked(pos, square, lookup) {
             return false;
         }
@@ -480,7 +480,7 @@ pub fn gen_pseudo_legal_castles(pos: &BoardState, list: &mut Vec<Move>) {
 
     let (king_mask, queen_mask) = match us {
         Color::White => (96, 14),
-        Color::Black => (6917529027641081856, 1008806316530991104),
+        Color::Black => (6_917_529_027_641_081_856, 1_008_806_316_530_991_104),
     };
 
     let occupied = pos.bb_all();
@@ -817,7 +817,7 @@ mod test {
     use crate::square::SquareIndex;
     use crate::square::SquareIndex::{
         A1, A2, A3, B1, B2, B4, B5, C2, C3, C4, C5, C6, C8, D2, D3, D4, D5, E1, E2, E6, E7, E8, F1,
-        F2, F3, G1, G2, G5, G8, H1, H2, H4, *,
+        F2, F3, G1, G2, G5, G8, H1, H2, H4, F5, F6,
     };
 
     #[test]
@@ -834,13 +834,13 @@ mod test {
         assert_eq!(depth_1, 20);
         assert_eq!(depth_2, 400);
         assert_eq!(depth_3, 8902);
-        assert_eq!(depth_4, 197281);
+        assert_eq!(depth_4, 197_281);
     }
     #[test]
     #[ignore]
     fn perft_kiwipete() {
         let mut pos = parse_fen(
-            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
         )
         .unwrap();
         let gen = MoveGenerator::new();
@@ -852,13 +852,13 @@ mod test {
         assert_eq!(depth_1, 48);
         assert_eq!(depth_2, 2039);
         assert_eq!(depth_3, 97862);
-        assert_eq!(depth_4, 4085603);
+        assert_eq!(depth_4, 4_085_603);
     }
 
     #[test]
     #[ignore]
     fn perft_fen_3() {
-        let mut pos = parse_fen(&"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1".to_string()).unwrap();
+        let mut pos = parse_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1").unwrap();
 
         let gen = MoveGenerator::new();
         let depth_1 = gen.perft(&mut pos, 1);
@@ -871,14 +871,14 @@ mod test {
         assert_eq!(depth_2, 191);
         assert_eq!(depth_3, 2812);
         assert_eq!(depth_4, 43238);
-        assert_eq!(depth_5, 674624);
+        assert_eq!(depth_5, 674_624);
     }
 
     #[test]
     #[ignore]
     fn perft_fen_4() {
         let mut pos = parse_fen(
-            &"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1".to_string(),
+            "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
         )
         .unwrap();
 
@@ -891,14 +891,14 @@ mod test {
         assert_eq!(depth_1, 6);
         assert_eq!(depth_2, 264);
         assert_eq!(depth_3, 9467);
-        assert_eq!(depth_4, 422333);
+        assert_eq!(depth_4, 422_333);
     }
 
     #[test]
     #[ignore]
     fn perft_fen_5() {
         let mut pos =
-            parse_fen(&"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8".to_string())
+            parse_fen("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8")
                 .unwrap();
 
         let gen = MoveGenerator::new();
@@ -910,14 +910,14 @@ mod test {
         assert_eq!(depth_1, 44);
         assert_eq!(depth_2, 1486);
         assert_eq!(depth_3, 62379);
-        assert_eq!(depth_4, 2103487);
+        assert_eq!(depth_4, 2_103_487);
     }
 
     #[test]
     #[ignore]
     fn perft_fen_6() {
         let mut pos = parse_fen(
-            &"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10".to_string(),
+            "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
         )
         .unwrap();
 
@@ -935,7 +935,7 @@ mod test {
     #[ignore]
     fn perft_fen_random() {
         let mut pos =
-            parse_fen(&"r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b KQ c3 0 1".to_string())
+            parse_fen("r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b KQ c3 0 1")
                 .unwrap();
 
         let gen = MoveGenerator::new();
@@ -945,14 +945,14 @@ mod test {
 
         assert_eq!(depth_1, 51);
         assert_eq!(depth_2, 2778);
-        assert_eq!(depth_3, 111425);
+        assert_eq!(depth_3, 111_425);
     }
 
     #[test]
     fn calculates_blockers() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/2r5/5b2/2P5/2P5/2K1Pr2/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/2r5/5b2/2P5/2P5/2K1Pr2/8 w - - 0 1").unwrap();
         let king_square = king_square(&pos);
 
         assert_eq!(calculate_blockers(&pos, &lookup, king_square), 4096);
@@ -981,14 +981,14 @@ mod test {
         let lookup = Lookup::new(random);
         let b = ray_between(B4 as u8, E7 as u8, &lookup);
 
-        assert_eq!(b, 4512412933816320);
+        assert_eq!(b, 4_512_412_933_816_320);
     }
 
     #[test]
     fn cannot_capture_checking_piece_while_pinned() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"2r5/8/8/2B5/8/8/8/2K3r1 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("2r5/8/8/2B5/8/8/8/2K3r1 w - - 0 1").unwrap();
 
         let mv = make_move(G1, C5);
 
@@ -1006,7 +1006,7 @@ mod test {
     fn cannot_block_checking_piece_while_pinned() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"2r5/8/8/2B5/8/8/8/2K4r w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("2r5/8/8/2B5/8/8/8/2K4r w - - 0 1").unwrap();
 
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
@@ -1023,7 +1023,7 @@ mod test {
     fn cannot_move_pinned_piece() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/1K1N3r/8/8/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/1K1N3r/8/8/8 w - - 0 1").unwrap();
 
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
@@ -1049,7 +1049,7 @@ mod test {
     fn can_move_piece_along_pinned_ray() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/8/1K3R1r/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/1K3R1r/8 w - - 0 1").unwrap();
 
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
@@ -1097,7 +1097,7 @@ mod test {
     fn cannot_move_non_king_with_multiple_checkers() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/1r6/8/8/3N4/8/1K5r/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/1r6/8/8/3N4/8/1K5r/8 w - - 0 1").unwrap();
 
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
@@ -1114,7 +1114,7 @@ mod test {
     fn can_move_king() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/8/1K5r/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/1K5r/8 w - - 0 1").unwrap();
 
         let mv = make_move(A2, B2);
         assert_eq!(is_legal_king_move(&pos, &mv, &lookup), false);
@@ -1127,7 +1127,7 @@ mod test {
     fn cannot_block_using_xray() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/3B4/3K3r/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/3B4/3K3r/8 w - - 0 1").unwrap();
 
         let king_square = king_square(&pos);
         let blockers = calculate_blockers(&pos, &lookup, king_square);
@@ -1150,7 +1150,7 @@ mod test {
     fn king_cannot_castle_through_check() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/3b4/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/3b4/8/R3K2R w KQ - 0 1").unwrap();
         let _mv = make_move(C2, D3);
         let mv = Move {
             to: 0,
@@ -1164,7 +1164,7 @@ mod test {
     fn king_cannot_castle_in_check() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/2b5/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/2b5/8/R3K2R w KQ - 0 1").unwrap();
         let mv = Move {
             to: 0,
             from: 0,
@@ -1177,7 +1177,7 @@ mod test {
     fn en_passant_discovered_check() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/K2Pp2q/8/8/8/8 w - e6 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/K2Pp2q/8/8/8/8 w - e6 0 1").unwrap();
         let mv = Move {
             to: E6 as u8,
             from: D5 as u8,
@@ -1194,7 +1194,7 @@ mod test {
     fn en_passant_out_of_check() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/3Pp2q/3K4/8/8/8 w - e6 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/3Pp2q/3K4/8/8/8 w - e6 0 1").unwrap();
         let mv = Move {
             to: E6 as u8,
             from: D5 as u8,
@@ -1211,7 +1211,7 @@ mod test {
     fn random_fen_1() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1").unwrap();
         let mv = Move {
             to: G5 as u8,
             from: H4 as u8,
@@ -1233,7 +1233,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"rnbqk1nr/pppp1ppp/8/4p3/1b1P4/P7/1PP1PPPP/RNBQKBNR w KQkq - 0 1".to_string(),
+            "rnbqk1nr/pppp1ppp/8/4p3/1b1P4/P7/1PP1PPPP/RNBQKBNR w KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1257,7 +1257,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/P1N2Q1p/1PPBBPPP/R3K2R w KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/P1N2Q1p/1PPBBPPP/R3K2R w KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1281,7 +1281,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R w KQkq a3 0 1".to_string(),
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/Pp2P3/2N2Q1p/1PPBBPPP/R3K2R w KQkq a3 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1305,7 +1305,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1329,7 +1329,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqpb1/bn2pnN1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqpb1/bn2pnN1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1353,7 +1353,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqNb1/bn2pn2/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqNb1/bn2pn2/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1377,7 +1377,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1ppqpb1/1n2pnp1/3PN3/1p2P3/2N2Q1p/PPPBbPPP/R2K3R w KQkq - 0 1".to_string(),
+            "r3k2r/p1ppqpb1/1n2pnp1/3PN3/1p2P3/2N2Q1p/PPPBbPPP/R2K3R w KQkq - 0 1",
         )
         .unwrap();
         let mv = Move {
@@ -1401,7 +1401,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos = parse_fen(
-            &"r3k2r/p1pp1pb1/bn2pnp1/1B1PN3/1pq1P3/2N2Q1p/PPPB1PPP/R4K1R w kq - 4 3".to_string(),
+            "r3k2r/p1pp1pb1/bn2pnp1/1B1PN3/1pq1P3/2N2Q1p/PPPB1PPP/R4K1R w kq - 4 3",
         )
         .unwrap();
         let mv = Move {
@@ -1425,7 +1425,7 @@ mod test {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
         let pos =
-            parse_fen(&"r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b K c3 0 1".to_string())
+            parse_fen("r6r/1bp2pP1/R2qkn2/1P6/1pPQ4/1B3N2/1B1P2p1/4K2R b K c3 0 1")
                 .unwrap();
         let mv = Move {
             to: C3 as u8,
@@ -1447,7 +1447,7 @@ mod test {
     fn castle_pawn_attacks() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/8/6p1/4K2R w K - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/6p1/4K2R w K - 0 1").unwrap();
         let mv = Move {
             to: E1 as u8,
             from: G1 as u8,
@@ -1468,7 +1468,7 @@ mod test {
     fn captures_attacker_on_ray() {
         let random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let lookup = Lookup::new(random);
-        let pos = parse_fen(&"8/8/8/8/8/8/1K1R2r1/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/1K1R2r1/8 w - - 0 1").unwrap();
         let mv = Move {
             to: G2 as u8,
             from: D2 as u8,
@@ -1487,7 +1487,7 @@ mod test {
 
     #[test]
     fn castles_no_obstruction() {
-        let pos = parse_fen(&"8/8/8/8/8/8/8/R3K2R w KQ - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/8/R3K2R w KQ - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_castles(&pos, &mut list);
         assert_eq!(list.len(), 2);
@@ -1495,12 +1495,12 @@ mod test {
 
     #[test]
     fn no_castles_with_obstruction() {
-        let pos = parse_fen(&"8/8/8/8/8/8/8/R3KB1R w KQ - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/8/R3KB1R w KQ - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_castles(&pos, &mut list);
         assert_eq!(list.len(), 1);
 
-        let pos = parse_fen(&"8/8/8/8/8/8/8/R1B1K2R w KQ - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/8/R1B1K2R w KQ - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_castles(&pos, &mut list);
         assert_eq!(list.len(), 1);
@@ -1508,7 +1508,7 @@ mod test {
 
     #[test]
     fn no_castles_without_rights() {
-        let pos = parse_fen(&"8/8/8/8/8/8/8/R3K2R w K - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/8/8/8/R3K2R w K - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_castles(&pos, &mut list);
         assert_eq!(list.len(), 1);
@@ -1517,7 +1517,7 @@ mod test {
     #[test]
     fn black_queenside_castle() {
         let pos = parse_fen(
-            &"r3k2r/p1ppq1b1/bn2pn2/3P2N1/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 2".to_string(),
+            "r3k2r/p1ppq1b1/bn2pn2/3P2N1/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 2",
         )
         .unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
@@ -1529,7 +1529,7 @@ mod test {
     #[test]
     fn gen_random_pawn_moves1() {
         let pos =
-            parse_fen(&"3N4/1p1N2R1/kp3PQp/8/p2P4/B7/6p1/b2b2K1 w - - 0 1".to_string()).unwrap();
+            parse_fen("3N4/1p1N2R1/kp3PQp/8/p2P4/B7/6p1/b2b2K1 w - - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 2);
@@ -1538,7 +1538,7 @@ mod test {
     #[test]
     fn gen_random_pawn_moves2() {
         let pos =
-            parse_fen(&"8/1P5n/1NB5/2KbQ1P1/2n5/p4R2/Pp2p3/1k2b3 w - - 0 1".to_string()).unwrap();
+            parse_fen("8/1P5n/1NB5/2KbQ1P1/2n5/p4R2/Pp2p3/1k2b3 w - - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 5);
@@ -1547,7 +1547,7 @@ mod test {
     #[test]
     fn gen_random_pawn_moves3() {
         let pos =
-            parse_fen(&"3r2r1/P6b/q2pKPk1/4P3/1p1P1R2/5n2/1B2N3/8 w - - 0 1".to_string()).unwrap();
+            parse_fen("3r2r1/P6b/q2pKPk1/4P3/1p1P1R2/5n2/1B2N3/8 w - - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 7);
@@ -1555,7 +1555,7 @@ mod test {
 
     #[test]
     fn gen_random_pawn_moves4() {
-        let pos = parse_fen(&"8/4PP2/2n3p1/6P1/2p1p2q/K1P3k1/b1p1P1B1/2R5 w - - 0 1".to_string())
+        let pos = parse_fen("8/4PP2/2n3p1/6P1/2p1p2q/K1P3k1/b1p1P1B1/2R5 w - - 0 1")
             .unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
@@ -1565,7 +1565,7 @@ mod test {
     #[test]
     fn gen_random_pawn_moves5() {
         let pos =
-            parse_fen(&"3bBr2/8/P7/2PPp3/1N6/3bK2R/2Pp4/1k1qN3 w - d6 0 1".to_string()).unwrap();
+            parse_fen("3bBr2/8/P7/2PPp3/1N6/3bK2R/2Pp4/1k1qN3 w - d6 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 7);
@@ -1585,7 +1585,7 @@ mod test {
     /// 3N4/1p1N2R1/kp3PQp/8/p2P4/B7/6p1/b2b2K1 w - - 0 1
     #[test]
     fn extract_random_pawns() {
-        let b: Bitboard = 35184506306560;
+        let b: Bitboard = 35_184_506_306_560;
         let mut moves: Vec<Move> = Vec::new();
         extract_pawn_moves(b, NORTH, Quiet, &mut moves);
         assert_eq!(moves.len(), 2);
@@ -1597,7 +1597,7 @@ mod test {
 
     #[test]
     fn gen_en_passant() {
-        let pos = parse_fen(&"8/8/3p4/KPp4r/5R1k/8/8/8 w - c6 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/3p4/KPp4r/5R1k/8/8/8 w - c6 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 2);
@@ -1605,7 +1605,7 @@ mod test {
 
     #[test]
     fn gen_a3_to_b4() {
-        let pos = parse_fen(&"8/8/8/8/1p6/P7/8/8 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("8/8/8/8/1p6/P7/8/8 w - - 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 2);
@@ -1613,7 +1613,7 @@ mod test {
 
     #[test]
     fn gen_b4_to_a3() {
-        let mut pos = parse_fen(&"8/8/8/8/Pp6/8/8/8 b - a3 0 1".to_string()).unwrap();
+        let mut pos = parse_fen("8/8/8/8/Pp6/8/8/8 b - a3 0 1").unwrap();
         let mut list: Vec<Move> = Vec::with_capacity(256);
         gen_pseudo_legal_pawn_moves(&pos, &mut list);
         assert_eq!(list.len(), 2);
