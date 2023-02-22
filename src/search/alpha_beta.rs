@@ -242,7 +242,6 @@ impl AlphaBeta {
                 .filter(chess_move::Move::is_capture)
                 .collect()
         };
-        //sort_moves_2(&mut moves, pos);
 
         if moves.is_empty() && is_attacked {
             return self.no_move_eval(pos, depth).eval;
@@ -342,60 +341,7 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
     [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
 ];
 
-/*
-fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
-    moves.par_sort_unstable_by_key(|mv| {
-        let maybe_capturing_piece = pos.type_on(mv.from).unwrap();
-        if mv.is_en_passant_capture() {
-            return 0;
-        }
-
-        if mv.is_capture() {
-            let captured_piece = pos.type_on(mv.to).unwrap();
-            return MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
-        }
-        0
-    });
-}
-*/
-
-fn sort_moves_2(moves: &mut Vec<Move>, pos: &BoardState) {
-    moves.par_sort_unstable_by_key(|mv| {
-        let maybe_capturing_piece = pos.type_on(mv.from).unwrap();
-        if mv.is_en_passant_capture() {
-            return 0;
-        }
-
-        if mv.is_capture() {
-            let captured_piece = pos.type_on(mv.to).unwrap();
-            return -MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()];
-        }
-
-        0
-    });
-}
-
 fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
-    moves.par_sort_unstable_by_key(|mv| {
-        if !mv.mv.is_capture() {
-            return 0;
-        }
-
-        if mv.mv.kind == MoveType::EnPassantCapture {
-            return 1;
-        }
-
-        let capturing_piece = pos.type_on(mv.mv.from).unwrap();
-        let captured_piece = pos.type_on(mv.mv.to).unwrap();
-
-        // If we are capturing a more valuable piece, return a very negative number
-        if captured_piece.value() > capturing_piece.value() {
-            capturing_piece.value() - captured_piece.value() - 100
-        } else {
-           captured_piece.value() - capturing_piece.value() - 50
-        }
-    });
-    /*
     moves.sort_by_cached_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
@@ -409,7 +355,6 @@ fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
 
         0
     });
-    */
 }
 
 #[cfg(test)]
