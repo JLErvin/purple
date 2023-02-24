@@ -143,7 +143,7 @@ impl AlphaBeta {
 
         let hash = self.zobrist.hash(pos);
         if let Some(e) = self.table.get(hash) {
-            if e.hash == hash && e.depth >= depth && is_bound_ok(&e, alpha, beta) {
+            if e.hash == hash && e.depth >= depth as u8 && is_bound_ok(&e, alpha, beta) {
                 return Some(e.best_move);
             }
 
@@ -155,11 +155,11 @@ impl AlphaBeta {
         if depth == 0 {
             let s = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             let bound = leaf_bound(s, alpha, beta);
-            self.save(pos, s, bound, depth);
+            self.save(pos, s, bound, depth as u8);
             return Some(s);
         }
 
-        let mut gen = evaled_moves(self.gen.all_moves(pos));
+        let mut gen = evaled_moves(&self.gen.all_moves(pos));
         sort_moves(&mut gen, pos);
         moves.append(&mut gen);
 
@@ -180,7 +180,7 @@ impl AlphaBeta {
                 alpha = mv.eval;
                 best_move = *mv;
                 if alpha >= beta {
-                    self.save(pos, *mv, Bound::Lower, depth);
+                    self.save(pos, *mv, Bound::Lower, depth as u8);
                     self.cutoff += 1;
                     return Some(best_move);
                 }
@@ -192,7 +192,7 @@ impl AlphaBeta {
         } else {
             Bound::Upper
         };
-        self.save(pos, best_move, bound, depth);
+        self.save(pos, best_move, bound, depth as u8);
 
         Some(best_move)
     }
@@ -311,7 +311,7 @@ impl AlphaBeta {
 }
 
 #[inline]
-fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
+fn evaled_moves(moves: &[Move]) -> Vec<EvaledMove> {
     moves
         .iter()
         .map(|mv| EvaledMove { mv: *mv, eval: 0 })
@@ -327,7 +327,7 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
     [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
 ];
 
-fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
+fn sort_moves(moves: &mut [EvaledMove], pos: &BoardState) {
     moves.sort_by_cached_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
@@ -456,7 +456,7 @@ mod test {
         let pos = parse_fen("7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1").unwrap();
 
         let searcher: AlphaBeta = Searcher::new();
-        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
         sort_moves(&mut moves, &pos);
@@ -470,9 +470,8 @@ mod test {
     fn sorts_better_captures_over_other_captures() {
         // Rook can take either pawn or queen
         let pos = parse_fen("4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1").unwrap();
-
         let searcher: AlphaBeta = Searcher::new();
-        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
         sort_moves(&mut moves, &pos);
