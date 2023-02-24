@@ -328,7 +328,7 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
 ];
 
 fn sort_moves(moves: &mut [EvaledMove], pos: &BoardState) {
-    moves.sort_by_cached_key(|mv| {
+    moves.sort_by_cached_key(|mv: &EvaledMove| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
             return 0;
