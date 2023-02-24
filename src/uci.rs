@@ -16,7 +16,7 @@ pub fn uci_loop() {
         let mut buffer = String::new();
         stdin().lock().read_line(&mut buffer).unwrap();
         let key = buffer.split_ascii_whitespace().collect_vec();
-        match &key.get(0).unwrap().to_string()[..] {
+        match &(*key.first().unwrap()).to_string()[..] {
             "quit" => break,
             "uci" => init_uci(),
             "position" => pos = update_position(&key[1..].join(" ")),
@@ -40,7 +40,7 @@ fn go(pos: &mut BoardState, searcher: &mut AlphaBeta, data: &[&str]) {
 
 fn update_position(fen: &String) -> BoardState {
     let v = fen.split_ascii_whitespace().collect_vec();
-    let keyword = v.get(0).unwrap();
+    let keyword = v.first().unwrap();
     let mut pos = match &keyword[..] {
         "startpos" => BoardState::default(),
         "fen" => return parse_fen(&fen[4..]).unwrap(),

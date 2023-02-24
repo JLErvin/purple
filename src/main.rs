@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use clap::*;
+use clap::{App, Arg};
 use itertools::Itertools;
 use purple::{self, Game};
 
@@ -28,7 +28,7 @@ fn main() {
                 .long("perft")
                 .help("run a performance test on the move generator")
                 .number_of_values(2)
-                .value_names(&*vec!["depth", "fen"])
+                .value_names(&["depth", "fen"])
                 .takes_value(true),
         )
         .arg(
@@ -37,7 +37,7 @@ fn main() {
                 .long("alpha-perft")
                 .help("run a performance test on the alpha-beta searcher")
                 .number_of_values(2)
-                .value_names(&*vec!["depth", "fen"])
+                .value_names(&["depth", "fen"])
                 .takes_value(true),
         )
         .arg(
@@ -46,7 +46,7 @@ fn main() {
                 .long("mini-perft")
                 .help("run a performance test on the minimax searcher")
                 .number_of_values(2)
-                .value_names(&*vec!["depth", "fen"])
+                .value_names(&["depth", "fen"])
                 .takes_value(true),
         )
         .get_matches();
@@ -70,7 +70,7 @@ fn main() {
 }
 
 fn execute_perft(args: Vec<&str>) {
-    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let depth = args.first().unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
     let game = Game::from_fen(fen).unwrap();
@@ -80,7 +80,7 @@ fn execute_perft(args: Vec<&str>) {
 }
 
 fn execute_mini_perft(args: Vec<&str>) {
-    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let depth = args.first().unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
     let mut game = Game::from_fen(fen).unwrap();
@@ -93,7 +93,7 @@ fn execute_mini_perft(args: Vec<&str>) {
 }
 
 fn execute_alpha_perft(args: Vec<&str>) {
-    let depth = args.get(0).unwrap().parse::<usize>().unwrap();
+    let depth = args.first().unwrap().parse::<usize>().unwrap();
     let fen = args.get(1).unwrap();
 
     let mut game = Game::from_fen(fen).unwrap();

@@ -1,16 +1,12 @@
 use std::time::Instant;
 
 use itertools::Itertools;
-use rand::prelude::SliceRandom;
-use rand::thread_rng;
-use rayon::slice::ParallelSliceMut;
 
 use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
 use crate::chess_move::{self, EvaledMove, Move, MoveType};
 use crate::move_gen::{is_attacked, king_square, MoveGenerator};
-use crate::piece::PieceType;
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
@@ -147,7 +143,7 @@ impl AlphaBeta {
 
         let hash = self.zobrist.hash(pos);
         if let Some(e) = self.table.get(hash) {
-            if e.hash == hash && e.depth >= depth && is_bound_ok(&e, alpha, beta) {
+            if e.hash == hash && e.depth >= depth as u8 && is_bound_ok(&e, alpha, beta) {
                 return Some(e.best_move);
             }
 
@@ -159,11 +155,11 @@ impl AlphaBeta {
         if depth == 0 {
             let s = EvaledMove::null(self.q_search(pos, alpha, beta, 5));
             let bound = leaf_bound(s, alpha, beta);
-            self.save(pos, s, bound, depth);
+            self.save(pos, s, bound, depth as u8);
             return Some(s);
         }
 
-        let mut gen = evaled_moves(self.gen.all_moves(pos));
+        let mut gen = evaled_moves(&self.gen.all_moves(pos));
         sort_moves(&mut gen, pos);
         moves.append(&mut gen);
 
@@ -184,7 +180,7 @@ impl AlphaBeta {
                 alpha = mv.eval;
                 best_move = *mv;
                 if alpha >= beta {
-                    self.save(pos, *mv, Bound::Lower, depth);
+                    self.save(pos, *mv, Bound::Lower, depth as u8);
                     self.cutoff += 1;
                     return Some(best_move);
                 }
@@ -196,7 +192,7 @@ impl AlphaBeta {
         } else {
             Bound::Upper
         };
-        self.save(pos, best_move, bound, depth);
+        self.save(pos, best_move, bound, depth as u8);
 
         Some(best_move)
     }
@@ -243,7 +239,7 @@ impl AlphaBeta {
             return self.no_move_eval(pos, depth).eval;
         }
 
-        for mv in moves.iter_mut() {
+        for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(*mv);
             let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
             if eval >= beta {
@@ -259,7 +255,7 @@ impl AlphaBeta {
 
     /// Return an evaluation of the given position, at the given depth, assuming there are no valid
     /// moves in the position. The returned value is either 0 (a draw), or is less than being mated
-    /// by the moving player (i.e., a value of -MATE_VALUE).
+    /// by the moving player (i.e., a value of -`MATE_VALUE`).
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
         let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
 
@@ -303,13 +299,7 @@ impl AlphaBeta {
 
         let hash = self.zobrist.hash(pos);
         //let fen = debug_print(pos);
-        let entry = Entry {
-            best_move,
-            depth,
-            bound,
-            hash,
-            //fen
-        };
+        let entry = Entry { best_move, hash, depth, bound };
         self.table.save(hash, entry);
     }
 
@@ -321,7 +311,7 @@ impl AlphaBeta {
 }
 
 #[inline]
-fn evaled_moves(moves: Vec<Move>) -> Vec<EvaledMove> {
+fn evaled_moves(moves: &[Move]) -> Vec<EvaledMove> {
     moves
         .iter()
         .map(|mv| EvaledMove { mv: *mv, eval: 0 })
@@ -337,7 +327,7 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
     [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
 ];
 
-fn sort_moves(moves: &mut Vec<EvaledMove>, pos: &BoardState) {
+fn sort_moves(moves: &mut [EvaledMove], pos: &BoardState) {
     moves.sort_by_cached_key(|mv| {
         let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
         if mv.mv.is_en_passant_capture() {
@@ -364,7 +354,7 @@ mod test {
 
     #[test]
     fn finds_mate_in_one_as_white() {
-        let mut pos = parse_fen(&"k7/8/2K5/8/8/8/8/1Q6 w - - 0 1".to_string()).unwrap();
+        let mut pos = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
@@ -372,7 +362,7 @@ mod test {
 
     #[test]
     fn finds_mate_in_one_as_black() {
-        let mut pos = parse_fen(&"K7/8/2k5/8/8/8/8/1q6 b - - 0 1".to_string()).unwrap();
+        let mut pos = parse_fen("K7/8/2k5/8/8/8/8/1q6 b - - 0 1").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 49)
@@ -381,7 +371,7 @@ mod test {
     #[test]
     fn best_move_random_1() {
         let mut pos =
-            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8".to_string())
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8")
                 .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
@@ -391,7 +381,7 @@ mod test {
     #[test]
     fn best_move_random_2() {
         let mut pos =
-            parse_fen(&"rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1".to_string())
+            parse_fen("rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1")
                 .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
@@ -401,7 +391,7 @@ mod test {
     #[test]
     fn best_move_random_3() {
         let mut pos =
-            parse_fen(&"r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8".to_string())
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8")
                 .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos);
@@ -410,7 +400,7 @@ mod test {
 
     #[test]
     fn avoids_horizon() {
-        let mut pos = parse_fen(&"7k/8/r7/r7/8/8/p1RR3K/8 w - - 0 1".to_string()).unwrap();
+        let mut pos = parse_fen("7k/8/r7/r7/8/8/p1RR3K/8 w - - 0 1").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 3);
         assert_ne!(mv.mv.to, 8)
@@ -418,7 +408,7 @@ mod test {
 
     #[test]
     fn doesnt_blunder() {
-        let mut pos = parse_fen(&"2Q5/1K6/5k2/8/3bB3/8/8/8 b - - 0 72".to_string()).unwrap();
+        let mut pos = parse_fen("2Q5/1K6/5k2/8/3bB3/8/8/8 b - - 0 72").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
         assert_ne!(mv.mv.to, 8)
@@ -429,21 +419,21 @@ mod test {
     fn doesnt_blunder_2() {
         let mut searcher: AlphaBeta = Searcher::new();
         let mut pos =
-            parse_fen(&"rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1".to_string())
+            parse_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1")
                 .unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
         let mut pos =
-            parse_fen(&"rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2".to_string())
+            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2")
                 .unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
         let mut pos = parse_fen(
-            &"rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3".to_string(),
+            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
         )
         .unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
 
         let mut pos = parse_fen(
-            &"rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4".to_string(),
+            "rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4",
         )
         .unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
@@ -452,7 +442,7 @@ mod test {
     #[test]
     fn doesnt_blunder_3() {
         let mut pos = parse_fen(
-            &"rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14".to_string(),
+            "rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14",
         )
         .unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
@@ -463,10 +453,10 @@ mod test {
     #[test]
     fn sorts_captures_over_non_captures() {
         // Any piece can capture the opposing queen
-        let pos = parse_fen(&"7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1".to_string()).unwrap();
+        let pos = parse_fen("7k/8/8/2q2Q2/1P6/3N4/5B2/K1R5 w - - 0 1").unwrap();
 
         let searcher: AlphaBeta = Searcher::new();
-        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
         sort_moves(&mut moves, &pos);
@@ -479,10 +469,9 @@ mod test {
     #[test]
     fn sorts_better_captures_over_other_captures() {
         // Rook can take either pawn or queen
-        let pos = parse_fen(&"4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1".to_string()).unwrap();
-
+        let pos = parse_fen("4k3/8/8/2p5/8/2Qq4/8/K7 w - - 0 1").unwrap();
         let searcher: AlphaBeta = Searcher::new();
-        let mut moves = evaled_moves(searcher.gen.all_moves(&pos));
+        let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
         sort_moves(&mut moves, &pos);

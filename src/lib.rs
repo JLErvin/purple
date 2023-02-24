@@ -7,7 +7,7 @@
 //! move generator, move evaluation and selection, and board state.
 //!
 //! Purple also includes a UCI (Universal Chess Interface) module for use with UCI programs
-//! like ArenaChess and CuteChess.
+//! like `ArenaChess` and `CuteChess`.
 //!
 //! There is also a `purple` binary available, see [source](https://github.com/jlervin/purple).
 //!

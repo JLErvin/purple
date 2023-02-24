@@ -22,7 +22,7 @@ pub struct MagicTable {
 }
 
 impl MagicTable {
-    /// Initializes a new MagicTable object which holds magic numbers and the necessary infrastructure
+    /// Initializes a new `MagicTable` object which holds magic numbers and the necessary infrastructure
     /// to lookup moves based on these values. Initialization of this struct is expensive as it
     /// involves finding all magic numbers for the given piece and builds the necessary lookup tables
     /// as well.
@@ -54,7 +54,7 @@ impl MagicTable {
         }
     }
 
-    /// Given a MagicPiece, initialize an array which represents the offsets that are needed to
+    /// Given a `MagicPiece`, initialize an array which represents the offsets that are needed to
     /// calculate indices for a contiguous array of all magic number lookups.
     ///
     /// As an example, the square A1 has no required offset. However, if the square A1 contained
@@ -113,7 +113,7 @@ impl MagicTable {
     }
 }
 
-static MAXIMUM_ITERATIONS: usize = 1000000;
+static MAXIMUM_ITERATIONS: usize = 1_000_000;
 
 struct MagicSearcher {
     occupancies: [Bitboard; 4096],
@@ -340,7 +340,7 @@ pub fn rook_ray(square: Square) -> Bitboard {
     b
 }
 
-/// Like the rook_ray function, except for bishops.
+/// Like the `rook_ray` function, except for bishops.
 pub fn bishop_ray(square: Square) -> Bitboard {
     let mut b: Bitboard = 0;
     let rank = square / 8;
@@ -382,7 +382,7 @@ pub fn bishop_ray(square: Square) -> Bitboard {
     b & !border
 }
 
-/// Like the rook_attacks function, except for bishops.
+/// Like the `rook_attacks` function, except for bishops.
 pub fn bishop_attacks(square: Square, blockers: Bitboard) -> Bitboard {
     let ray = bishop_ray(square);
     let relevant_blockers = ray & blockers;
@@ -479,7 +479,7 @@ pub fn occupancy(occupancy_index: usize, bits: usize, mut attack_mask: Bitboard)
     let mut b: Bitboard = 0;
 
     for index in 0..bits {
-        let square = attack_mask.trailing_zeros() as Bitboard;
+        let square = u64::from(attack_mask.trailing_zeros());
         attack_mask = attack_mask.clear_bit(square as u8);
         if occupancy_index & (1 << index) != 0 {
             b |= 1 << square
