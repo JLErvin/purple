@@ -26,7 +26,8 @@ pub struct Game {
 
 impl Game {
     /// Construct a new game from the default starting position.
-    #[must_use] pub fn new() -> Game {
+    #[must_use]
+    pub fn new() -> Game {
         let gen = MoveGenerator::new();
         let pos = BoardState::default();
         let searcher = AlphaBeta::new();
@@ -63,7 +64,8 @@ impl Game {
     }
 
     /// Return a vector of all legal moves from the current position.
-    #[must_use] pub fn legal_moves(&self) -> Vec<Move> {
+    #[must_use]
+    pub fn legal_moves(&self) -> Vec<Move> {
         self.gen.all_moves(&self.pos)
     }
 
@@ -79,7 +81,8 @@ impl Game {
 
     /// Runs a performance test of the Game's move generator, returning the total number
     /// of nodes calculated at the given depth.
-    #[must_use] pub fn perft(&self, depth: usize) -> usize {
+    #[must_use]
+    pub fn perft(&self, depth: usize) -> usize {
         self.gen.perft(&self.pos, depth)
     }
 
@@ -90,12 +93,14 @@ impl Game {
     }
 
     /// Return a string representing the position, useful for debugging purposes.
-    #[must_use] pub fn debug(&self) -> String {
+    #[must_use]
+    pub fn debug(&self) -> String {
         debug_print(&self.pos)
     }
 
     /// Return a stats struct, which contains metrics for the previous search
-    #[must_use] pub fn stats(&self) -> &Stats {
+    #[must_use]
+    pub fn stats(&self) -> &Stats {
         self.searcher.stats()
     }
 }

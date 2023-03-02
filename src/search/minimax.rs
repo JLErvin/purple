@@ -105,8 +105,7 @@ mod test {
     #[ignore]
     fn best_move_random_1() {
         let mut pos =
-            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8")
-                .unwrap();
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8").unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 21)
@@ -115,9 +114,7 @@ mod test {
     #[test]
     #[ignore]
     fn best_move_random_2() {
-        let mut pos =
-            parse_fen("rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1")
-                .unwrap();
+        let mut pos = parse_fen("rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1").unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 45)
@@ -127,8 +124,7 @@ mod test {
     #[ignore]
     fn best_move_random_3() {
         let mut pos =
-            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8")
-                .unwrap();
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8").unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 3)
@@ -137,10 +133,9 @@ mod test {
     #[test]
     #[ignore]
     fn best_move_random_4() {
-        let mut pos = parse_fen(
-            "rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5",
-        )
-        .unwrap();
+        let mut pos =
+            parse_fen("rnbqkbnr/1p1ppppp/2p5/8/p2PP2P/2N2N2/PPP2PP1/R1BQKB1R b KQkq - 0 5")
+                .unwrap();
         let mut searcher: MinimaxSearcher = Searcher::new();
         let _mv = searcher.best_move(&mut pos);
     }

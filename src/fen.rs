@@ -132,7 +132,10 @@ mod tests {
             576_460_752_303_423_488
         );
         assert_eq!(position.bb(Color::White, PieceType::Queen), 64);
-        assert_eq!(position.bb(Color::Black, PieceType::Pawn), 637_716_744_110_592);
+        assert_eq!(
+            position.bb(Color::Black, PieceType::Pawn),
+            637_716_744_110_592
+        );
         assert_eq!(position.bb(Color::Black, PieceType::Rook), 256);
         assert_eq!(position.bb(Color::Black, PieceType::Knight), 0);
         assert_eq!(position.bb(Color::Black, PieceType::Bishop), 8194);
