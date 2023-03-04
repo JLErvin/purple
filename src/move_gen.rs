@@ -408,6 +408,12 @@ pub fn attacks_to(pos: &BoardState, square: Square, lookup: &Lookup) -> Bitboard
     (pawns | rooks | bishops | queens | knights | king) & pos.bb_for_color(!us)
 }
 
+pub fn is_in_check(pos: &BoardState, lookup: &Lookup) -> bool {
+    let king_square = king_square(pos);
+    let checkers: Bitboard = attacks_to(pos, king_square, lookup);
+    checkers.count_ones() != 0
+}
+
 /// Calculates the ray strictly inclusive between s1 and s2
 fn ray_between(s1: Square, s2: Square, lookup: &Lookup) -> Bitboard {
     let full: Bitboard = !0;
