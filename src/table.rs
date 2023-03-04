@@ -230,8 +230,7 @@ mod test {
 
         let mut pos1 = parse_fen("k7/8/2K5/8/8/8/8/1Q6 w - - 0 1").unwrap();
         let mut pos2 =
-            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8")
-                .unwrap();
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8").unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -256,13 +255,10 @@ mod test {
     fn different_positions_should_be_different() {
         let zobrist = ZobristTable::init();
 
-        let mut pos1 = parse_fen(
-            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
-        )
-        .unwrap();
+        let mut pos1 =
+            parse_fen("rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3").unwrap();
         let mut pos2 =
-            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2")
-                .unwrap();
+            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2").unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);
@@ -275,12 +271,9 @@ mod test {
         let zobrist = ZobristTable::init();
 
         let mut pos1 =
-            parse_fen("rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4")
-                .unwrap();
-        let mut pos2 = parse_fen(
-            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
-        )
-        .unwrap();
+            parse_fen("rnbqkbnr/2pppppp/8/pp6/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4").unwrap();
+        let mut pos2 =
+            parse_fen("rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3").unwrap();
 
         let hash1 = zobrist.hash(&mut pos1);
         let hash2 = zobrist.hash(&mut pos2);

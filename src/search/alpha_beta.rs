@@ -1,3 +1,4 @@
+use std::cmp::{max, min};
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -73,7 +74,7 @@ impl Searcher for AlphaBeta {
                 break;
             }
 
-            let next = self.alpha_beta(pos, NEG_INF, INF, i as u8);
+            let next = self.alpha_beta(pos, NEG_INF, INF, i as u8, 0);
             if next.is_none() {
                 break;
             }
@@ -84,8 +85,7 @@ impl Searcher for AlphaBeta {
             self.cutoff = 0;
             self.stats.reset();
         }
-        //let mut pv = Vec::new();
-        //pv = self.table.pv(pos, &self.zobrist);
+        //let pv = self.table.pv(pos, &self.zobrist);
         //println!("PV: {:?}", pv);
 
         best_move
@@ -125,6 +125,7 @@ impl AlphaBeta {
         mut alpha: isize,
         beta: isize,
         depth: u8,
+        ply: u8,
     ) -> Option<EvaledMove> {
         // If time has expired, ignore this search request
         let now = Instant::now();
@@ -159,6 +160,22 @@ impl AlphaBeta {
             return Some(s);
         }
 
+        // If we haven't found a best move to search first yet, and we are on a left-most node,
+        // then perform an IID search to determine the best node to search first
+        if moves.is_empty() && depth > 3 {
+            let is_leftmost_node = if ply % 2 == 0 {
+                alpha == NEG_INF && beta == INF
+            } else {
+                alpha == INF && beta == NEG_INF
+            };
+
+            if is_leftmost_node {
+                if let Some(e) = self.alpha_beta(pos, alpha, beta, depth / 2, ply + 1) {
+                    moves.push(e);
+                }
+            }
+        }
+
         let mut gen = evaled_moves(&self.gen.all_moves(pos));
         sort_moves(&mut gen, pos);
         moves.append(&mut gen);
@@ -169,7 +186,7 @@ impl AlphaBeta {
 
         for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
-            let next = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1);
+            let next = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1);
             self.stats.count_node();
             if next.is_none() {
                 return next;
@@ -299,7 +316,12 @@ impl AlphaBeta {
 
         let hash = self.zobrist.hash(pos);
         //let fen = debug_print(pos);
-        let entry = Entry { best_move, hash, depth, bound };
+        let entry = Entry {
+            best_move,
+            hash,
+            depth,
+            bound,
+        };
         self.table.save(hash, entry);
     }
 
@@ -371,8 +393,7 @@ mod test {
     #[test]
     fn best_move_random_1() {
         let mut pos =
-            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8")
-                .unwrap();
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR w KQkq - 0 8").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 21)
@@ -380,9 +401,7 @@ mod test {
 
     #[test]
     fn best_move_random_2() {
-        let mut pos =
-            parse_fen("rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1")
-                .unwrap();
+        let mut pos = parse_fen("rnbqkbnr/7p/pppPpBp1/8/8/3P4/PPP2PPP/R2QKBNR b - - 0 1").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos).mv;
         assert_eq!(mv.to, 45)
@@ -391,8 +410,7 @@ mod test {
     #[test]
     fn best_move_random_3() {
         let mut pos =
-            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8")
-                .unwrap();
+            parse_fen("r2qkbnr/ppp2ppp/2np4/8/8/PPPpPbP1/7P/RNBQKBNR b KQkq - 0 8").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move(&mut pos);
         assert_eq!(mv.mv.to, 3)
@@ -419,32 +437,24 @@ mod test {
     fn doesnt_blunder_2() {
         let mut searcher: AlphaBeta = Searcher::new();
         let mut pos =
-            parse_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1")
-                .unwrap();
+            parse_fen("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1").unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
         let mut pos =
-            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2")
-                .unwrap();
+            parse_fen("rnbqkbnr/1ppppppp/p7/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq - 1 2").unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
-        let mut pos = parse_fen(
-            "rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3",
-        )
-        .unwrap();
+        let mut pos =
+            parse_fen("rnbqkbnr/1ppppppp/8/p7/3P4/1PN5/P1P1PPPP/R1BQKBNR b KQkq - 0 3").unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
 
-        let mut pos = parse_fen(
-            "rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4",
-        )
-        .unwrap();
+        let mut pos =
+            parse_fen("rnbqkbnr/2pppppp/1p6/p7/3P4/1PN5/PBP1PPPP/R2QKBNR b KQkq - 1 4").unwrap();
         let _mv = searcher.best_move_depth(&mut pos, 7);
     }
 
     #[test]
     fn doesnt_blunder_3() {
-        let mut pos = parse_fen(
-            "rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14",
-        )
-        .unwrap();
+        let mut pos =
+            parse_fen("rnbqk1nr/3p3p/2p1pppb/8/Pp1PPP2/3B2P1/PBPQ3P/1NKR3R b kq - 0 14").unwrap();
         let mut searcher: AlphaBeta = Searcher::new();
         let mv = searcher.best_move_depth(&mut pos, 5);
         assert_ne!(mv.mv.to, 17)
