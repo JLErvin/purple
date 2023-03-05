@@ -2,7 +2,7 @@ use itertools::Itertools;
 
 use crate::board::BoardState;
 use crate::chess_move::{EvaledMove, Move};
-use crate::move_gen::{is_attacked, king_square, MoveGenerator};
+use crate::move_gen::{king_square, MoveGenerator};
 use crate::search::eval::{eval, MATE_VALUE};
 use crate::search::search::Searcher;
 use crate::search::stats::Stats;
@@ -61,7 +61,7 @@ impl MinimaxSearcher {
     }
 
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
-        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
+        let is_in_check = self.gen.is_attacked(pos, king_square(pos));
 
         if is_in_check {
             EvaledMove::null(-MATE_VALUE - depth as isize)
