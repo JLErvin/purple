@@ -160,11 +160,11 @@ impl AlphaBeta {
             return Some(s);
         }
 
-            let is_leftmost_node = if ply % 2 == 0 {
-                alpha == NEG_INF && beta == INF
-            } else {
-                alpha == INF && beta == NEG_INF
-            };
+        let is_leftmost_node = if ply % 2 == 0 {
+            alpha == NEG_INF && beta == INF
+        } else {
+            alpha == INF && beta == NEG_INF
+        };
 
         // If we haven't found a best move to search first yet, and we are on a left-most node,
         // then perform an IID search to determine the best node to search first
@@ -190,48 +190,9 @@ impl AlphaBeta {
 
             let n = if is_first_move {
                 is_first_move = false;
-                self.alpha_beta(&mut new_pos, -beta, -alpha, depth-1, ply+1)
+                self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1)
             } else {
-                let in_check = is_in_check(&new_pos, &self.gen.lookup);
-                let mut r = 0;
-
-                let can_late_move_reduce = 
-                !is_leftmost_node &&
-                !in_check &&
-                !mv.mv.is_capture() &&
-                !mv.mv.is_promotion();
-
-                if can_late_move_reduce && depth > 2 {
-                    r += 1;
-                    if depth > 4 {
-                        r += depth / 4;
-                    }
-                }
-
-                let mut tmp = self.alpha_beta(&mut new_pos, -alpha - 1, -alpha, depth - r - 1, ply + 1);
-                if tmp.is_none() {
-                    return None;
-                }
-                let mut tmp = tmp.unwrap();
-
-                if r > 0 && -tmp.eval > alpha {
-                    let n = self.alpha_beta(&mut new_pos, -alpha - 1, -alpha, depth - 1, ply + 1);
-                    if n.is_none() {
-                        return None
-                    }
-                    tmp = n.unwrap();
-                }
-
-                if alpha < -tmp.eval && -tmp.eval < beta {
-                    let n  = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1);
-                    if n.is_none() {
-                        return None
-                    }
-                    tmp = n.unwrap();
-                }
-
-                tmp.eval = tmp.eval;
-                Some(tmp)
+                self.lmr_search(pos, mv, alpha, beta, depth, ply)
             };
 
             let next = n;
@@ -261,6 +222,53 @@ impl AlphaBeta {
         self.save(pos, best_move, bound, depth as u8);
 
         Some(best_move)
+    }
+
+    fn lmr_search(
+        &mut self,
+        pos: &mut BoardState,
+        mv: &EvaledMove,
+        alpha: isize,
+        beta: isize,
+        depth: u8,
+        ply: u8,
+    ) -> Option<EvaledMove> {
+        let is_leftmost_node = if ply % 2 == 0 {
+            alpha == NEG_INF && beta == INF
+        } else {
+            alpha == INF && beta == NEG_INF
+        };
+
+        let in_check = is_in_check(pos, &self.gen.lookup);
+        let mut r = 0;
+
+        let can_late_move_reduce =
+            !is_leftmost_node && !in_check && !mv.mv.is_capture() && !mv.mv.is_promotion();
+
+        if can_late_move_reduce && depth > 2 {
+            r += 1;
+            if depth > 4 {
+                r += depth / 4;
+            }
+        }
+
+        let tmp = self.alpha_beta(pos, -alpha - 1, -alpha, depth - r - 1, ply + 1);
+        tmp?;
+        let mut tmp = tmp.unwrap();
+
+        if r > 0 && -tmp.eval > alpha {
+            let n = self.alpha_beta(pos, -alpha - 1, -alpha, depth - 1, ply + 1);
+            n?;
+            tmp = n.unwrap();
+        }
+
+        if alpha < -tmp.eval && -tmp.eval < beta {
+            let n = self.alpha_beta(pos, -beta, -alpha, depth - 1, ply + 1);
+            n?;
+            tmp = n.unwrap();
+        }
+
+        Some(tmp)
     }
 
     /// Perform a Quiescence search, which evaluates up to a certain provided maximum depth
