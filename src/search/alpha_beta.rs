@@ -1,4 +1,3 @@
-use std::cmp::{max, min};
 use std::time::Instant;
 
 use itertools::Itertools;
