@@ -236,7 +236,7 @@ impl AlphaBeta {
             alpha == INF && beta == NEG_INF
         };
 
-        let in_check = is_in_check(pos, &self.gen.lookup);
+        let in_check = self.gen.is_in_check(pos);
         let mut r = 0;
 
         let can_late_move_reduce =

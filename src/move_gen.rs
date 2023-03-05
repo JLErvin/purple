@@ -490,6 +490,12 @@ impl MoveGenerator {
         }
     }
 
+    pub fn is_in_check(&self, pos: &BoardState) -> bool {
+        let king_square = king_square(pos);
+        let checkers: Bitboard = self.attacks_to(pos, king_square);
+        checkers.count_ones() != 0
+    }
+
     #[allow(dead_code)]
     pub fn perft(&self, pos: &BoardState, depth: usize) -> usize {
         self.perft_inner(pos, depth)
