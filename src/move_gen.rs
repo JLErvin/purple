@@ -951,7 +951,7 @@ mod test {
 
     #[test]
     fn calculates_blockers() {
-        let random = MagicRandomizer::new(GenerationScheme::PreComputed);
+        let _random = MagicRandomizer::new(GenerationScheme::PreComputed);
         let gen = MoveGenerator::new();
         let pos = parse_fen("8/8/2r5/5b2/2P5/2P5/2K1Pr2/8 w - - 0 1").unwrap();
         let king_square = king_square(&pos);
