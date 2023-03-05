@@ -168,11 +168,10 @@ impl AlphaBeta {
 
         // If we haven't found a best move to search first yet, and we are on a left-most node,
         // then perform an IID search to determine the best node to search first
-        if moves.is_empty() && depth > 3 {
-            if is_leftmost_node {
-                if let Some(e) = self.alpha_beta(pos, alpha, beta, depth / 2, ply + 1) {
-                    moves.push(e);
-                }
+        let can_perform_iid = moves.is_empty() && depth > 3 && is_leftmost_node;
+        if can_perform_iid {
+            if let Some(e) = self.alpha_beta(pos, alpha, beta, depth / 2, ply + 1) {
+                moves.push(e);
             }
         }
 
@@ -188,15 +187,13 @@ impl AlphaBeta {
         for mv in &mut moves {
             let mut new_pos = pos.clone_with_move(mv.mv);
 
-            let n = if is_first_move {
+            let next = if is_first_move {
                 is_first_move = false;
                 self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1)
             } else {
                 self.lmr_search(&mut new_pos, mv, alpha, beta, depth, ply)
             };
 
-            let next = n;
-            //let next = self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1);
             self.stats.count_node();
             if next.is_none() {
                 return next;
