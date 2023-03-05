@@ -1,6 +1,6 @@
 use crate::bitboard::{
-    AddPiece, Bitboard, ClearBit, GetBit, New, Shift, INIT_W_BISHOPS, INIT_W_KING, INIT_W_KNIGHTS,
-    INIT_W_QUEEN, INIT_W_ROOKS, RANK1, RANK2, RANK7, RANK8,
+    AddPiece, Bitboard, ClearBit, GetBit, New, Shift, INIT_W_BISHOPS, INIT_W_KING,
+    INIT_W_KNIGHTS, INIT_W_QUEEN, INIT_W_ROOKS, RANK1, RANK2, RANK7, RANK8,
 };
 use crate::chess_move::{Move, MoveType};
 use crate::piece::PieceType::Rook;
