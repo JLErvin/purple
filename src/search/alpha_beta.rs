@@ -1,4 +1,4 @@
-use std::cmp::{max, min};
+
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -7,7 +7,7 @@ use super::eval::MATE_VALUE;
 use super::search::Searcher;
 use crate::board::BoardState;
 use crate::chess_move::{self, EvaledMove, Move, MoveType};
-use crate::move_gen::{is_attacked, is_in_check, king_square, MoveGenerator};
+use crate::move_gen::{king_square, MoveGenerator};
 use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
@@ -236,7 +236,7 @@ impl AlphaBeta {
             alpha == INF && beta == NEG_INF
         };
 
-        let in_check = is_in_check(pos, &self.gen.lookup);
+        let in_check = self.gen.is_in_check(pos);
         let mut r = 0;
 
         let can_late_move_reduce =
@@ -294,7 +294,7 @@ impl AlphaBeta {
             alpha = eval;
         };
 
-        let is_attacked = is_attacked(pos, king_square(pos), &self.gen.lookup);
+        let is_attacked = self.gen.is_attacked(pos, king_square(pos));
 
         let mut moves = if is_attacked {
             self.gen.all_moves(pos)
@@ -328,7 +328,7 @@ impl AlphaBeta {
     /// moves in the position. The returned value is either 0 (a draw), or is less than being mated
     /// by the moving player (i.e., a value of -`MATE_VALUE`).
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
-        let is_in_check = is_attacked(pos, king_square(pos), &self.gen.lookup);
+        let is_in_check = self.gen.is_attacked(pos, king_square(pos));
 
         if is_in_check {
             EvaledMove::null(-MATE_VALUE - depth as isize)
