@@ -192,7 +192,7 @@ impl AlphaBeta {
                 is_first_move = false;
                 self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1)
             } else {
-                self.lmr_search(pos, mv, alpha, beta, depth, ply)
+                self.lmr_search(&mut new_pos, mv, alpha, beta, depth, ply)
             };
 
             let next = n;
