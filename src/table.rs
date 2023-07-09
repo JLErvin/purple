@@ -11,7 +11,7 @@ use crate::chess_move::{EvaledMove, MoveType};
 use crate::piece::{Color, PieceType};
 use crate::square::square_to_file;
 
-type ZobristHash = u64;
+pub type ZobristHash = u64;
 
 /// A `ZobristTable` maintains the random values needed to create Zobrist hashes
 /// for use in a transposition table.

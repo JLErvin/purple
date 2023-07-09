@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::board::{BoardState, Castle, Position};
 use crate::piece::Color;
 use crate::square::{algebraic_to_square, Square};
+use crate::table::ZobristHash;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
@@ -12,6 +15,7 @@ pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let en_passant = parse_en_passant(s.next().unwrap());
     let half_move = parse_move(s.next().unwrap());
     let full_move = parse_move(s.next().unwrap());
+    let history = HashMap::<ZobristHash, usize>::new();
 
     let board_state = BoardState {
         position: position.unwrap(),
@@ -20,6 +24,8 @@ pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
         en_passant,
         half_move,
         full_move,
+        history,
+        is_threefold: false,
     };
 
     Ok(board_state)

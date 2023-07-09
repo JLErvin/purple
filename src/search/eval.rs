@@ -56,6 +56,10 @@ const WHITE_KING_OPENING: [isize; 64] = [
 /// hand-picked factors such as material difference, center control, tempo, pawn structure, etc.
 /// Evaluations are determined to be relative to the active player.
 pub fn eval(pos: &BoardState) -> isize {
+    if pos.is_threefold {
+        return 0;
+    }
+
     material_eval(pos)
         + mobility_eval(pos)
         + pawn_eval(pos)

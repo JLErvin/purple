@@ -1,14 +1,17 @@
+use std::collections::HashMap;
+
 use crate::bitboard::{
-    AddPiece, Bitboard, ClearBit, GetBit, New, Shift, INIT_W_BISHOPS, INIT_W_KING,
-    INIT_W_KNIGHTS, INIT_W_QUEEN, INIT_W_ROOKS, RANK1, RANK2, RANK7, RANK8,
+    AddPiece, Bitboard, ClearBit, GetBit, New, Shift, INIT_W_BISHOPS, INIT_W_KING, INIT_W_KNIGHTS,
+    INIT_W_QUEEN, INIT_W_ROOKS, RANK1, RANK2, RANK7, RANK8,
 };
 use crate::chess_move::{Move, MoveType};
 use crate::piece::PieceType::Rook;
 use crate::piece::{Color, Piece, PieceType, COLOR_COUNT, PIECE_COUNT};
 use crate::square::Square;
 use crate::square::SquareIndex::{A1, A8, C1, C8, D1, D8, E1, E8, F1, F8, G1, G8, H1, H8};
+use crate::table::{ZobristHash, ZobristTable};
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct BoardState {
     pub position: Position,
     pub active_player: Color,
@@ -16,6 +19,8 @@ pub struct BoardState {
     pub en_passant: Option<Square>,
     pub half_move: u8,
     pub full_move: u8,
+    pub history: HashMap<ZobristHash, usize>,
+    pub is_threefold: bool,
 }
 
 impl BoardState {
@@ -72,8 +77,20 @@ impl BoardState {
     }
 
     pub fn clone_with_move(&self, mv: Move) -> BoardState {
-        let mut new_pos = *self;
+        let mut new_pos = self.clone();
         new_pos.make_move(mv);
+        new_pos
+    }
+
+    pub fn clone_with_move_and_history(&mut self, mv: Move, zobrist: &ZobristTable) -> BoardState {
+        let mut new_pos = self.clone_with_move(mv);
+        let hash = zobrist.hash(&mut new_pos);
+
+        *self.history.entry(hash).or_default() += 1;
+        if *self.history.get(&hash).unwrap() >= 3 {
+            self.is_threefold = true;
+        }
+
         new_pos
     }
 
@@ -194,6 +211,7 @@ impl BoardState {
     #[allow(dead_code)]
     pub fn empty() -> BoardState {
         let position = Position::empty();
+        let history = HashMap::<ZobristHash, usize>::new();
         BoardState {
             position,
             active_player: Color::White,
@@ -201,10 +219,13 @@ impl BoardState {
             en_passant: None,
             half_move: 0,
             full_move: 0,
+            history,
+            is_threefold: false,
         }
     }
 
     pub fn default() -> BoardState {
+        let history = HashMap::<ZobristHash, usize>::new();
         BoardState {
             position: Position::default(),
             active_player: Color::White,
@@ -212,6 +233,8 @@ impl BoardState {
             en_passant: None,
             half_move: 0,
             full_move: 1,
+            history,
+            is_threefold: false,
         }
     }
 }

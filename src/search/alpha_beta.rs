@@ -1,4 +1,3 @@
-
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -14,7 +13,7 @@ use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 
 pub struct Settings {
     use_table: bool,
-    move_time: Option<u64>,
+    move_time: Option<u128>,
 }
 
 pub struct AlphaBeta {
@@ -66,11 +65,7 @@ impl Searcher for AlphaBeta {
         let mut j = 0;
         for i in 0..=depth {
             //loop {
-            let now = Instant::now();
-            let elapsed = now.duration_since(self.start_time).as_secs();
-            if self.settings.move_time.is_some()
-                && elapsed > self.settings.move_time.unwrap() as u64
-            {
+            if self.time_expired() {
                 break;
             }
 
@@ -91,8 +86,8 @@ impl Searcher for AlphaBeta {
         best_move
     }
 
-    fn move_time(&mut self, seconds: u64) {
-        self.settings.move_time = Some(seconds);
+    fn move_time(&mut self, miliseconds: u128) {
+        self.settings.move_time = Some(miliseconds);
     }
 }
 
@@ -128,9 +123,7 @@ impl AlphaBeta {
         ply: u8,
     ) -> Option<EvaledMove> {
         // If time has expired, ignore this search request
-        let now = Instant::now();
-        let elapsed = now.duration_since(self.start_time).as_secs();
-        if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
+        if self.time_expired() {
             return None;
         }
 
@@ -185,7 +178,7 @@ impl AlphaBeta {
 
         let mut is_first_move = true;
         for mv in &mut moves {
-            let mut new_pos = pos.clone_with_move(mv.mv);
+            let mut new_pos = pos.clone_with_move_and_history(mv.mv, &self.zobrist);
 
             let next = if is_first_move {
                 is_first_move = false;
@@ -278,9 +271,8 @@ impl AlphaBeta {
         depth: usize,
     ) -> isize {
         let eval = eval(pos);
-        let now = Instant::now();
-        let elapsed = now.duration_since(self.start_time).as_secs();
-        if self.settings.move_time.is_some() && elapsed > self.settings.move_time.unwrap() as u64 {
+
+        if self.time_expired() {
             return eval;
         }
 
@@ -311,7 +303,7 @@ impl AlphaBeta {
         }
 
         for mv in &mut moves {
-            let mut new_pos = pos.clone_with_move(*mv);
+            let mut new_pos = pos.clone_with_move_and_history(*mv, &self.zobrist);
             let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
             if eval >= beta {
                 return beta;
@@ -383,6 +375,16 @@ impl AlphaBeta {
     #[allow(dead_code)]
     pub fn use_table(&mut self, setting: bool) {
         self.settings.use_table = setting;
+    }
+
+    fn time_expired(&self) -> bool {
+        if self.settings.move_time.is_none() {
+            return false;
+        }
+
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.start_time).as_millis();
+        self.settings.move_time.unwrap() < elapsed
     }
 }
 

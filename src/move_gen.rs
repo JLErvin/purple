@@ -270,7 +270,7 @@ impl MoveGenerator {
     /// which the piece moves to a square but does not capture on that square.
     fn is_legal_en_passant(&self, pos: &BoardState, mv: &Move, king_square: Square) -> bool {
         let us = pos.active_player;
-        let mut pos = *pos;
+        let mut pos = pos.clone();
 
         let offset: i8 = match us {
             Color::White => 8,
