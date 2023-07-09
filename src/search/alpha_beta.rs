@@ -178,7 +178,7 @@ impl AlphaBeta {
 
         let mut is_first_move = true;
         for mv in &mut moves {
-            let mut new_pos = pos.clone_with_move_and_history(mv.mv, &self.zobrist);
+            let mut new_pos = pos.clone_with_move(mv.mv);
 
             let next = if is_first_move {
                 is_first_move = false;
@@ -303,7 +303,7 @@ impl AlphaBeta {
         }
 
         for mv in &mut moves {
-            let mut new_pos = pos.clone_with_move_and_history(*mv, &self.zobrist);
+            let mut new_pos = pos.clone_with_move(*mv);
             let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
             if eval >= beta {
                 return beta;
