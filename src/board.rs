@@ -86,10 +86,18 @@ impl BoardState {
         let mut new_pos = self.clone_with_move(mv);
         let hash = zobrist.hash(&mut new_pos);
 
-        *self.history.entry(hash).or_default() += 1;
-        if *self.history.get(&hash).unwrap() >= 3 {
-            self.is_threefold = true;
+        /*
+        *new_pos.history.entry(hash).or_default() += 1;
+        if *new_pos.history.get(&hash).unwrap() >= 3 {
+            new_pos.is_threefold = true;
         }
+        */
+
+        if new_pos.history.get(&hash).is_none() {
+            new_pos.history.insert(hash, 0);
+        }
+        let count = new_pos.history.get(&hash).unwrap();
+        new_pos.history.insert(hash, count + 1); // error here
 
         new_pos
     }

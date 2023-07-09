@@ -304,6 +304,10 @@ impl AlphaBeta {
 
         for mv in &mut moves {
             let mut new_pos = pos.clone_with_move_and_history(*mv, &self.zobrist);
+            if new_pos.is_threefold {
+                return 0;
+            }
+
             let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
             if eval >= beta {
                 return beta;
@@ -320,6 +324,10 @@ impl AlphaBeta {
     /// moves in the position. The returned value is either 0 (a draw), or is less than being mated
     /// by the moving player (i.e., a value of -`MATE_VALUE`).
     fn no_move_eval(&self, pos: &BoardState, depth: usize) -> EvaledMove {
+        if pos.is_threefold {
+            return EvaledMove::null(0);
+        }
+
         let is_in_check = self.gen.is_attacked(pos, king_square(pos));
 
         if is_in_check {
