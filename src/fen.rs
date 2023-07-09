@@ -23,6 +23,7 @@ pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
         en_passant,
         half_move,
         full_move,
+        null_allowed: true,
     };
 
     Ok(board_state)

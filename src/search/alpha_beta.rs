@@ -1,3 +1,4 @@
+use std::cmp;
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -127,9 +128,11 @@ impl AlphaBeta {
             return None;
         }
 
+        /*
         if let Some(e) = self.table_fetch(pos, alpha, beta, depth) {
             return Some(e);
         }
+        */
 
         let prev_alpha = alpha;
         let mut best_move = EvaledMove::null(alpha);
@@ -176,8 +179,35 @@ impl AlphaBeta {
             return Some(self.no_move_eval(pos, depth as usize));
         }
 
+        // Potentially attempt NMP
+        let in_check = self.gen.is_in_check(pos);
+        let is_null_allowed = pos.null_allowed;
+        let can_perform_nmp = !in_check && !is_leftmost_node && is_null_allowed;
+
+        if can_perform_nmp {
+            let r = cmp::min(depth - 1, 3 + depth / 4);
+            let mv = Move::null();
+            let mut new_pos = pos.clone_with_move(mv);
+            new_pos.switch();
+            new_pos.null_allowed = false;
+            if let Some(mut score) =
+                self.alpha_beta(&mut new_pos, -beta, -alpha, depth - r - 1, ply + 1)
+            {
+                score.eval = -score.eval;
+                if score.eval >= beta {
+                    return Some(score);
+                }
+            } else {
+                return None;
+            }
+        }
+
         let mut is_first_move = true;
         for mv in &mut moves {
+            if self.time_expired() {
+                return None;
+            }
+
             let mut new_pos = pos.clone_with_move(mv.mv);
 
             let next = if is_first_move {
@@ -223,6 +253,10 @@ impl AlphaBeta {
         depth: u8,
         ply: u8,
     ) -> Option<EvaledMove> {
+        if self.time_expired() {
+            return None;
+        }
+
         let is_leftmost_node = if ply % 2 == 0 {
             alpha == NEG_INF && beta == INF
         } else {
@@ -303,6 +337,10 @@ impl AlphaBeta {
         }
 
         for mv in &mut moves {
+            if self.time_expired() {
+                return eval;
+            }
+
             let mut new_pos = pos.clone_with_move(*mv);
             let eval = -self.q_search(&mut new_pos, -beta, -alpha, depth - 1);
             if eval >= beta {

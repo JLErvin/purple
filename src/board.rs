@@ -19,6 +19,7 @@ pub struct BoardState {
     pub en_passant: Option<Square>,
     pub half_move: u8,
     pub full_move: u8,
+    pub null_allowed: bool,
 }
 
 impl BoardState {
@@ -204,6 +205,7 @@ impl BoardState {
             en_passant: None,
             half_move: 0,
             full_move: 0,
+            null_allowed: true,
         }
     }
 
@@ -215,6 +217,7 @@ impl BoardState {
             en_passant: None,
             half_move: 0,
             full_move: 1,
+            null_allowed: true,
         }
     }
 }
