@@ -33,7 +33,7 @@ impl Searcher for MinimaxSearcher {
         self.minimax(pos, depth)
     }
 
-    fn move_time(&mut self, _seconds: u64) {}
+    fn move_time(&mut self, _seconds: u128) {}
 }
 
 impl MinimaxSearcher {

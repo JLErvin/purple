@@ -23,16 +23,16 @@ pub fn uci_loop() {
             "go" => go(&mut pos, &mut searcher, &key),
             "isready" => println!("readyok"),
             "ucinewgame" => pos = update_position(&"startpos".to_string()),
-            //"movetime" => searcher.move_time(key[1].parse::<u8>().unwrap()),
+            //"movetime" => searcher.move_time(key[1].parse::<u64>().unwrap()),
             _ => println!("Command not understood"),
         }
     }
 }
 
 fn go(pos: &mut BoardState, searcher: &mut AlphaBeta, data: &[&str]) {
-    let movetime = data[2].parse::<u64>().unwrap();
+    let movetime = data[2].parse::<u128>().unwrap();
     //searcher.move_time((movetime / 1000) - 1);
-    searcher.move_time(movetime / 1000);
+    searcher.move_time(movetime);
     let mv = searcher.best_move_depth(pos, 15);
     println!("eval: {}", mv.eval);
     println!("static eval: {}", eval(pos));
@@ -67,7 +67,7 @@ fn apply_moves(pos: &mut BoardState, moves: &[&str]) {
 }
 
 fn init_uci() {
-    println!("id name Purple");
+    println!("id name Purple_Threefold");
     println!("id author Joshua L Ervin");
     println!("uciok");
 }

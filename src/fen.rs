@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::board::{BoardState, Castle, Position};
 use crate::piece::Color;
 use crate::square::{algebraic_to_square, Square};
+use crate::table::ZobristHash;
 
 pub fn parse_fen(fen: &str) -> Result<BoardState, String> {
     let mut s = fen.split_whitespace();
