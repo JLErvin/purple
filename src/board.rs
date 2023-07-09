@@ -208,7 +208,6 @@ impl BoardState {
     }
 
     pub fn default() -> BoardState {
-        let history = HashMap::<ZobristHash, usize>::new();
         BoardState {
             position: Position::default(),
             active_player: Color::White,
