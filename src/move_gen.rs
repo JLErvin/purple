@@ -496,6 +496,14 @@ impl MoveGenerator {
         checkers.count_ones() != 0
     }
 
+    pub fn is_giving_check(&self, pos: &mut BoardState) -> bool {
+        pos.switch();
+        let king_square = king_square(pos);
+        let checkers: Bitboard = self.attacks_to(pos, king_square);
+        pos.switch();
+        checkers.count_ones() != 0
+    }
+
     #[allow(dead_code)]
     pub fn perft(&self, pos: &BoardState, depth: usize) -> usize {
         self.perft_inner(pos, depth)

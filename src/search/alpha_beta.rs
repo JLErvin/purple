@@ -13,6 +13,10 @@ use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 
 pub struct Settings {
     use_table: bool,
+    use_idd: bool,
+    use_move_ordering: bool,
+    use_lmr: bool,
+    use_fp: bool,
     move_time: Option<u128>,
 }
 
@@ -34,6 +38,10 @@ impl Searcher for AlphaBeta {
         let table = TranspositionTable::new_mb(50);
         let settings = Settings {
             use_table: true,
+            use_idd: true,
+            use_move_ordering: true,
+            use_lmr: true,
+            use_fp: true,
             move_time: None,
         };
         let start_time = Instant::now();
@@ -136,7 +144,7 @@ impl AlphaBeta {
         let mut moves = Vec::<EvaledMove>::new();
 
         let hash = self.zobrist.hash(pos);
-        if let Some(e) = self.table.get(hash) {
+        if let Some(e) = self.table.get(hash) && self.settings.use_table {
             if e.hash == hash && e.depth >= depth as u8 && is_bound_ok(&e, alpha, beta) {
                 return Some(e.best_move);
             }
@@ -161,7 +169,8 @@ impl AlphaBeta {
 
         // If we haven't found a best move to search first yet, and we are on a left-most node,
         // then perform an IID search to determine the best node to search first
-        let can_perform_iid = moves.is_empty() && depth > 3 && is_leftmost_node;
+        let can_perform_iid =
+            moves.is_empty() && depth > 3 && is_leftmost_node && self.settings.use_idd;
         if can_perform_iid {
             if let Some(e) = self.alpha_beta(pos, alpha, beta, depth / 2, ply + 1) {
                 moves.push(e);
@@ -169,7 +178,7 @@ impl AlphaBeta {
         }
 
         let mut gen = evaled_moves(&self.gen.all_moves(pos));
-        sort_moves(&mut gen, pos);
+        self.sort_moves(&mut gen, pos);
         moves.append(&mut gen);
 
         if moves.is_empty() {
@@ -184,6 +193,25 @@ impl AlphaBeta {
                 is_first_move = false;
                 self.alpha_beta(&mut new_pos, -beta, -alpha, depth - 1, ply + 1)
             } else {
+                let in_check = self.gen.is_in_check(&new_pos);
+                let is_giving_check = self.gen.is_giving_check(&mut new_pos);
+                let can_futility_prune = !is_leftmost_node
+                    && depth < 6
+                    && !in_check
+                    && !is_giving_check
+                    && !mv.mv.is_capture()
+                    && !mv.mv.is_promotion()
+                    && !mv.mv.is_promotion_capture()
+                    && self.settings.use_fp;
+
+                if can_futility_prune {
+                    let margin = 500 * depth as isize;
+                    let static_eval = eval(&new_pos);
+                    if static_eval + margin < alpha {
+                        continue;
+                    }
+                }
+
                 self.lmr_search(&mut new_pos, mv, alpha, beta, depth, ply)
             };
 
@@ -232,8 +260,11 @@ impl AlphaBeta {
         let in_check = self.gen.is_in_check(pos);
         let mut r = 0;
 
-        let can_late_move_reduce =
-            !is_leftmost_node && !in_check && !mv.mv.is_capture() && !mv.mv.is_promotion();
+        let can_late_move_reduce = !is_leftmost_node
+            && !in_check
+            && !mv.mv.is_capture()
+            && !mv.mv.is_promotion()
+            && self.settings.use_lmr;
 
         if can_late_move_reduce && depth > 2 {
             r += 1;
@@ -386,6 +417,26 @@ impl AlphaBeta {
         let elapsed = now.duration_since(self.start_time).as_millis();
         self.settings.move_time.unwrap() < elapsed
     }
+
+    fn sort_moves(&self, moves: &mut [EvaledMove], pos: &BoardState) {
+        if !self.settings.use_move_ordering {
+            return;
+        }
+
+        moves.sort_by_cached_key(|mv: &EvaledMove| {
+            let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
+            if mv.mv.is_en_passant_capture() {
+                return 0;
+            }
+
+            if mv.mv.is_capture() {
+                let captured_piece = pos.type_on(mv.mv.to).unwrap();
+                return MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()] - 100;
+            }
+
+            0
+        });
+    }
 }
 
 #[inline]
@@ -405,25 +456,9 @@ pub const MVV_LVA: [[isize; 6]; 6] = [
     [10, 11, 12, 13, 14, 15], // victim P, attacker K, Q, R, B, N, P, None
 ];
 
-fn sort_moves(moves: &mut [EvaledMove], pos: &BoardState) {
-    moves.sort_by_cached_key(|mv: &EvaledMove| {
-        let maybe_capturing_piece = pos.type_on(mv.mv.from).unwrap();
-        if mv.mv.is_en_passant_capture() {
-            return 0;
-        }
-
-        if mv.mv.is_capture() {
-            let captured_piece = pos.type_on(mv.mv.to).unwrap();
-            return MVV_LVA[captured_piece.idx()][maybe_capturing_piece.idx()] - 100;
-        }
-
-        0
-    });
-}
-
 #[cfg(test)]
 mod test {
-    use super::{evaled_moves, sort_moves};
+    use super::evaled_moves;
     use crate::chess_move::MoveType;
     use crate::fen::parse_fen;
     use crate::search::alpha_beta::AlphaBeta;
@@ -525,7 +560,7 @@ mod test {
         let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
-        sort_moves(&mut moves, &pos);
+        searcher.sort_moves(&mut moves, &pos);
         println!("{:?}", moves);
 
         let top_move = moves[0];
@@ -540,7 +575,7 @@ mod test {
         let mut moves = evaled_moves(&searcher.gen.all_moves(&pos));
         println!("{:?}", moves);
         println!();
-        sort_moves(&mut moves, &pos);
+        searcher.sort_moves(&mut moves, &pos);
         println!("{:?}", moves);
 
         let top_move = moves[0];
