@@ -11,6 +11,7 @@ use crate::search::eval::{eval, INF, NEG_INF};
 use crate::search::stats::Stats;
 use crate::table::{Bound, Entry, TranspositionTable, ZobristTable};
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct Settings {
     use_table: bool,
     use_idd: bool,
