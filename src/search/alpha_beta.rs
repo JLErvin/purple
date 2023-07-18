@@ -144,13 +144,15 @@ impl AlphaBeta {
         let mut moves = Vec::<EvaledMove>::new();
 
         let hash = self.zobrist.hash(pos);
-        if let Some(e) = self.table.get(hash) && self.settings.use_table {
-            if e.hash == hash && e.depth >= depth as u8 && is_bound_ok(&e, alpha, beta) {
-                return Some(e.best_move);
-            }
+        if let Some(e) = self.table.get(hash) {
+            if self.settings.use_table {
+                if e.hash == hash && e.depth >= depth as u8 && is_bound_ok(&e, alpha, beta) {
+                    return Some(e.best_move);
+                }
 
-            if e.hash == hash && e.best_move.mv.kind != MoveType::Null {
-                moves.push(e.best_move);
+                if e.hash == hash && e.best_move.mv.kind != MoveType::Null {
+                    moves.push(e.best_move);
+                }
             }
         }
 
