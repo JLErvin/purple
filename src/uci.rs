@@ -67,7 +67,7 @@ fn apply_moves(pos: &mut BoardState, moves: &[&str]) {
 }
 
 fn init_uci() {
-    println!("id name Purple_Table");
+    println!("id name Purple");
     println!("id author Joshua L Ervin");
     println!("uciok");
 }
